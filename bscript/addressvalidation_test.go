@@ -3,7 +3,7 @@ package bscript_test
 import (
 	"testing"
 
-	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

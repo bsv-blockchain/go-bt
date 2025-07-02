@@ -494,7 +494,7 @@ func (s *Script) Addresses(mainnetBool ...bool) ([]string, error) {
 		addresses = []string{a.AddressString}
 	}
 	// TODO: handle multisig, and other outputs
-	// https://github.com/libsv/go-bt/issues/6
+	// https://github.com/bsv-blockchain/go-bt/issues/6
 	return addresses, nil
 }
 

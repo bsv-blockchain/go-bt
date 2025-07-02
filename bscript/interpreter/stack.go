@@ -7,7 +7,7 @@ package interpreter
 import (
 	"encoding/hex"
 
-	"github.com/libsv/go-bt/v2/bscript/interpreter/errs"
+	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/errs"
 )
 
 // asBool gets the boolean value of the byte array.
