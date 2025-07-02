@@ -8,7 +8,7 @@ require (
 	github.com/libsv/go-bk v0.1.6
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.2
-	golang.org/x/crypto v0.35.0
+	golang.org/x/crypto v0.39.0
 	golang.org/x/sync v0.4.0
 	google.golang.org/protobuf v1.36.6
 )
