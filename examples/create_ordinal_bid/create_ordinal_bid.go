@@ -1,3 +1,4 @@
+// Package main demonstrates how to create a bid for an ordinal inscription using the go-bt library.
 package main
 
 import (
@@ -6,12 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/libsv/go-bk/wif"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
 	"github.com/bsv-blockchain/go-bt/v2/ord"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
+	"github.com/libsv/go-bk/wif"
 )
 
 func main() {

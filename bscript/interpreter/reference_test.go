@@ -40,7 +40,7 @@ func init() {
 
 }
 
-// parseShortForm parses a string as as used in the Bitcoin Core reference tests
+// parseShortForm parses a string as used in the Bitcoin Core reference tests
 // into the script it came from.
 //
 // The format used for these tests is pretty simple if ad-hoc:
@@ -62,7 +62,7 @@ func parseShortForm(script string) (*bscript.Script, error) {
 			ops[opcodeName] = opcodeValue
 
 			// The opcodes named OP_# can't have the OP_ prefix
-			// stripped or they would conflict with the plain
+			// stripped, or they would conflict with the plain
 			// numbers.  Also, since OP_FALSE and OP_TRUE are
 			// aliases for the OP_0, and OP_1, respectively, they
 			// have the same value, so detect those by name and
@@ -78,8 +78,8 @@ func parseShortForm(script string) (*bscript.Script, error) {
 	}
 
 	// Split only does one separator so convert all \n and tab into  space.
-	script = strings.Replace(script, "\n", " ", -1)
-	script = strings.Replace(script, "\t", " ", -1)
+	script = strings.ReplaceAll(script, "\n", " ")
+	script = strings.ReplaceAll(script, "\t", " ")
 	tokens := strings.Split(script, " ")
 
 	var scr bscript.Script
@@ -90,22 +90,34 @@ func parseShortForm(script string) (*bscript.Script, error) {
 		// if parses as a plain number
 		if num, err := strconv.ParseInt(tok, 10, 64); err == nil {
 			if num == 0 {
-				scr.AppendOpcodes(bscript.Op0)
+				err = scr.AppendOpcodes(bscript.Op0)
+				if err != nil {
+					return nil, err
+				}
 			} else if num == -1 || (1 <= num && num <= 16) {
-				scr.AppendOpcodes((bscript.Op1 - 1) + byte(num))
+				err = scr.AppendOpcodes((bscript.Op1 - 1) + byte(num))
+				if err != nil {
+					return nil, err
+				}
 			} else {
 				n := &scriptNumber{val: big.NewInt(num)}
-				scr.AppendPushData(n.Bytes())
+				err = scr.AppendPushData(n.Bytes())
+				if err != nil {
+					return nil, err
+				}
 			}
 			continue
-		} else if bts, err := parseHex(tok); err == nil {
+		} else if bts, errHex := parseHex(tok); errHex == nil {
 			// Concatenate the bytes manually since the test code
 			// intentionally creates scripts that are too large and
 			// would cause the builder to error otherwise.
 			scr = append(scr, bts...)
 		} else if len(tok) >= 2 &&
 			tok[0] == '\'' && tok[len(tok)-1] == '\'' {
-			scr.AppendPushData([]byte(tok[1 : len(tok)-1]))
+			err = scr.AppendPushData([]byte(tok[1 : len(tok)-1]))
+			if err != nil {
+				return nil, err
+			}
 		} else if code, ok := shortFormOps[tok]; ok {
 			scr = append(scr, code)
 		} else {
@@ -150,7 +162,7 @@ func parseHex(tok string) ([]byte, error) {
 }
 
 // shortFormOps holds a map of opcode names to values for use in short form
-// parsing.  It is declared here so it only needs to be created once.
+// parsing.  It is declared here, so it only needs to be created once.
 var shortFormOps map[string]byte
 
 // parseScriptFlags parses the provided flags string from the format used in the
@@ -313,7 +325,7 @@ func createSpendingTx(sigScript, pkScript *bscript.Script, outputValue int64) *b
 	}
 
 	empty := chainhash.Hash{}
-	coinbaseTx.Inputs[0].PreviousTxIDAdd(&empty)
+	_ = coinbaseTx.Inputs[0].PreviousTxIDAdd(&empty)
 
 	spendingTx := &bt.Tx{
 		Version:  1,
@@ -329,12 +341,12 @@ func createSpendingTx(sigScript, pkScript *bscript.Script, outputValue int64) *b
 			LockingScript: bscript.NewFromBytes([]byte{}),
 		}},
 	}
-	spendingTx.Inputs[0].PreviousTxIDAdd(coinbaseTx.TxIDChainHash())
+	_ = spendingTx.Inputs[0].PreviousTxIDAdd(coinbaseTx.TxIDChainHash())
 
 	return spendingTx
 }
 
-// TestScripts ensures all of the tests in script_tests.json execute with the
+// TestScripts ensures all the tests in script_tests.json execute with the
 // expected results as defined in the test data.
 func TestScripts(t *testing.T) {
 	file, err := os.ReadFile("data/script_tests.json")
@@ -416,8 +428,8 @@ func TestScripts(t *testing.T) {
 		// Extract and parse the expected result from the test fields.
 		//
 		// Convert the expected result string into the allowed script
-		// error codes.  This is necessary because interpreter is more
-		// fine grained with its errors than the reference test data, so
+		// error codes.  This is necessary because the interpreter is more
+		// fine-grained with its errors than the reference test data, so
 		// some of the reference test data errors map to more than one
 		// possibility.
 		resultStr, ok := test[3].(string)
@@ -449,7 +461,7 @@ func TestScripts(t *testing.T) {
 			continue
 		}
 
-		// At this point an error was expected so ensure the result of
+		// At this point, an error was expected so ensure the result of
 		// the execution matches it.
 		successRes := false
 		for _, code := range allowedErrorCodes {
@@ -459,9 +471,9 @@ func TestScripts(t *testing.T) {
 			}
 		}
 		if !successRes {
-			serr := &errs.Error{}
-			if ok := errors.As(err, serr); ok {
-				t.Errorf("%s: want error codes %v, got %v", name, allowedErrorCodes, serr.ErrorCode)
+			successErr := &errs.Error{}
+			if ok = errors.As(err, successErr); ok {
+				t.Errorf("%s: want error codes %v, got %v", name, allowedErrorCodes, successErr.ErrorCode)
 				continue
 			}
 			t.Errorf("%s: want error codes %v, got err: %v (%T)", name, allowedErrorCodes, err, err)
@@ -473,10 +485,10 @@ func TestScripts(t *testing.T) {
 // testVecF64ToUint32 properly handles conversion of float64s read from the JSON
 // test data to unsigned 32-bit integers.  This is necessary because some of the
 // test data uses -1 as a shortcut to mean max uint32 and direct conversion of a
-// negative float to an unsigned int is implementation dependent and therefore
-// doesn't result in the expected value on all platforms.  This function woks
+// negative float to an unsigned int is implementation-dependent and therefore
+// doesn't result in the expected value on all platforms.  This function works
 // around that limitation by converting to a 32-bit signed integer first and
-// then to a 32-bit unsigned integer which results in the expected behaviour on
+// then to a 32-bit unsigned integer which results in the expected behavior on
 // all platforms.
 func testVecF64ToUint32(f float64) uint32 {
 	return uint32(int32(f))
@@ -487,7 +499,7 @@ type txIOKey struct {
 	idx uint32
 }
 
-// TestTxInvalidTests ensures all of the tests in tx_invalid.json fail as
+// TestTxInvalidTests ensures all the tests in tx_invalid.json fail as
 // expected.
 //
 //nolint:goconst // reason: using constants would reduce readability in this specific case
@@ -620,8 +632,8 @@ testloop:
 				continue testloop
 			}
 			// These are meant to fail, so as soon as the first
-			// input fails the transaction has failed. (some of the
-			// test txns have good inputs, too..
+			// input fails, the transaction has failed. (some of the
+			// test txns have good inputs, too.
 			err = NewEngine().Execute(
 				WithTx(tx, k, prevOut),
 				WithFlags(flags),
@@ -635,7 +647,7 @@ testloop:
 	}
 }
 
-// TestTxValidTests ensures all of the tests in tx_valid.json pass as expected.
+// TestTxValidTests ensures all the tests in tx_valid.json pass as expected.
 func TestTxValidTests(t *testing.T) {
 	file, err := os.ReadFile("data/tx_valid.json")
 	if err != nil {

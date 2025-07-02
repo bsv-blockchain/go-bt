@@ -1,3 +1,4 @@
+// Package main demonstrates how to marshal a list of transactions into a Node JSON format using the go-bt library.
 package main
 
 import (

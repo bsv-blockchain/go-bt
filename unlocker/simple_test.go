@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/libsv/go-bk/bec"
-	"github.com/libsv/go-bk/wif"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
+	"github.com/libsv/go-bk/bec"
+	"github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -32,8 +32,8 @@ func TestLocalUnlocker_UnlockAllInputs(t *testing.T) {
 	w, err = wif.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 	require.NoError(t, err)
 
-	unlocker := unlocker.Getter{PrivateKey: w.PrivKey}
-	err = tx.FillAllInputs(context.Background(), &unlocker)
+	unlockerVal := unlocker.Getter{PrivateKey: w.PrivKey}
+	err = tx.FillAllInputs(context.Background(), &unlockerVal)
 	require.NoError(t, err)
 
 	expectedSignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d2507232651000000006b483045022100c1d77036dc6cd1f3fa1214b0688391ab7f7a16cd31ea4e5a1f7a415ef167df820220751aced6d24649fa235132f1e6969e163b9400f80043a72879237dab4a1190ad412103b8b40a84123121d260f5c109bc5a46ec819c2e4002e5ba08638783bfb4e01435ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
@@ -95,8 +95,8 @@ func TestLocalUnlocker_ValidSignature(t *testing.T) {
 			w, err := wif.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 			require.NoError(t, err)
 
-			unlocker := &unlocker.Simple{PrivateKey: w.PrivKey}
-			uscript, err := unlocker.UnlockingScript(context.Background(), tx, bt.UnlockerParams{})
+			unlockerVal := &unlocker.Simple{PrivateKey: w.PrivKey}
+			uscript, err := unlockerVal.UnlockingScript(context.Background(), tx, bt.UnlockerParams{})
 			require.NoError(t, err)
 
 			require.NoError(t, tx.InsertInputUnlockingScript(0, uscript))
@@ -136,7 +136,7 @@ type mockUnlocker struct {
 	script string
 }
 
-func (m *mockUnlocker) UnlockingScript(ctx context.Context, tx *bt.Tx, params bt.UnlockerParams) (*bscript.Script, error) {
+func (m *mockUnlocker) UnlockingScript(_ context.Context, _ *bt.Tx, _ bt.UnlockerParams) (*bscript.Script, error) {
 	uscript, err := bscript.NewFromASM(m.script)
 	require.NoError(m.t, err)
 
@@ -156,18 +156,18 @@ func TestLocalUnlocker_NonSignature(t *testing.T) {
 				require.NoError(t, tx.From("45be95d2f2c64e99518ffbbce03fb15a7758f20ee5eecf0df07938d977add71d", 0, "52529387", 15564838601))
 				return tx
 			}(),
-			unlockerFunc: func(ctx context.Context, lockingScript *bscript.Script) (bt.Unlocker, error) {
+			unlockerFunc: func(_ context.Context, lockingScript *bscript.Script) (bt.Unlocker, error) {
 				asm, err := lockingScript.ToASM()
 				require.NoError(t, err)
 
-				unlocker, ok := map[string]*mockUnlocker{
+				unlockerVal, ok := map[string]*mockUnlocker{
 					"OP_2 OP_2 OP_ADD OP_EQUAL": {t: t, script: "OP_4"},
 				}[asm]
 
 				assert.True(t, ok)
-				assert.NotNil(t, unlocker)
+				assert.NotNil(t, unlockerVal)
 
-				return unlocker, nil
+				return unlockerVal, nil
 			},
 			expUnlockingScripts: []string{"OP_4"},
 		},
@@ -179,20 +179,20 @@ func TestLocalUnlocker_NonSignature(t *testing.T) {
 				require.NoError(t, tx.From("45be95d2f2c64e99518ffbbce03fb15a7758f20ee5eecf0df07938d977add71d", 0, "5a559687", 15564838601))
 				return tx
 			}(),
-			unlockerFunc: func(ctx context.Context, lockingScript *bscript.Script) (bt.Unlocker, error) {
+			unlockerFunc: func(_ context.Context, lockingScript *bscript.Script) (bt.Unlocker, error) {
 				asm, err := lockingScript.ToASM()
 				require.NoError(t, err)
 
-				unlocker, ok := map[string]*mockUnlocker{
+				unlockerVal, ok := map[string]*mockUnlocker{
 					"OP_2 OP_2 OP_SUB OP_EQUAL":  {t: t, script: "OP_FALSE"},
 					"OP_2 OP_8 OP_MUL OP_EQUAL":  {t: t, script: "OP_16"},
 					"OP_10 OP_5 OP_DIV OP_EQUAL": {t: t, script: "OP_2"},
 				}[asm]
 
 				assert.True(t, ok)
-				assert.NotNil(t, unlocker)
+				assert.NotNil(t, unlockerVal)
 
-				return unlocker, nil
+				return unlockerVal, nil
 			},
 			expUnlockingScripts: []string{"OP_FALSE", "OP_16", "OP_2"},
 		},

@@ -1,12 +1,13 @@
+// Package main demonstrates how to create a transaction with an OP_RETURN output using the go-bt library.
 package main
 
 import (
 	"context"
 	"log"
 
-	"github.com/libsv/go-bk/wif"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
+	"github.com/libsv/go-bk/wif"
 )
 
 func main() {

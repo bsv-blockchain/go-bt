@@ -1,3 +1,4 @@
+// Package main demonstrates how to unmarshal a transaction from Node JSON format using the go-bt library.
 package main
 
 import (

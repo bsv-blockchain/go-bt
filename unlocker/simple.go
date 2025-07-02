@@ -5,16 +5,17 @@ import (
 	"context"
 	"errors"
 
-	"github.com/libsv/go-bk/bec"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
+	"github.com/libsv/go-bk/bec"
 )
 
 var (
-	externalSignerFn func(message []byte, privateKey []byte) ([]byte, error) = nil
+	externalSignerFn func(message []byte, privateKey []byte) ([]byte, error)
 )
 
+// InjectExternalSignerFn allows the injection of an external signing function.
 func InjectExternalSignerFn(fn func(message []byte, privateKey []byte) ([]byte, error)) {
 	externalSignerFn = fn
 }
@@ -29,17 +30,17 @@ type Getter struct {
 // as the calling `*local.Getter`.
 //
 // For an example implementation, see `examples/unlocker_getter/`.
-func (g *Getter) Unlocker(ctx context.Context, lockingScript *bscript.Script) (bt.Unlocker, error) {
+func (g *Getter) Unlocker(_ context.Context, _ *bscript.Script) (bt.Unlocker, error) {
 	return &Simple{PrivateKey: g.PrivateKey}, nil
 }
 
-// Simple implements the a simple `bt.Unlocker` interface. It is used to build an unlocking script
+// Simple implements a simple `bt.Unlocker` interface. It is used to build an unlocking script
 // using a bec Private Key.
 type Simple struct {
 	PrivateKey *bec.PrivateKey
 }
 
-// UnlockingScript create the unlocking script for a given input using the PrivateKey passed in through the
+// UnlockingScript create the unlocking script for a given input using the PrivateKey passed in through
 // the `unlock.Local` struct.
 //
 // UnlockingScript generates and uses an ECDSA signature for the provided hash digest using the private key
@@ -48,7 +49,7 @@ type Simple struct {
 // canonical in accordance with RFC6979 and BIP0062.
 //
 // For example usage, see `examples/create_tx/create_tx.go`
-func (l *Simple) UnlockingScript(ctx context.Context, tx *bt.Tx, params bt.UnlockerParams) (*bscript.Script, error) {
+func (l *Simple) UnlockingScript(_ context.Context, tx *bt.Tx, params bt.UnlockerParams) (*bscript.Script, error) {
 	if params.SigHashFlags == 0 {
 		params.SigHashFlags = sighash.AllForkID
 	}

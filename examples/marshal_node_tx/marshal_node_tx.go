@@ -1,3 +1,4 @@
+// Package main demonstrates how to marshal a single transaction into a Node JSON format using the go-bt library.
 package main
 
 import (

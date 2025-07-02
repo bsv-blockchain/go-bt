@@ -1,17 +1,18 @@
+// Package main demonstrates how to create a transaction with an inscription using the go-bt library.
 package main
 
 import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"mime"
+	"os"
 
-	"github.com/libsv/go-bk/wif"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
+	"github.com/libsv/go-bk/wif"
 )
 
 func main() {
@@ -33,7 +34,7 @@ func main() {
 	)
 
 	// Read the image file
-	data, err := ioutil.ReadFile("1SatLogoLight.png")
+	data, err := os.ReadFile("1SatLogoLight.png")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -42,11 +43,14 @@ func main() {
 	// Get the content type of the image
 	contentType := mime.TypeByExtension(".png")
 
-	tx.Inscribe(&bscript.InscriptionArgs{
+	err = tx.Inscribe(&bscript.InscriptionArgs{
 		LockingScriptPrefix: s,
 		Data:                data,
 		ContentType:         contentType,
 	})
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
 	err = tx.ChangeToAddress("17ujiveRLkf2JQiGR8Sjtwb37evX7vG3WG", bt.NewFeeQuote())
 	if err != nil {

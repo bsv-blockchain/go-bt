@@ -17,7 +17,7 @@ import (
 // AcceptOrdinalSaleListing2Dummies accepts a partially signed Bitcoin
 // transaction offer to sell an ordinal. When accepting the offer,
 // you will need to provide at least 3 UTXOs - with the first 2
-// being dummy utxos that will just pass through, and the rest with
+// being fake utxos that will just pass through, and the rest with
 // the required payment and tx fees.
 func AcceptOrdinalSaleListing2Dummies(ctx context.Context, vla *ValidateListingArgs,
 	asoa *AcceptListingArgs) (*bt.Tx, error) {
@@ -34,7 +34,7 @@ func AcceptOrdinalSaleListing2Dummies(ctx context.Context, vla *ValidateListingA
 
 	tx := bt.NewTx()
 
-	// add dummy inputs
+	// add fake inputs
 	err := tx.FromUTXOs(asoa.UTXOs[0], asoa.UTXOs[1])
 	if err != nil {
 		return nil, fmt.Errorf(`failed to add inputs: %w`, err)
@@ -48,7 +48,7 @@ func AcceptOrdinalSaleListing2Dummies(ctx context.Context, vla *ValidateListingA
 		return nil, fmt.Errorf(`failed to add inputs: %w`, err)
 	}
 
-	// add dummy output to passthrough dummy inputs
+	// add fake output to passthrough fake inputs
 	tx.AddOutput(&bt.Output{
 		LockingScript: asoa.DummyOutputScript,
 		Satoshis:      asoa.UTXOs[0].Satoshis + asoa.UTXOs[1].Satoshis,
@@ -69,7 +69,7 @@ func AcceptOrdinalSaleListing2Dummies(ctx context.Context, vla *ValidateListingA
 
 	//nolint:dupl // TODO: are 2 dummies useful or to be removed?
 	for i, u := range asoa.UTXOs {
-		// skip 3rd input (ordinals input)
+		// skip 3rd input (ordinal input)
 		j := i
 		if i >= 2 {
 			j++
@@ -107,10 +107,10 @@ type MakeBid2DArgs struct {
 	FQ                        *bt.FeeQuote
 }
 
-// MakeBidToBuy1SatOrdinal makes a bid offer to buy a 1 sat ordinal
+// MakeBidToBuy1SatOrdinal2Dummies makes a bid offer to buy a 1 sat ordinal
 // at a specific price - this tx will be partially signed and will
 // need to be completed by the seller if they accept the bid. Multiple
-// people can make different bids and the seller will need to choose
+// people can make different bids, and the seller will need to choose
 // only one to go through and broadcast to the node network.
 //
 // Note: this function is meant for ordinals in 1 satoshi outputs instead
@@ -122,7 +122,7 @@ func MakeBidToBuy1SatOrdinal2Dummies(ctx context.Context, mba *MakeBid2DArgs) (*
 
 	tx := bt.NewTx()
 
-	// add dummy inputs
+	// add fake inputs
 	err := tx.FromUTXOs(mba.BidderUTXOs[0], mba.BidderUTXOs[1])
 	if err != nil {
 		return nil, fmt.Errorf(`failed to add inputs: %w`, err)
@@ -135,7 +135,7 @@ func MakeBidToBuy1SatOrdinal2Dummies(ctx context.Context, mba *MakeBid2DArgs) (*
 	emptyOrdInput := &bt.Input{
 		PreviousTxOutIndex: mba.OrdinalVOut,
 		PreviousTxScript: func() *bscript.Script {
-			//nolint:lll // add dummy ordinal PreviousTxScript
+			//nolint:lll // add fake ordinal PreviousTxScript
 			// so that the change function can estimate
 			// UnlockingScript sizes
 			s, _ := bscript.NewFromHexString("76a914c25e9a2b70ec83d7b4fbd0f36f00a86723a48e6b88ac0063036f72645118746578742f706c61696e3b636861727365743d7574662d38000d48656c6c6f2c20776f726c642168") // hello world (text/plain) test inscription
@@ -154,7 +154,7 @@ func MakeBidToBuy1SatOrdinal2Dummies(ctx context.Context, mba *MakeBid2DArgs) (*
 		return nil, fmt.Errorf(`failed to add inputs: %w`, err)
 	}
 
-	// add dummy output to passthrough dummy inputs
+	// add fake output to passthrough fake inputs
 	tx.AddOutput(&bt.Output{
 		LockingScript: mba.DummyOutputScript,
 		Satoshis:      mba.BidderUTXOs[0].Satoshis + mba.BidderUTXOs[1].Satoshis,
@@ -168,7 +168,7 @@ func MakeBidToBuy1SatOrdinal2Dummies(ctx context.Context, mba *MakeBid2DArgs) (*
 
 	tx.AddOutput(&bt.Output{
 		Satoshis: mba.BidAmount,
-		LockingScript: func() *bscript.Script { // add dummy p2pkh script to calc fees accurately
+		LockingScript: func() *bscript.Script { // add a fake p2pkh script to calc fees accurately
 			s, _ := bscript.NewP2PKHFromAddress("1FunnyJoke111111111111111112AVXh5")
 			return s
 		}(),
@@ -181,7 +181,7 @@ func MakeBidToBuy1SatOrdinal2Dummies(ctx context.Context, mba *MakeBid2DArgs) (*
 
 	//nolint: dupl // TODO: are 2 dummies useful or to be removed?
 	for i, u := range mba.BidderUTXOs {
-		// skip 3rd input (ordinals input)
+		// skip 3rd input (ordinal input)
 		j := i
 		if i >= 2 {
 			j++
@@ -241,7 +241,7 @@ func (vba *ValidateBid2DArgs) Validate(pstx *bt.Tx) bool {
 		}
 	}
 
-	// check passthrough dummy inputs and output to avoid
+	// check passthrough fake inputs and output to avoid
 	// mismatching and losing the ordinal to another output
 	if (vba.PreviousUTXOs[0].Satoshis + vba.PreviousUTXOs[1].Satoshis) != pstx.Outputs[0].Satoshis {
 		return false

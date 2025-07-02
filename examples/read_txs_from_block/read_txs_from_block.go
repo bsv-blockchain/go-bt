@@ -1,3 +1,4 @@
+// Package main demonstrates how to read transactions from a block file in a memory-efficient way using the go-bt library.
 package main
 
 import (

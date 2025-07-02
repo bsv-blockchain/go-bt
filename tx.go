@@ -49,10 +49,12 @@ type Tx struct {
 	txHash atomic.Pointer[chainhash.Hash]
 }
 
+// ExtendedTx wraps a *bt.Tx and provides a method to convert it back to *bt.Tx.
 type ExtendedTx struct {
 	*Tx
 }
 
+// ToTx returns the underlying *bt.Tx from the ExtendedTx.
 func (etx *ExtendedTx) ToTx() *Tx {
 	return etx.Tx
 }
@@ -92,7 +94,7 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 }
 
 // NewTxFromStream takes an array of bytes and constructs a Tx from it, returning the Tx and the bytes used.
-// Despite the name, this is not actually reading a stream in the true sense: it is a byte slice that contains
+// Despite the name, this is not reading a stream in the true sense: it is a byte slice that contains
 // many transactions one after another.
 func NewTxFromStream(b []byte) (*Tx, int, error) {
 	tx := Tx{}
@@ -166,7 +168,7 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	}
 	// ----------------------------------------------------------------------------------
 	// If we have not returned from the previous block of code, we will have detected
-	// a sane transaction and we will know if it is extended format or not.
+	// a sane transaction, and we will know if it is extended format or not.
 	// We can now proceed with reading the rest of the transaction.
 	// ----------------------------------------------------------------------------------
 
@@ -292,6 +294,7 @@ func (tx *Tx) IsCoinbase() bool {
 	return false
 }
 
+// IsExtended checks if the transaction is in extended format.
 func (tx *Tx) IsExtended() bool {
 	if tx == nil || tx.Inputs == nil {
 		return false
@@ -310,10 +313,12 @@ func (tx *Tx) IsExtended() bool {
 	return true
 }
 
+// SetExtended sets the extended flag for the transaction.
 func (tx *Tx) SetExtended(extended bool) {
 	tx.extended = extended
 }
 
+// ToExtendedTx converts the Tx to an ExtendedTx if it is already extended.
 func (tx *Tx) ToExtendedTx() *ExtendedTx {
 	if tx == nil {
 		return nil
@@ -334,12 +339,13 @@ func (tx *Tx) TxID() string {
 	return tx.TxIDChainHash().String()
 }
 
-// SetTxHash should only be used when the transaction hash is known and the transaction will not change
+// SetTxHash should only be used when the transaction hash is known and the transaction will not change,
 // this can be used to optimize processes that depend on the txid and avoid recalculating it
 func (tx *Tx) SetTxHash(hash *chainhash.Hash) {
 	tx.txHash.Store(hash)
 }
 
+// TxIDChainHash returns the transaction ID as a chainhash.Hash.
 func (tx *Tx) TxIDChainHash() *chainhash.Hash {
 	txHash := tx.txHash.Load()
 	if txHash != nil {
@@ -382,7 +388,7 @@ func (tx *Tx) BytesWithClearedInputs(index int, lockingScript []byte) []byte {
 
 // CloneTx returns a clone of the tx by bytes
 func (tx *Tx) CloneTx() *Tx {
-	// Ignore err as byte slice passed in is created from valid tx
+	// Ignore erring as byte slice passed in is created from valid tx
 	clone, err := NewTxFromBytes(tx.Bytes())
 	if err != nil {
 		log.Fatal(err)
@@ -402,7 +408,7 @@ func (tx *Tx) CloneTx() *Tx {
 // Clone returns a clone of the tx
 func (tx *Tx) Clone() *Tx {
 	// Creating a new Tx from scratch is much faster than cloning from bytes
-	// ~ 420ns/op vs 2200ns/op of the above function in benchmarking
+	// ~ 420ns/op vs. 2200ns/op of the above function in benchmarking
 	// this matters as we clone txs a couple of times when verifying signatures
 	clone := &Tx{
 		Version:  tx.Version,
@@ -442,7 +448,7 @@ func (tx *Tx) Clone() *Tx {
 // that are mutated in the signing process.
 func (tx *Tx) ShallowClone() *Tx {
 	// Creating a new Tx from scratch is much faster than cloning from bytes
-	// ~ 420ns/op vs 2200ns/op of the above function in benchmarking
+	// ~ 420ns/op vs. 2200ns/op of the above function in benchmarking
 	// this matters as we clone txs a couple of times when verifying signatures
 	clone := &Tx{
 		Version:  tx.Version,
@@ -479,9 +485,9 @@ func (tx *Tx) ShallowClone() *Tx {
 	return clone
 }
 
-// NodeJSON returns a wrapped *bt.Tx for marshalling/unmarshalling into a node tx format.
+// NodeJSON returns a wrapped *bt.Tx for marshaling/unmarshalling into a node tx format.
 //
-// Marshalling usage example:
+// Marshaling usage example:
 //
 //	bb, err := json.Marshal(tx.NodeJSON())
 //
@@ -507,6 +513,7 @@ func (tt *Txs) NodeJSON() interface{} {
 	return (*nodeTxsWrapper)(tt)
 }
 
+// toBytesHelper encodes the transaction into a byte array.
 func (tx *Tx) toBytesHelper(index int, lockingScript []byte, extended bool) []byte {
 	h := make([]byte, 0, 1024)
 	// this is faster than using LittleEndianBytes, since we do not malloc a new byte slice
@@ -550,12 +557,12 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte, extended bool) []by
 }
 
 // TxSize contains the size breakdown of a transaction
-// including the breakdown of data bytes vs standard bytes.
+// including the breakdown of data bytes vs. standard bytes.
 // This information can be used when calculating fees.
 type TxSize struct {
-	// TotalBytes are the amount of bytes for the entire tx.
+	// TotalBytes are the number of bytes for the entire tx.
 	TotalBytes uint64
-	// TotalStdBytes are the amount of bytes for the tx minus the data bytes.
+	// TotalStdBytes are the number of bytes for the tx minus the data bytes.
 	TotalStdBytes uint64
 	// TotalDataBytes is the size in bytes of the op_return / data outputs.
 	TotalDataBytes uint64
@@ -610,6 +617,7 @@ func (tx *Tx) EstimateSizeWithTypes() (*TxSize, error) {
 	return tempTx.SizeWithTypes(), nil
 }
 
+// estimatedFinalTx will return a clone of the tx with all inputs
 func (tx *Tx) estimatedFinalTx() (*Tx, error) {
 	tempTx := tx.Clone()
 
@@ -617,7 +625,7 @@ func (tx *Tx) estimatedFinalTx() (*Tx, error) {
 		if in.PreviousTxScript == nil {
 			return nil, fmt.Errorf("%w at index %d in order to calc expected UnlockingScript", ErrEmptyPreviousTxScript, i)
 		}
-		if !(in.PreviousTxScript.IsP2PKH() || in.PreviousTxScript.IsP2PKHInscription()) {
+		if !in.PreviousTxScript.IsP2PKH() && !in.PreviousTxScript.IsP2PKHInscription() {
 			return nil, ErrUnsupportedScript
 		}
 		if in.UnlockingScript == nil || len(*in.UnlockingScript) == 0 {
@@ -633,9 +641,9 @@ func (tx *Tx) estimatedFinalTx() (*Tx, error) {
 // a breakdown of the fees including the total and the size breakdown of
 // the tx in bytes.
 type TxFees struct {
-	// TotalFeePaid is the total amount of fees this tx will pay.
+	// TotalFeePaid is the total number of fees this tx will pay.
 	TotalFeePaid uint64
-	// StdFeePaid is the amount of fee to cover the standard inputs and outputs etc.
+	// StdFeePaid is the amount of fee to cover the standard inputs and outputs, etc.
 	StdFeePaid uint64
 	// DataFeePaid is the amount of fee to cover the op_return data outputs.
 	DataFeePaid uint64
@@ -683,7 +691,7 @@ func (tx *Tx) EstimateIsFeePaidEnough(fees *FeeQuote) (bool, error) {
 	return actualFeePaid >= expFeesPaid.TotalFeePaid, nil
 }
 
-// EstimateFeesPaid will estimate how big the tx will be when finalised
+// EstimateFeesPaid will estimate how big the tx will be when finalized
 // by estimating input unlocking scripts that have not yet been filled
 // including the individual fee types (std/data/etc.).
 func (tx *Tx) EstimateFeesPaid(fees *FeeQuote) (*TxFees, error) {
@@ -694,6 +702,7 @@ func (tx *Tx) EstimateFeesPaid(fees *FeeQuote) (*TxFees, error) {
 	return tx.feesPaid(size, fees)
 }
 
+// feesPaid will calculate the fees that this transaction is paying
 func (tx *Tx) feesPaid(size *TxSize, fees *FeeQuote) (*TxFees, error) {
 	// get fees
 	stdFee, err := fees.Fee(FeeTypeStandard)
@@ -714,6 +723,7 @@ func (tx *Tx) feesPaid(size *TxSize, fees *FeeQuote) (*TxFees, error) {
 
 }
 
+// estimateDeficit estimates the deficit of the transaction
 func (tx *Tx) estimateDeficit(fees *FeeQuote) (uint64, error) {
 	totalInputSatoshis := tx.TotalInputSatoshis()
 	totalOutputSatoshis := tx.TotalOutputSatoshis()

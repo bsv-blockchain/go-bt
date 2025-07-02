@@ -88,10 +88,10 @@ func (n *nodeUTXOWrapper) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	n.UTXO.Satoshis = uint64(uj.Amount * 100000000)
-	n.UTXO.Vout = uj.Vout
-	n.UTXO.LockingScript = lscript
-	n.UTXO.TxIDHash = txID
+	n.Satoshis = uint64(uj.Amount * 100000000)
+	n.Vout = uj.Vout
+	n.LockingScript = lscript
+	n.TxIDHash = txID
 
 	return nil
 }

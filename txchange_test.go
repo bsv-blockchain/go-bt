@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	. "github.com/libsv/go-bk/wif"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
+	wifpkg "github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -105,8 +105,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", fq)
 		require.NoError(t, err)
 
-		var wif *WIF
-		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *wifpkg.WIF
+		wif, err = wifpkg.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		require.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -131,8 +131,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", fq)
 		require.NoError(t, err)
 
-		var wif *WIF
-		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *wifpkg.WIF
+		wif, err = wifpkg.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		require.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -173,8 +173,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("1D7gaZJo3vPn2Ks3PH694W9P8UVYLNh2jY", fq)
 		require.NoError(t, err)
 
-		var wif *WIF
-		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *wifpkg.WIF
+		wif, err = wifpkg.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		require.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -210,8 +210,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", fq)
 		require.NoError(t, err)
 
-		var wif *WIF
-		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *wifpkg.WIF
+		wif, err = wifpkg.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		require.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -243,8 +243,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", fq)
 		require.NoError(t, err)
 
-		var wif *WIF
-		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *wifpkg.WIF
+		wif, err = wifpkg.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		require.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -277,8 +277,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", fq)
 		require.NoError(t, err)
 
-		var wif *WIF
-		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *wifpkg.WIF
+		wif, err = wifpkg.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		require.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -314,8 +314,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("1BxGFoRPSFgYxoAStEncL6HuELqPkV3JVj", fq)
 		require.NoError(t, err)
 
-		var wif *WIF
-		wif, err = DecodeWIF("5JXAjNX7cbiWvmkdnj1EnTKPChauttKAJibXLm8tqWtDhXrRbKz")
+		var wif *wifpkg.WIF
+		wif, err = wifpkg.DecodeWIF("5JXAjNX7cbiWvmkdnj1EnTKPChauttKAJibXLm8tqWtDhXrRbKz")
 		require.NoError(t, err)
 		assert.NotNil(t, wif)
 

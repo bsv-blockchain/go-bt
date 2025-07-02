@@ -48,6 +48,7 @@ func (i *Input) ReadFromExtended(r io.Reader) (int64, error) {
 	return i.readFrom(r, true)
 }
 
+// readFrom is a helper function that reads from the `io.Reader` into the `bt.Input`.
 func (i *Input) readFrom(r io.Reader, extended bool) (int64, error) {
 	*i = Input{}
 	var bytesRead int64
@@ -129,7 +130,7 @@ func (i *Input) readFrom(r io.Reader, extended bool) (int64, error) {
 	return bytesRead, nil
 }
 
-// PreviousTxIDAdd will add the supplied txID bytes to the Input,
+// PreviousTxIDAdd will add the supplied txID bytes to the Input
 // if it isn't a valid transaction id an ErrInvalidTxID error will be returned.
 func (i *Input) PreviousTxIDAdd(txIDHash *chainhash.Hash) error {
 	if !IsValidTxID(txIDHash) {
@@ -159,6 +160,7 @@ func (i *Input) PreviousTxIDStr() string {
 	return i.previousTxIDHash.String()
 }
 
+// PreviousTxIDChainHash returns the PreviousTxID as a chainhash.Hash.
 func (i *Input) PreviousTxIDChainHash() *chainhash.Hash {
 	return i.previousTxIDHash
 }
@@ -194,7 +196,7 @@ func (i *Input) Bytes(clearLockingScript bool, intoBytes ...[]byte) []byte {
 		h = append(h, i.previousTxIDHash.CloneBytes()...)
 	}
 
-	// this is optimised to avoid the memory allocation of LittleEndianBytes
+	// this is optimized to avoid the memory allocation of LittleEndianBytes
 	h = append(h, []byte{
 		byte(i.PreviousTxOutIndex),
 		byte(i.PreviousTxOutIndex >> 8),
@@ -213,7 +215,7 @@ func (i *Input) Bytes(clearLockingScript bool, intoBytes ...[]byte) []byte {
 		}
 	}
 
-	// this is optimised to avoid the memory allocation of LittleEndianBytes
+	// this is optimized to avoid the memory allocation of LittleEndianBytes
 	return append(h, []byte{
 		byte(i.SequenceNumber),
 		byte(i.SequenceNumber >> 8),

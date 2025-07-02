@@ -213,7 +213,7 @@ func TestMarshalling(t *testing.T) {
 
 	b, err := json.Marshal(myData)
 	require.NoError(t, err)
-	assert.Equal(t, `{"hash":"24988b93623304735e42a71f5c1e161b9ee2b9c52a3be8260ea3b05fba4df22c"}`, string(b))
+	assert.JSONEq(t, `{"hash":"24988b93623304735e42a71f5c1e161b9ee2b9c52a3be8260ea3b05fba4df22c"}`, string(b))
 
 	var myData2 test
 	err = json.Unmarshal(b, &myData2)
@@ -237,7 +237,7 @@ func TestHashMarshal(t *testing.T) {
 		},
 		{
 			name:    "valid hash",
-			hash:    (*Hash)(&h),
+			hash:    &h,
 			want:    h[:],
 			wantErr: false,
 		},
@@ -251,7 +251,7 @@ func TestHashMarshal(t *testing.T) {
 				return
 			}
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -275,7 +275,7 @@ func TestHashMarshalTo(t *testing.T) {
 		},
 		{
 			name:    "valid hash",
-			hash:    (*Hash)(&h),
+			hash:    &h,
 			data:    make([]byte, HashSize),
 			want:    HashSize,
 			wantErr: false,
@@ -290,8 +290,8 @@ func TestHashMarshalTo(t *testing.T) {
 				return
 			}
 
-			assert.NoError(t, err)
-			assert.Equal(t, tt.want, len(bytes))
+			require.NoError(t, err)
+			assert.Len(t, bytes, tt.want)
 
 			if tt.hash != nil {
 				assert.Equal(t, tt.hash[:], bytes)
@@ -329,7 +329,7 @@ func TestHashUnmarshal(t *testing.T) {
 				return
 			}
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, bytes.Equal(tt.data, hash[:]))
 		})
 	}
@@ -349,7 +349,7 @@ func TestHashSize(t *testing.T) {
 		},
 		{
 			name: "valid hash",
-			hash: (*Hash)(&h),
+			hash: &h,
 			want: HashSize,
 		},
 	}
@@ -365,20 +365,20 @@ func TestHashSize(t *testing.T) {
 func TestHashProtobufSerialization(t *testing.T) {
 	// Create an original hash
 	original := DoubleHashH([]byte("test data"))
-	h := (*Hash)(&original)
+	h := &original
 
 	// Marshal to protobuf format
 	data, err := h.Marshal()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, data)
-	assert.Equal(t, HashSize, len(data))
+	assert.Len(t, data, HashSize)
 
 	// Create a new hash and unmarshal the data
 	unmarshaled := new(Hash)
 	err = unmarshaled.Unmarshal(data)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	// Verify the unmarshaled hash matches the original
+	// Verify the unmarshalled hash matches the original
 	assert.Equal(t, h[:], unmarshaled[:])
 	assert.Equal(t, original[:], unmarshaled[:])
 }

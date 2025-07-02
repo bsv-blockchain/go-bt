@@ -7,13 +7,13 @@ import (
 	"hash"
 	"math/big"
 
-	"github.com/libsv/go-bk/bec"
-	"github.com/libsv/go-bk/crypto"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/errs"
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/scriptflag"
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
+	"github.com/libsv/go-bk/bec"
+	"github.com/libsv/go-bk/crypto"
 	"golang.org/x/crypto/ripemd160"
 )
 
@@ -606,8 +606,7 @@ func opcodeReturn(op *ParsedOpcode, t *thread) error {
 func verifyLockTime(txLockTime, threshold, lockTime int64) error {
 	// The lockTimes in both the script and transaction must be of the same
 	// type.
-	if !((txLockTime < threshold && lockTime < threshold) ||
-		(txLockTime >= threshold && lockTime >= threshold)) {
+	if (txLockTime < threshold || lockTime < threshold) && (txLockTime >= threshold || lockTime >= threshold) {
 		return errs.NewError(errs.ErrUnsatisfiedLockTime,
 			"mismatched locktime types -- tx locktime %d, stack locktime %d", txLockTime, lockTime)
 	}

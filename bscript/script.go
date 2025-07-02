@@ -240,7 +240,7 @@ func (s *Script) ToASM() (string, error) {
 	parts, err := DecodeParts(*s)
 	// if err != nil, we will append [error] to the ASM script below (as done in the node).
 
-	data := false
+	var data bool
 	if len(*s) > 1 && ((*s)[0] == OpRETURN || ((*s)[0] == OpFALSE && (*s)[1] == OpRETURN)) {
 		data = true
 	}

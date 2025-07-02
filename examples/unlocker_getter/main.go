@@ -1,16 +1,17 @@
+// Package main demonstrates how to implement a custom `bt.UnlockerGetter`
 package main
 
 import (
 	"context"
 
-	"github.com/libsv/go-bk/wif"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
+	"github.com/libsv/go-bk/wif"
 )
 
-// This example gives a simple in-memory based example of how to implement and use a `bt.UnlockerGetter`
-// using derivated public/private keys.
+// This example gives a simple in-memory-based example of how to implement and use a `bt.UnlockerGetter`
+// using derivative public/private keys.
 //
 // The basic idea is, we have accounts, each with a master private key. If someone would like to send money
 // to an account, they request "destinations" from the account. These destinations are added to the
@@ -26,7 +27,7 @@ import (
 // their `PreviousTxScript` to the `bt.UnlockerGetter` provided to the `bt.FillAllInputs` call.
 // This allows an account when receiving a locking script to refer to its own script=>derivation mapping,
 // and ultimately derive the private key used to create the public key that used to create the locking script.
-// Finally allowing for an `unlocker.Simple` to be returned, with this derived private key.
+// Finally, allowing for an `unlocker.Simple` to be returned, with this derived private key.
 func main() {
 	// Create two accounts. The first is our account, which we will pretend to fund to begin with.
 	// The second is the merchant, which we will pretend to send money to.
@@ -44,7 +45,7 @@ func main() {
 		panic(err)
 	}
 
-	// decocdedWif just for signing the base tx. It isn't relevant to myAccount or merchantAccount,
+	// decoded Wif just for signing the base tx. It isn't relevant to myAccount or merchantAccount,
 	// and can be ignored.
 	decodedWif, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 	if err != nil {
@@ -82,7 +83,7 @@ func main() {
 	// and that we are starting anew, only this time it's the account who is building and
 	// broadcasting a transaction to elsewhere.
 
-	// Create the tx which we are going to send to the merchant.
+	// Create the tx, which we are going to send to the merchant.
 	tx := bt.NewTx()
 	// Add the three UTXOs from the baseTx for funding.
 	for i := 0; i < 3; i++ {
