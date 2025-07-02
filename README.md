@@ -2,9 +2,9 @@
 
 > The go-to Bitcoin Transaction (BT) GoLang library  
 
-[![Release](https://img.shields.io/github/release-pre/libsv/go-bt.svg?logo=github&style=flat&v=1)](https://github.com/libsv/go-bt/releases)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/libsv/go-bt/run-tests.yml?logo=github&v=3)](https://github.com/libsv/go-bt/actions)
-[![Report](https://goreportcard.com/badge/github.com/libsv/go-bt?style=flat&v=1)](https://goreportcard.com/report/github.com/libsv/go-bt)
+[![Release](https://img.shields.io/github/release-pre/libsv/go-bt.svg?logo=github&style=flat&v=1)](https://github.com/bsv-blockchain/go-bt/releases)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/libsv/go-bt/run-tests.yml?logo=github&v=3)](https://github.com/bsv-blockchain/go-bt/actions)
+[![Report](https://goreportcard.com/badge/github.com/bsv-blockchain/go-bt?style=flat&v=1)](https://goreportcard.com/report/github.com/bsv-blockchain/go-bt)
 [![codecov](https://codecov.io/gh/libsv/go-bt/branch/master/graph/badge.svg?v=1)](https://codecov.io/gh/libsv/go-bt)
 [![Go](https://img.shields.io/github/go-mod/go-version/libsv/go-bt?v=1)](https://golang.org/)
 [![Sponsor](https://img.shields.io/badge/sponsor-libsv-181717.svg?logo=github&style=flat&v=3)](https://github.com/sponsors/libsv)
@@ -34,16 +34,16 @@
 **go-bt** requires a [supported release of Go](https://golang.org/doc/devel/release.html#policy).
 
 ```shell script
-go get -u github.com/libsv/go-bt/v2
+go get -u github.com/bsv-blockchain/go-bt/v2
 ```
 
 <br/>
 
 ## Documentation
 
-View the generated [documentation](https://pkg.go.dev/github.com/libsv/go-bt)
+View the generated [documentation](https://pkg.go.dev/github.com/bsv-blockchain/go-bt)
 
-[![GoDoc](https://godoc.org/github.com/libsv/go-bt?status.svg&style=flat)](https://pkg.go.dev/github.com/libsv/go-bt)
+[![GoDoc](https://godoc.org/github.com/bsv-blockchain/go-bt?status.svg&style=flat)](https://pkg.go.dev/github.com/bsv-blockchain/go-bt)
 
 For more information around the technical aspects of Bitcoin, please see the updated [Bitcoin Wiki](https://wiki.bitcoinsv.io/index.php/Main_Page)
 
@@ -123,7 +123,7 @@ vet                  Run the Go vet application
 
 ## Examples & Tests
 
-All unit tests and [examples](examples) run via [Github Actions](https://github.com/libsv/go-bt/actions) and
+All unit tests and [examples](examples) run via [Github Actions](https://github.com/bsv-blockchain/go-bt/actions) and
 uses [Go version 1.16.x](https://golang.org/doc/go1.16). View the [configuration file](.github/workflows/run-tests.yml).
 
 Run all tests (including integration tests)
@@ -173,7 +173,7 @@ The most basic way to show your support is to star :star2: the project, or to ra
 You can also support this project by [becoming a sponsor on GitHub](https://github.com/sponsors/libsv) :clap:
 or by making a [**bitcoin donation**](https://gobitcoinsv.com/#sponsor) to ensure this journey continues indefinitely! :rocket:
 
-[![Stars](https://img.shields.io/github/stars/libsv/go-bt?label=Please%20like%20us&style=social)](https://github.com/libsv/go-bt/stargazers)
+[![Stars](https://img.shields.io/github/stars/libsv/go-bt?label=Please%20like%20us&style=social)](https://github.com/bsv-blockchain/go-bt/stargazers)
 
 <br/>
 

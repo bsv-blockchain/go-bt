@@ -1,7 +1,7 @@
 package bt
 
 import (
-	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/bsv-blockchain/go-bt/v2/bscript"
 )
 
 const (

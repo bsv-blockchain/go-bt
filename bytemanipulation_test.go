@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/libsv/go-bk/crypto"
-	"github.com/libsv/go-bt/v2"
+	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

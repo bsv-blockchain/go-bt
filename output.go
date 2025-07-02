@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/pkg/errors"
 )
 
