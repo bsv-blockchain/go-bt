@@ -4,11 +4,11 @@ import (
 	"math/big"
 
 	"github.com/libsv/go-bk/bec"
-	"github.com/libsv/go-bt/v2"
-	"github.com/libsv/go-bt/v2/bscript"
-	"github.com/libsv/go-bt/v2/bscript/interpreter/errs"
-	"github.com/libsv/go-bt/v2/bscript/interpreter/scriptflag"
-	"github.com/libsv/go-bt/v2/sighash"
+	"github.com/bsv-blockchain/go-bt/v2"
+	"github.com/bsv-blockchain/go-bt/v2/bscript"
+	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/errs"
+	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/scriptflag"
+	"github.com/bsv-blockchain/go-bt/v2/sighash"
 )
 
 // halfOrder is used to tame ECDSA malleability (see BIP0062).

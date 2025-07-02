@@ -8,9 +8,9 @@ import (
 
 	"github.com/libsv/go-bk/bip32"
 	"github.com/libsv/go-bk/chaincfg"
-	"github.com/libsv/go-bt/v2"
-	"github.com/libsv/go-bt/v2/bscript"
-	"github.com/libsv/go-bt/v2/unlocker"
+	"github.com/bsv-blockchain/go-bt/v2"
+	"github.com/bsv-blockchain/go-bt/v2/bscript"
+	"github.com/bsv-blockchain/go-bt/v2/unlocker"
 )
 
 // account for creating destination scripts and stores these scripts with their derivations.

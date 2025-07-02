@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/libsv/go-bk/wif"
-	"github.com/libsv/go-bt/v2"
-	"github.com/libsv/go-bt/v2/unlocker"
+	"github.com/bsv-blockchain/go-bt/v2"
+	"github.com/bsv-blockchain/go-bt/v2/unlocker"
 )
 
 func main() {

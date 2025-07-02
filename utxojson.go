@@ -3,8 +3,8 @@ package bt
 import (
 	"encoding/json"
 
-	"github.com/libsv/go-bt/v2/bscript"
-	"github.com/libsv/go-bt/v2/chainhash"
+	"github.com/bsv-blockchain/go-bt/v2/bscript"
+	"github.com/bsv-blockchain/go-bt/v2/chainhash"
 )
 
 type nodeUTXOWrapper struct {

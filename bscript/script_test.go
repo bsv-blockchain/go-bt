@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/bsv-blockchain/go-bt/v2/bscript"
 )
 
 func TestNewP2PKHFromPubKeyStr(t *testing.T) {

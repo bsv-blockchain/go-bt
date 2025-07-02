@@ -5,9 +5,9 @@
 * **Do not open up a GitHub issue if the bug is a security vulnerability
   in go-bt**, and instead to refer to our [security policy](https://github.com/libsv/libsv/blob/master/SECURITY.md).
 
-* **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/libsv/go-bt/issues).
+* **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/bsv-blockchain/go-bt/issues).
 
-* If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/libsv/go-bt/issues/new/choose). Be sure to to follow our issues template as much as possible.
+* If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/bsv-blockchain/go-bt/issues/new/choose). Be sure to to follow our issues template as much as possible.
 
 #### **Did you write a patch that fixes a bug?**
 
