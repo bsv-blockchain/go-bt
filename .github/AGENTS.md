@@ -18,7 +18,7 @@ Additional `AGENTS.md` files **may exist in subdirectories** to provide more con
 
 ## 🔍 Project Overview
 
-**go-safe-conversion** is a Go library that converts between numeric types while checking for range violations and overflow. It offers easy-to-use helpers that return clear errors when a conversion would lose data or produce invalid results.
+**go-bt** is a Go package for Bitcoin Transactions, providing utilities for creating, parsing, and manipulating Bitcoin transactions in a type-safe manner.
 
 <br/>
 
@@ -33,6 +33,12 @@ Additional `AGENTS.md` files **may exist in subdirectories** to provide more con
 | `.devcontainer/` | VS Code dev container configuration for consistent local development environments |
 | `.vscode/`       | VS Code settings and extensions for development                                   |
 | `.make/`         | Shared Makefile targets used by `Makefile`                                        |
+| `bscript/`       | Package for Bitcoin Script operations, including parsing and execution            |
+| `chainhash/`     | Package for Bitcoin chain hash operations, including block and transaction hashes |
+| `ord/`           | Package for Ordinals protocol operations, including parsing and handling ordinals |
+| `sighash/`       | Package for Bitcoin signature hash operations, including transaction signing      |
+| `testing/`       | Package for testing utilities, including mocks and test helpers                   |
+| `unlocker/`      | Package for Bitcoin transaction unlocking                                         |
 | `examples/`      | Example program demonstrating package usage                                       |
 | `.` (root)       | Source files and tests for the `go-wire` package                                  |
 
@@ -734,8 +740,7 @@ This section tracks notable updates to `AGENTS.md`, including the date, author, 
 All contributors are expected to append entries here when making meaningful changes to agent behavior, conventions, or policies.
 
 
-| Date       | Author   | Summary of Changes                                           |
-|------------|----------|--------------------------------------------------------------|
-| 2025-06-30 | @mrz1836 | Added pre-commit hook guidelines and config reference        |
-| 2025-06-27 | @mrz1836 | Adapted to fix this project go-safe-conversion                      |
+| Date       | Author   | Summary of Changes                |
+|------------|----------|-----------------------------------|
+| 2025-07-02 | @mrz1836 | Adapted to fix this project go-bt |
 > For minor edits (typos, formatting), this log update is optional. For all behavioral or structural changes, log entries are **required**.

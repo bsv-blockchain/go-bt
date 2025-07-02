@@ -1,30 +1,63 @@
-## How to contribute to go-bt
+# 🤝 Contributing Guide
 
-#### **Did you find a bug?**
+Thanks for taking the time to contribute! This project thrives on clear, well-tested, idiomatic Go code. Here's how you can help:
 
-* **Do not open up a GitHub issue if the bug is a security vulnerability
-  in go-bt**, and instead to refer to our [security policy](https://github.com/libsv/libsv/blob/master/SECURITY.md).
+<br/>
 
-* **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/bsv-blockchain/go-bt/issues).
+## 📦 How to Contribute
 
-* If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/bsv-blockchain/go-bt/issues/new/choose). Be sure to to follow our issues template as much as possible.
+1. Fork the repo.
+2. Create a new branch.
+3. Install the pre-commit hooks:
+   ```bash
+   pip install pre-commit
+   pre-commit install
+   ```
+4. Commit *one feature per commit*.
+5. Write tests.
+6. Open a pull request with a clear list of changes.
 
-#### **Did you write a patch that fixes a bug?**
+More info on [pull requests](http://help.github.com/pull-requests/).
 
-* Open a new GitHub pull request with the patch.
+<br/>
 
-* Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.
+## 🧪 Testing
 
-* Before submitting, please make sure you continue reading this guide to know more about coding conventions and benchmarks.
+All tests follow standard Go patterns. We love:
 
-#### **Do you have questions about the source code?**
+* ✅ [Go Tests](https://golang.org/pkg/testing/)
+* 📘 [Go Examples](https://golang.org/pkg/testing/#hdr-Examples)
+* ⚡ [Go Benchmarks](https://golang.org/pkg/testing/#hdr-Benchmarks)
 
-* Ask any question about how to use LiBSV/go-bt on [stackoverflow](https://stackoverflow.com) using the `libsv` or `go-bt` tag. We try to be as responsive as possible.
+Tests should be:
 
-LiBSV/go-bt is a volunteer effort. We encourage you to pitch in and interact with the project!
+* Easy to understand
+* Focused on one behavior
+* Fast
 
-Thanks! :heart:
+Use `require` over `assert` where possible (we lint for this).
 
-Libsv Team
+This project aims for >= **90% code coverage**. Every code path must be tested to
+keep the Codecov badge green and CI passing.
 
-Inspired from [Ruby on Rails CONTRIBUTING.MD](https://github.com/rails/rails/blob/master/CONTRIBUTING.md)
+<br/>
+
+## 🧹 Coding Conventions
+
+We follow [Effective Go](https://golang.org/doc/effective_go.html), plus:
+
+* 📖 [godoc](https://godoc.org/golang.org/x/tools/cmd/godoc)
+* 🧼 [golangci-lint](https://golangci-lint.run/)
+* 🧾 [Go Report Card](https://goreportcard.com/)
+
+Format your code with `gofmt`, lint with `golangci-lint`, and keep your diffs minimal.
+
+<br/>
+
+## 📚 More Guidance
+
+For detailed workflows, commit standards, branch naming, PR templates, and more—read [AGENTS.md](./AGENTS.md). It’s the rulebook.
+
+<br/>
+
+Let’s build something great. 💪

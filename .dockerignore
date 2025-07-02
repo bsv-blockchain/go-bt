@@ -60,7 +60,7 @@ todo.md
 # Temporary directories in the project
 bin
 tmp
-.golangci.yml
+.golangci-bak.yml
 .golangci.json
 .goreleaser.yml
 .editorconfig

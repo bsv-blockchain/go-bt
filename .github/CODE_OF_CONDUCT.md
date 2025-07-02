@@ -1,76 +1,99 @@
-# Contributor Covenant Code of Conduct
+# 🏗️ How We Build Together
 
-## Our Pledge
+Welcome to our humble Go library. We value good ideas, clear communication, and contributions from people who care about great code. This document sets the tone for how we collaborate.
 
-In the interest of fostering an open and welcoming environment, we as
-contributors and maintainers pledge to making participation in our project and
-our community a harassment-free experience for everyone, regardless of age, body
-size, disability, ethnicity, sex characteristics, gender identity and expression,
-level of experience, education, socio-economic status, nationality, personal
-appearance, race, religion, or sexual identity and orientation.
+<br/>
 
-## Our Standards
+---
 
-Examples of behavior that contributes to creating a positive environment
-include:
+<br/>
 
-* Using welcoming and inclusive language
-* Being respectful of differing viewpoints and experiences
-* Gracefully accepting constructive criticism
-* Focusing on what is best for the community
-* Showing empathy towards other community members
+### 🧠 Final Decisions
 
-Examples of unacceptable behavior by participants include:
+Project maintainers make the final call. They can revisit and revise past decisions. It keeps things moving.
 
-* The use of sexualized language or imagery and unwelcome sexual attention or
- advances
-* Trolling, insulting/derogatory comments, and personal or political attacks
-* Public or private harassment
-* Publishing others' private information, such as a physical or electronic
- address, without explicit permission
-* Other conduct which could reasonably be considered inappropriate in a
- professional setting
+<br/>
 
-## Our Responsibilities
+### 🧰 Contributions Welcome
 
-Project maintainers are responsible for clarifying the standards of acceptable
-behavior and are expected to take appropriate and fair corrective action in
-response to any instances of unacceptable behavior.
+Pitch in! Collaboration is a team sport. Don't leave others carrying your weight forever.
 
-Project maintainers have the right and responsibility to remove, edit, or
-reject comments, commits, code, wiki edits, issues, and other contributions
-that are not aligned to this Code of Conduct, or to ban temporarily or
-permanently any contributor for other behaviors that they deem inappropriate,
-threatening, offensive, or harmful.
+<br/>
 
-## Scope
+### 🎯 Choose Your Adventure
 
-This Code of Conduct applies both within project spaces and in public spaces
-when an individual is representing the project or its community. Examples of
-representing a project or community include using an official project e-mail
-address, posting via an official social media account, or acting as an appointed
-representative at an online or offline event. Representation of a project may be
-further defined and clarified by project maintainers.
+Everyone can tackle whatever challenge they feel ready for. Grab an issue and go!
 
-## Enforcement
+<br/>
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project team at libsv.bitcoin@gmail.com. All
-complaints will be reviewed and investigated and will result in a response that
-is deemed necessary and appropriate to the circumstances. The project team is
-obligated to maintain confidentiality with regard to the reporter of an incident.
-Further details of specific enforcement policies may be posted separately.
+### 🏗️ Earned Roles
 
-Project maintainers who do not follow or enforce the Code of Conduct in good
-faith may face temporary or permanent repercussions as determined by other
-members of the project's leadership.
+Project influence is earned through consistent, quality contributions. Titles mean less than impact.
 
-## Attribution
+<br/>
 
-This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 1.4,
-available at https://www.contributor-covenant.org/version/1/4/code-of-conduct.html
+### 🧪 Better > Worse
 
-[homepage]: https://www.contributor-covenant.org
+Good code replaces not-so-good code. Technical merit always wins.
 
-For answers to common questions about this code of conduct, see
-https://www.contributor-covenant.org/faq
+<br/>
+
+### 🔒 Keep It On Topic
+
+This is a space for building software. Let's stay focused.
+
+<br/>
+
+### ⚖️ Take It Elsewhere
+
+If something’s not about the project, take it to another channel. Let's not derail progress.
+
+<br/>
+
+### 🫶 We See People, Not Labels
+
+Your identity—race, gender, beliefs, background—is irrelevant here. Code speaks louder.
+
+<br/>
+
+### 💬 Debate Ideas, Not People
+
+Challenge code. Not humans. No exceptions.
+
+<br/>
+
+### 🔍 Be Clear
+
+If your idea isn't clear, expect questions. If it stays unclear, expect crickets. Help us help you.
+
+<br/>
+
+### 🚫 Illegal is Illegal
+
+Anything illegal outside the project is illegal here too. Keep it clean.
+
+<br/>
+
+### 📦 Project-Only Focus
+
+This code of merit only applies to what happens *in* the project.
+
+<br/>
+
+### ✅ Participation = Agreement
+
+By contributing, you're saying, "Yep, I'm in."
+
+<br/>
+
+### 🎯 Stick to the Mission
+
+Trying to shift this project away from its purpose? That's not cool and won't be allowed.
+
+<br/>
+
+---
+
+<br/>
+
+Thanks for keeping things fun, focused, and respectful. Let's build something awesome together!
