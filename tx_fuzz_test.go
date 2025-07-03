@@ -17,7 +17,10 @@ func FuzzNewTxFromBytes(f *testing.F) {
 	// Seed corpus with a known valid transaction to exercise the successful
 	// parsing path. This transaction is taken from the unit tests.
 	seedHex := "02000000011ccba787d421b98904da3329b2c7336f368b62e89bc896019b5eadaa28145b9c0000000049483045022100c4df63202a9aa2bea5c24ebf4418d145e81712072ef744a4b108174f1ef59218022006eb54cf904707b51625f521f8ed2226f7d34b62492ebe4ddcb1c639caf16c3c41ffffffff0140420f00000000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac00000000"
-	seedBytes, _ := hex.DecodeString(seedHex)
+	seedBytes, err := hex.DecodeString(seedHex)
+	if err != nil {
+		panic("failed to decode seedHex: " + err.Error())
+	}
 	f.Add(seedBytes)
 	f.Add([]byte{0x00}) // minimal invalid input
 
