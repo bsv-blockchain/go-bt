@@ -4,11 +4,9 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter"
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/debug"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDebugger_BeforeExecute(t *testing.T) {
@@ -42,29 +40,17 @@ func TestDebugger_BeforeExecute(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
-
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
 			var timesCalled int
 			debugger := debug.NewDebugger()
 			debugger.AttachBeforeExecute(func(state *interpreter.State) {
 				timesCalled++
-				stack := make([]string, len(state.DataStack))
-				for i, d := range state.DataStack {
-					stack[i] = hex.EncodeToString(d)
-				}
-				assert.Equal(t, test.expStack, stack)
+				assert.Equal(t, test.expStack, snapshot(state))
 				assert.Equal(t, test.expOpcode, state.Opcode().Name())
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			assert.Equal(t, 1, timesCalled)
 		})
@@ -73,12 +59,6 @@ func TestDebugger_BeforeExecute(t *testing.T) {
 
 func TestDebugger_BeforeStep(t *testing.T) {
 	t.Parallel()
-
-	type stateHistory struct {
-		dstack  [][]string
-		astack  [][]string
-		opcodes []string
-	}
 
 	tests := map[string]struct {
 		lockingScriptHex   string
@@ -138,33 +118,16 @@ func TestDebugger_BeforeStep(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
-
-			history := &stateHistory{
-				dstack:  make([][]string, 0),
-				astack:  make([][]string, 0),
-				opcodes: make([]string, 0),
-			}
+			history := &stateHistory{}
 
 			debugger := debug.NewDebugger()
 			debugger.AttachBeforeStep(func(state *interpreter.State) {
-				stack := make([]string, len(state.DataStack))
-				for i, d := range state.DataStack {
-					stack[i] = hex.EncodeToString(d)
-				}
-				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.Opcode().Name())
+				recordState(history, state)
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			assert.Equal(t, test.expStackHistory, history.dstack)
 			assert.Equal(t, test.expOpcodes, history.opcodes)
@@ -174,12 +137,6 @@ func TestDebugger_BeforeStep(t *testing.T) {
 
 func TestDebugger_AfterStep(t *testing.T) {
 	t.Parallel()
-
-	type stateHistory struct {
-		dstack  [][]string
-		astack  [][]string
-		opcodes []string
-	}
 
 	tests := map[string]struct {
 		lockingScriptHex   string
@@ -238,33 +195,16 @@ func TestDebugger_AfterStep(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
-
-			history := &stateHistory{
-				dstack:  make([][]string, 0),
-				astack:  make([][]string, 0),
-				opcodes: make([]string, 0),
-			}
+			history := &stateHistory{}
 
 			debugger := debug.NewDebugger()
 			debugger.AttachAfterStep(func(state *interpreter.State) {
-				stack := make([]string, len(state.DataStack))
-				for i, d := range state.DataStack {
-					stack[i] = hex.EncodeToString(d)
-				}
-				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.Opcode().Name())
+				recordState(history, state)
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			assert.Equal(t, test.expStackHistory, history.dstack)
 			assert.Equal(t, test.expOpcodes, history.opcodes)
@@ -274,12 +214,6 @@ func TestDebugger_AfterStep(t *testing.T) {
 
 func TestDebugger_BeforeExecuteOpcode(t *testing.T) {
 	t.Parallel()
-
-	type stateHistory struct {
-		dstack  [][]string
-		astack  [][]string
-		opcodes []string
-	}
 
 	tests := map[string]struct {
 		lockingScriptHex   string
@@ -339,33 +273,16 @@ func TestDebugger_BeforeExecuteOpcode(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
-
-			history := &stateHistory{
-				dstack:  make([][]string, 0),
-				astack:  make([][]string, 0),
-				opcodes: make([]string, 0),
-			}
+			history := &stateHistory{}
 
 			debugger := debug.NewDebugger()
 			debugger.AttachBeforeExecuteOpcode(func(state *interpreter.State) {
-				stack := make([]string, len(state.DataStack))
-				for i, d := range state.DataStack {
-					stack[i] = hex.EncodeToString(d)
-				}
-				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.Opcode().Name())
+				recordState(history, state)
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			assert.Equal(t, test.expStackHistory, history.dstack)
 			assert.Equal(t, test.expOpcodes, history.opcodes)
@@ -375,12 +292,6 @@ func TestDebugger_BeforeExecuteOpcode(t *testing.T) {
 
 func TestDebugger_AfterExecuteOpcode(t *testing.T) {
 	t.Parallel()
-
-	type stateHistory struct {
-		dstack  [][]string
-		astack  [][]string
-		opcodes []string
-	}
 
 	tests := map[string]struct {
 		lockingScriptHex   string
@@ -439,33 +350,16 @@ func TestDebugger_AfterExecuteOpcode(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
-
-			history := &stateHistory{
-				dstack:  make([][]string, 0),
-				astack:  make([][]string, 0),
-				opcodes: make([]string, 0),
-			}
+			history := &stateHistory{}
 
 			debugger := debug.NewDebugger()
 			debugger.AttachAfterExecuteOpcode(func(state *interpreter.State) {
-				stack := make([]string, len(state.DataStack))
-				for i, d := range state.DataStack {
-					stack[i] = hex.EncodeToString(d)
-				}
-				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.Opcode().Name())
+				recordState(history, state)
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			assert.Equal(t, test.expStackHistory, history.dstack)
 			assert.Equal(t, test.expOpcodes, history.opcodes)
@@ -475,12 +369,6 @@ func TestDebugger_AfterExecuteOpcode(t *testing.T) {
 
 func TestDebugger_BeforeScriptChange(t *testing.T) {
 	t.Parallel()
-
-	type stateHistory struct {
-		dstack  [][]string
-		astack  [][]string
-		opcodes []string
-	}
 
 	tests := map[string]struct {
 		lockingScriptHex   string
@@ -522,11 +410,7 @@ func TestDebugger_BeforeScriptChange(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
-
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
 			history := &stateHistory{
 				dstack:  make([][]string, 0),
@@ -539,19 +423,10 @@ func TestDebugger_BeforeScriptChange(t *testing.T) {
 			var timesCalled int
 			debugger.AttachBeforeScriptChange(func(state *interpreter.State) {
 				timesCalled++
-				stack := make([]string, len(state.DataStack))
-				for i, d := range state.DataStack {
-					stack[i] = hex.EncodeToString(d)
-				}
-				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.Opcode().Name())
+				recordState(history, state)
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			assert.Equal(t, test.expStackHistory, history.dstack)
 			assert.Equal(t, test.expOpcodes, history.opcodes)
@@ -562,12 +437,6 @@ func TestDebugger_BeforeScriptChange(t *testing.T) {
 
 func TestDebugger_AfterScriptChange(t *testing.T) {
 	t.Parallel()
-
-	type stateHistory struct {
-		dstack  [][]string
-		astack  [][]string
-		opcodes []string
-	}
 
 	tests := map[string]struct {
 		lockingScriptHex   string
@@ -609,11 +478,7 @@ func TestDebugger_AfterScriptChange(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
-
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
 			history := &stateHistory{
 				dstack:  make([][]string, 0),
@@ -626,19 +491,10 @@ func TestDebugger_AfterScriptChange(t *testing.T) {
 			var timesCalled int
 			debugger.AttachAfterScriptChange(func(state *interpreter.State) {
 				timesCalled++
-				stack := make([]string, len(state.DataStack))
-				for i, d := range state.DataStack {
-					stack[i] = hex.EncodeToString(d)
-				}
-				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.Opcode().Name())
+				recordState(history, state)
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			assert.Equal(t, test.expStackHistory, history.dstack)
 			assert.Equal(t, test.expOpcodes, history.opcodes)
@@ -678,28 +534,18 @@ func TestDebugger_AfterExecution(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
-
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
 			stack := make([]string, 0)
 			var opcode string
 
 			debugger := debug.NewDebugger()
 			debugger.AttachAfterExecute(func(state *interpreter.State) {
-				for _, d := range state.DataStack {
-					stack = append(stack, hex.EncodeToString(d))
-				}
+				stack = append(stack, snapshot(state)...)
 				opcode = state.Opcode().Name()
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			assert.Equal(t, test.expStack, stack)
 			assert.Equal(t, test.expOpcode, opcode)
@@ -736,11 +582,7 @@ func TestDebugger_AfterError(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
-
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
 			stack := make([]string, 0)
 			var opcode string
@@ -749,17 +591,11 @@ func TestDebugger_AfterError(t *testing.T) {
 			debugger := debug.NewDebugger()
 			debugger.AttachAfterError(func(state *interpreter.State, _ error) {
 				called = true
-				for _, d := range state.DataStack {
-					stack = append(stack, hex.EncodeToString(d))
-				}
+				stack = append(stack, snapshot(state)...)
 				opcode = state.Opcode().Name()
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			// This produces an error... This needs to be reviewed in the future.
 			// require.NoError(t, err)
@@ -805,11 +641,7 @@ func TestDebugger_AfterSuccess(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
-
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
 			stack := make([]string, 0)
 			var opcode string
@@ -818,17 +650,11 @@ func TestDebugger_AfterSuccess(t *testing.T) {
 			debugger := debug.NewDebugger()
 			debugger.AttachAfterSuccess(func(state *interpreter.State) {
 				called = true
-				for _, d := range state.DataStack {
-					stack = append(stack, hex.EncodeToString(d))
-				}
+				stack = append(stack, snapshot(state)...)
 				opcode = state.Opcode().Name()
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			assert.Equal(t, test.expCalled, called)
 			if called {
@@ -841,13 +667,6 @@ func TestDebugger_AfterSuccess(t *testing.T) {
 
 func TestDebugger_BeforeStackPush(t *testing.T) {
 	t.Parallel()
-
-	type stateHistory struct {
-		dstack  [][]string
-		astack  [][]string
-		opcodes []string
-		entries []string
-	}
 
 	tests := map[string]struct {
 		lockingScriptHex   string
@@ -911,35 +730,17 @@ func TestDebugger_BeforeStackPush(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
-
-			history := &stateHistory{
-				dstack:  make([][]string, 0),
-				astack:  make([][]string, 0),
-				opcodes: make([]string, 0),
-				entries: make([]string, 0),
-			}
+			history := &stateHistory{}
 
 			debugger := debug.NewDebugger()
 			debugger.AttachBeforeStackPush(func(state *interpreter.State, data []byte) {
-				stack := make([]string, len(state.DataStack))
-				for i, d := range state.DataStack {
-					stack[i] = hex.EncodeToString(d)
-				}
-				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.Opcode().Name())
+				recordState(history, state)
 				history.entries = append(history.entries, hex.EncodeToString(data))
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			assert.Equal(t, test.expStackHistory, history.dstack)
 			assert.Equal(t, test.expOpcodes, history.opcodes)
@@ -950,13 +751,6 @@ func TestDebugger_BeforeStackPush(t *testing.T) {
 
 func TestDebugger_AfterStackPush(t *testing.T) {
 	t.Parallel()
-
-	type stateHistory struct {
-		dstack  [][]string
-		astack  [][]string
-		opcodes []string
-		entries []string
-	}
 
 	tests := map[string]struct {
 		lockingScriptHex   string
@@ -1020,35 +814,17 @@ func TestDebugger_AfterStackPush(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
-
-			history := &stateHistory{
-				dstack:  make([][]string, 0),
-				astack:  make([][]string, 0),
-				opcodes: make([]string, 0),
-				entries: make([]string, 0),
-			}
+			history := &stateHistory{}
 
 			debugger := debug.NewDebugger()
 			debugger.AttachAfterStackPush(func(state *interpreter.State, data []byte) {
-				stack := make([]string, len(state.DataStack))
-				for i, d := range state.DataStack {
-					stack[i] = hex.EncodeToString(d)
-				}
-				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.Opcode().Name())
+				recordState(history, state)
 				history.entries = append(history.entries, hex.EncodeToString(data))
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			assert.Equal(t, test.expStackHistory, history.dstack)
 			assert.Equal(t, test.expOpcodes, history.opcodes)
@@ -1059,12 +835,6 @@ func TestDebugger_AfterStackPush(t *testing.T) {
 
 func TestDebugger_BeforeStackPop(t *testing.T) {
 	t.Parallel()
-
-	type stateHistory struct {
-		dstack  [][]string
-		astack  [][]string
-		opcodes []string
-	}
 
 	tests := map[string]struct {
 		lockingScriptHex   string
@@ -1121,11 +891,7 @@ func TestDebugger_BeforeStackPop(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
-
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
 			history := &stateHistory{
 				dstack:  make([][]string, 0),
@@ -1135,19 +901,10 @@ func TestDebugger_BeforeStackPop(t *testing.T) {
 
 			debugger := debug.NewDebugger()
 			debugger.AttachBeforeStackPop(func(state *interpreter.State) {
-				stack := make([]string, len(state.DataStack))
-				for i, d := range state.DataStack {
-					stack[i] = hex.EncodeToString(d)
-				}
-				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.Opcode().Name())
+				recordState(history, state)
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			assert.Equal(t, test.expStackHistory, history.dstack)
 			assert.Equal(t, test.expOpcodes, history.opcodes)
@@ -1157,13 +914,6 @@ func TestDebugger_BeforeStackPop(t *testing.T) {
 
 func TestDebugger_AfterStackPop(t *testing.T) {
 	t.Parallel()
-
-	type stateHistory struct {
-		dstack  [][]string
-		astack  [][]string
-		opcodes []string
-		entries []string
-	}
 
 	tests := map[string]struct {
 		lockingScriptHex   string
@@ -1224,35 +974,17 @@ func TestDebugger_AfterStackPop(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			lscript, err := bscript.NewFromHexString(test.lockingScriptHex)
-			require.NoError(t, err)
+			lscript, uscript := parseScripts(t, test.lockingScriptHex, test.unlockingScriptHex)
 
-			uscript, err := bscript.NewFromHexString(test.unlockingScriptHex)
-			require.NoError(t, err)
-
-			history := &stateHistory{
-				dstack:  make([][]string, 0),
-				astack:  make([][]string, 0),
-				opcodes: make([]string, 0),
-				entries: make([]string, 0),
-			}
+			history := &stateHistory{}
 
 			debugger := debug.NewDebugger()
 			debugger.AttachAfterStackPop(func(state *interpreter.State, data []byte) {
-				stack := make([]string, len(state.DataStack))
-				for i, d := range state.DataStack {
-					stack[i] = hex.EncodeToString(d)
-				}
-				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.Opcode().Name())
+				recordState(history, state)
 				history.entries = append(history.entries, hex.EncodeToString(data))
 			})
 
-			_ = interpreter.NewEngine().Execute(
-				interpreter.WithScripts(lscript, uscript),
-				interpreter.WithAfterGenesis(),
-				interpreter.WithDebugger(debugger),
-			)
+			_ = runEngine(t, lscript, uscript, debugger)
 
 			assert.Equal(t, test.expStackHistory, history.dstack)
 			assert.Equal(t, test.expOpcodes, history.opcodes)
