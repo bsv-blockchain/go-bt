@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const testScript = "fake script"
+
 func TestEncodeBIP276(t *testing.T) {
 	t.Parallel()
 
@@ -18,7 +20,7 @@ func TestEncodeBIP276(t *testing.T) {
 				Prefix:  bscript.PrefixScript,
 				Version: bscript.CurrentVersion,
 				Network: bscript.NetworkMainnet,
-				Data:    []byte("fake script"),
+				Data:    []byte(testScript),
 			},
 		)
 
@@ -31,7 +33,7 @@ func TestEncodeBIP276(t *testing.T) {
 				Prefix:  bscript.PrefixScript,
 				Version: bscript.CurrentVersion,
 				Network: bscript.NetworkTestnet,
-				Data:    []byte("fake script"),
+				Data:    []byte(testScript),
 			},
 		)
 
@@ -44,7 +46,7 @@ func TestEncodeBIP276(t *testing.T) {
 				Prefix:  bscript.PrefixScript,
 				Version: 0,
 				Network: bscript.NetworkMainnet,
-				Data:    []byte("fake script"),
+				Data:    []byte(testScript),
 			},
 		)
 
@@ -57,7 +59,7 @@ func TestEncodeBIP276(t *testing.T) {
 				Prefix:  bscript.PrefixScript,
 				Version: 256,
 				Network: bscript.NetworkMainnet,
-				Data:    []byte("fake script"),
+				Data:    []byte(testScript),
 			},
 		)
 
@@ -70,7 +72,7 @@ func TestEncodeBIP276(t *testing.T) {
 				Prefix:  bscript.PrefixScript,
 				Version: bscript.CurrentVersion,
 				Network: 0,
-				Data:    []byte("fake script"),
+				Data:    []byte(testScript),
 			},
 		)
 
@@ -83,7 +85,7 @@ func TestEncodeBIP276(t *testing.T) {
 				Prefix:  "different-prefix",
 				Version: bscript.CurrentVersion,
 				Network: bscript.NetworkMainnet,
-				Data:    []byte("fake script"),
+				Data:    []byte(testScript),
 			},
 		)
 
@@ -96,7 +98,7 @@ func TestEncodeBIP276(t *testing.T) {
 				Prefix:  bscript.PrefixTemplate,
 				Version: bscript.CurrentVersion,
 				Network: bscript.NetworkMainnet,
-				Data:    []byte("fake script"),
+				Data:    []byte(testScript),
 			},
 		)
 
@@ -113,7 +115,7 @@ func TestDecodeBIP276(t *testing.T) {
 		assert.Equal(t, `"bitcoin-script"`, fmt.Sprintf("%q", script.Prefix))
 		assert.Equal(t, 1, script.Network)
 		assert.Equal(t, 1, script.Version)
-		assert.Equal(t, "fake script", string(script.Data))
+		assert.Equal(t, testScript, string(script.Data))
 	})
 
 	t.Run("invalid decode", func(t *testing.T) {
