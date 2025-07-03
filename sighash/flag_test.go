@@ -7,7 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFlagHas_ReturnsExpectedResult(t *testing.T) {
+// TestFlagHasReturnsExpectedResult tests the Has method of the Flag type.
+func TestFlagHasReturnsExpectedResult(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name     string
@@ -29,7 +30,8 @@ func TestFlagHas_ReturnsExpectedResult(t *testing.T) {
 	}
 }
 
-func TestFlagHasWithMask_ReturnsExpectedResult(t *testing.T) {
+// TestFlagHasWithMaskReturnsExpectedResult tests the HasWithMask method of the Flag type.
+func TestFlagHasWithMaskReturnsExpectedResult(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name     string
@@ -50,7 +52,8 @@ func TestFlagHasWithMask_ReturnsExpectedResult(t *testing.T) {
 	}
 }
 
-func TestFlagString_ReturnsFlagName(t *testing.T) {
+// TestFlagStringReturnsFlagName tests the String method of the Flag type.
+func TestFlagStringReturnsFlagName(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		flag     Flag
