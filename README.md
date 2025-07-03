@@ -310,9 +310,13 @@ make bench
 
 ### Benchmark Results
 
-| Benchmark                           | Iterations | ns/op | B/op | allocs/op |
-|-------------------------------------|------------|------:|-----:|----------:|
-|                                     |            |       |      |           |
+| Benchmark             | Iterations | ns/op | B/op | allocs/op |
+|-----------------------|------------|------:|-----:|----------:|
+|                       |            |       |      |           |
+| [Bytes]-toBytesHelper | 4,112,503  | 280.2 | 1024 |         1 |
+| [Clone]-clone         | 4,117,903  | 291.4 |  416 |        13 |
+| [ShallowClone]-clone  | 5,963,280  | 196.3 |  296 |         8 |
+
 > These benchmarks reflect fast, allocation-free lookups for most retrieval functions, ensuring optimal performance in production environments.
 > Performance benchmarks for the core functions in this library, executed on an Apple M1 Max (ARM64).
 
