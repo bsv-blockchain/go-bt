@@ -192,8 +192,8 @@ func TestTx_MarshallJSON(t *testing.T) {
 	// TODO add tests for extended format
 }
 
-// TestTx_UnmarshalJSON tests the JSON unmarshaling of transactions.
-func TestTx_UnmarshalJSON(t *testing.T) {
+// TestTxUnmarshalJSON tests the JSON unmarshaling of transactions.
+func TestTxUnmarshalJSON(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
 		json  string
@@ -267,8 +267,8 @@ func TestRunTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
-// TestTx_UnmarshalJSON tests the unmarshaling of transactions from JSON format.
-func (ts *TestSuite) TestTx_UnmarshalJSON() {
+// TestTxUnmarshalJSON tests the unmarshaling of transactions from JSON format.
+func (ts *TestSuite) TestTxUnmarshalJSON() {
 	ts.Run("hex path", func() {
 		const sampleHex = "01000000000000000000" // TODO: replace with a valid tx hex
 		data := fmt.Sprintf(`{"hex":"%s"}`, sampleHex)
