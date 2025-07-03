@@ -13,7 +13,7 @@ import (
 const (
 	hashP2PKH        = 0x00
 	hashTestNetP2PKH = 0x6f
-	hashP2SH         = 0x05 // TODO: remove deprecated p2sh stuff
+	hashP2SH         = 0x05
 	hashTestNetP2SH  = 0xc4
 )
 
