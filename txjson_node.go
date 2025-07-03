@@ -150,7 +150,7 @@ func (w *nodeTxWrapper) UnmarshalJSON(b []byte) error {
 		if err != nil {
 			return err
 		}
-		w.Tx.copyFrom(parsed) // safe deep‑copy; keeps the original pointer
+		w.copyFrom(parsed) // safe deep‑copy; keeps the original pointer
 		return nil
 	}
 
