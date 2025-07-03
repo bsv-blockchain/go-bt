@@ -14,28 +14,32 @@ var (
 	ErrNoUnlocker        = errors.New("unlocker not supplied")
 )
 
-// Sentinal errors reported by inputs.
+// Sentinel errors reported by inputs.
 var (
 	ErrInputNoExist  = errors.New("specified input does not exist")
 	ErrInputTooShort = errors.New("input length too short")
 
 	// You should not be able to spend an input with 0 Satoshi value.
-	// Most likely the input Satoshi value is not provided.
+	// Most likely, the input Satoshi value is not provided.
+
+	// ErrInputSatsZero is returned when the input Satoshi value is not provided.
 	ErrInputSatsZero = errors.New("input satoshi value is not provided")
 )
 
-// Sentinal errors reported by outputs.
+// Sentinel errors reported by outputs.
 var (
 	ErrOutputNoExist  = errors.New("specified output does not exist")
 	ErrOutputTooShort = errors.New("output length too short")
 )
 
-// Sentinal errors reported by change.
+// Sentinel errors reported by change.
 var (
+
+	// ErrInsufficientInputs is returned when the total inputted satoshis are less than the outputted satoshis.
 	ErrInsufficientInputs = errors.New("satoshis inputted to the tx are less than the outputted satoshis")
 )
 
-// Sentinal errors reported by signature hash.
+// Sentinel errors reported by signature hash.
 var (
 	ErrEmptyPreviousTxID     = errors.New("'PreviousTxID' not supplied")
 	ErrEmptyPreviousTxScript = errors.New("'PreviousTxScript' not supplied")
@@ -50,7 +54,7 @@ var (
 	ErrUnknownFeeType   = errors.New("unknown fee type")
 )
 
-// Sentinel errors reported by Fund.
+// Sentinel errors reported by the Fund.
 var (
 	// ErrNoUTXO signals the UTXOGetterFunc has reached the end of its input.
 	ErrNoUTXO = errors.New("no remaining utxos")
@@ -59,12 +63,13 @@ var (
 	ErrInsufficientFunds = errors.New("insufficient funds provided")
 )
 
-// Sentinal errors reported by ordinal inscriptions.
+// Sentinel errors reported by ordinal inscriptions.
 var (
+	// ErrOutputsNotEmpty is returned when the transaction outputs are not empty
 	ErrOutputsNotEmpty = errors.New("transaction outputs must be empty to avoid messing with Ordinal ordering scheme")
 )
 
-// Sentinal errors reported by PSBTs.
+// Sentinel errors reported by PSBTs.
 var (
 	ErrDummyInput            = errors.New("failed to add dummy input 0")
 	ErrInsufficientUTXOs     = errors.New("need at least 2 utxos")
