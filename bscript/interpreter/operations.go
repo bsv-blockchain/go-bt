@@ -14,7 +14,7 @@ import (
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
 	"github.com/libsv/go-bk/bec"
 	"github.com/libsv/go-bk/crypto"
-	"golang.org/x/crypto/ripemd160"
+	"golang.org/x/crypto/ripemd160" //nolint:staticcheck // OP_RIPEMD160 support requires this
 )
 
 // Conditional execution constants.
@@ -25,9 +25,10 @@ const (
 )
 
 var (
-	externalVerifySignatureFn func(payload, signature, publicKey []byte) bool = nil
+	externalVerifySignatureFn func(payload, signature, publicKey []byte) bool
 )
 
+// InjectExternalVerifySignatureFn allows the injection of an external
 func InjectExternalVerifySignatureFn(fn func(payload, signature, publicKey []byte) bool) {
 	externalVerifySignatureFn = fn
 }
@@ -334,10 +335,11 @@ var opcodeArray = [256]opcode{
 // opcodes before executing in an initial parse step, the consensus rules
 // dictate the script doesn't fail until the program counter passes over a
 // disabled opcode (even when they appear in a branch that is not executed).
-func opcodeDisabled(op *ParsedOpcode, t *thread) error {
+func opcodeDisabled(op *ParsedOpcode, _ *thread) error {
 	return errs.NewError(errs.ErrDisabledOpcode, "attempt to execute disabled opcode %s", op.Name())
 }
 
+// opcodeVerConditional is a common handler for the OP_VERIF and
 func opcodeVerConditional(op *ParsedOpcode, t *thread) error {
 	if t.afterGenesis && !t.shouldExec(*op) {
 		return nil
@@ -347,20 +349,20 @@ func opcodeVerConditional(op *ParsedOpcode, t *thread) error {
 
 // opcodeReserved is a common handler for all reserved opcodes.  It returns an
 // appropriate error indicating the opcode is reserved.
-func opcodeReserved(op *ParsedOpcode, t *thread) error {
+func opcodeReserved(op *ParsedOpcode, _ *thread) error {
 	return errs.NewError(errs.ErrReservedOpcode, "attempt to execute reserved opcode %s", op.Name())
 }
 
 // opcodeInvalid is a common handler for all invalid opcodes.  It returns an
 // appropriate error indicating the opcode is invalid.
-func opcodeInvalid(op *ParsedOpcode, t *thread) error {
+func opcodeInvalid(op *ParsedOpcode, _ *thread) error {
 	return errs.NewError(errs.ErrReservedOpcode, "attempt to execute invalid opcode %s", op.Name())
 }
 
 // opcodeFalse pushes an empty array to the data stack to represent false.  Note
 // that 0, when encoded as a number according to the numeric encoding consensus
 // rules, is an empty array.
-func opcodeFalse(op *ParsedOpcode, t *thread) error {
+func opcodeFalse(_ *ParsedOpcode, t *thread) error {
 	t.dstack.PushByteArray(nil)
 	return nil
 }
@@ -373,7 +375,7 @@ func opcodePushData(op *ParsedOpcode, t *thread) error {
 }
 
 // opcode1Negate pushes -1, encoded as a number, to the data stack.
-func opcode1Negate(op *ParsedOpcode, t *thread) error {
+func opcode1Negate(_ *ParsedOpcode, t *thread) error {
 	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(-1),
 		afterGenesis: t.afterGenesis,
@@ -387,13 +389,13 @@ func opcode1Negate(op *ParsedOpcode, t *thread) error {
 func opcodeN(op *ParsedOpcode, t *thread) error {
 	// The opcodes are all defined consecutively, so the numeric value is
 	// the difference.
-	t.dstack.PushByteArray([]byte{(op.op.val - (bscript.Op1 - 1))})
+	t.dstack.PushByteArray([]byte{op.op.val - (bscript.Op1 - 1)})
 	return nil
 }
 
 // opcodeNop is a common handler for the NOP family of opcodes.  As the name
 // implies it generally does nothing, however, it will return an error when
-// the flag to discourage use of NOPs is set for select opcodes.
+// the flag, to discourage use of NOPs, is set for select opcodes.
 func opcodeNop(op *ParsedOpcode, t *thread) error {
 	switch op.op.val {
 	case bscript.OpNOP1, bscript.OpNOP4, bscript.OpNOP5,
@@ -419,7 +421,7 @@ func popIfBool(t *thread) (bool, error) {
 		}
 
 		if len(b) > 1 {
-			return false, errs.NewError(errs.ErrMinimalIf, "conditionl has data of length %d", len(b))
+			return false, errs.NewError(errs.ErrMinimalIf, "condition has data of length %d", len(b))
 		}
 		if len(b) == 1 && b[0] != 1 {
 			return false, errs.NewError(errs.ErrMinimalIf, "conditional failed")
@@ -434,7 +436,7 @@ func popIfBool(t *thread) (bool, error) {
 // opcodeIf treats the top item on the data stack as a boolean and removes it.
 //
 // An appropriate entry is added to the conditional stack depending on whether
-// the boolean is true and whether this if is on an executing branch in order
+// the boolean is true and whether this is on an executing branch
 // to allow proper execution of further opcodes depending on the conditional
 // logic.  When the boolean is true, the first branch will be executed (unless
 // this opcode is nested in a non-executed branch).
@@ -442,7 +444,7 @@ func popIfBool(t *thread) (bool, error) {
 // <expression> if [statements] [else [statements]] endif
 //
 // Note that, unlike for all non-conditional opcodes, this is executed even when
-// it is on a non-executing branch so proper nesting is maintained.
+// it is on a non-executing branch, so proper nesting is maintained.
 //
 // Data stack transformation: [... bool] -> [...]
 // Conditional stack transformation: [...] -> [... OpCondValue]
@@ -472,7 +474,7 @@ func opcodeIf(op *ParsedOpcode, t *thread) error {
 // it.
 //
 // An appropriate entry is added to the conditional stack depending on whether
-// the boolean is true and whether this if is on an executing branch in order
+// the boolean is true and whether this is on an executing branch
 // to allow proper execution of further opcodes depending on the conditional
 // logic.  When the boolean is false, the first branch will be executed (unless
 // this opcode is nested in a non-executed branch).
@@ -480,7 +482,7 @@ func opcodeIf(op *ParsedOpcode, t *thread) error {
 // <expression> notif [statements] [else [statements]] endif
 //
 // Note that, unlike for all non-conditional opcodes, this is executed even when
-// it is on a non-executing branch so proper nesting is maintained.
+// it is on a non-executing branch, so proper nesting is maintained.
 //
 // Data stack transformation: [... bool] -> [...]
 // Conditional stack transformation: [...] -> [... OpCondValue]
@@ -506,7 +508,7 @@ func opcodeNotIf(op *ParsedOpcode, t *thread) error {
 	return nil
 }
 
-// opcodeElse inverts conditional execution for other half of if/else/endif.
+// opcodeElse inverts conditional execution for another half of if/else/endif.
 //
 // An error is returned if there has not already been a matching bscript.OpIF.
 //
@@ -565,7 +567,7 @@ func opcodeEndif(op *ParsedOpcode, t *thread) error {
 // abstractVerify examines the top item on the data stack as a boolean value and
 // verifies it evaluates to true.  An error is returned either when there is no
 // item on the stack or when that item evaluates to false.  In the latter case
-// where the verification fails specifically due to the top item evaluating
+// where the verification fails, specifically due to the top item evaluated
 // to false, the returned error will use the passed error code.
 func abstractVerify(op *ParsedOpcode, t *thread, c errs.ErrorCode) error {
 	verified, err := t.dstack.PopBool()
@@ -587,7 +589,7 @@ func opcodeVerify(op *ParsedOpcode, t *thread) error {
 
 // opcodeReturn returns an appropriate error since it is always an error to
 // return early from a script.
-func opcodeReturn(op *ParsedOpcode, t *thread) error {
+func opcodeReturn(_ *ParsedOpcode, t *thread) error {
 	if !t.afterGenesis {
 		return errs.NewError(errs.ErrEarlyReturn, "script returned early")
 	}
@@ -595,7 +597,7 @@ func opcodeReturn(op *ParsedOpcode, t *thread) error {
 	t.earlyReturnAfterGenesis = true
 	if len(t.condStack) == 0 {
 		// Terminate the execution as successful. The remaining of the script does not affect the validity (even in
-		// presence of unbalanced IFs, invalid opcodes etc)
+		// presence of unbalanced IFs, invalid opcodes, etc.)
 		return success()
 	}
 
@@ -622,10 +624,10 @@ func verifyLockTime(txLockTime, threshold, lockTime int64) error {
 
 // opcodeCheckLockTimeVerify compares the top item on the data stack to the
 // LockTime field of the transaction containing the script signature
-// validating if the transaction outputs are spendable yet.  If flag
+// validating if the transaction outputs aren't spendable yet.  If flag
 // ScriptVerifyCheckLockTimeVerify is not set, the code continues as if bscript.OpNOP2
 // were executed.
-func opcodeCheckLockTimeVerify(op *ParsedOpcode, t *thread) error {
+func opcodeCheckLockTimeVerify(_ *ParsedOpcode, t *thread) error {
 	// If the ScriptVerifyCheckLockTimeVerify script flag is not set, treat
 	// opcode as bscript.OpNOP2 instead.
 	if !t.hasFlag(scriptflag.VerifyCheckLockTimeVerify) || t.afterGenesis {
@@ -662,25 +664,25 @@ func opcodeCheckLockTimeVerify(op *ParsedOpcode, t *thread) error {
 	}
 
 	// The lock time field of a transaction is either a block height at
-	// which the transaction is finalised or a timestamp depending on if the
+	// which the transaction is finalized or a timestamp depending on if the
 	// value is before the interpreter.LockTimeThreshold.  When it is under the
-	// threshold it is a block height.
+	// threshold, it is a block height.
 	if err = verifyLockTime(int64(t.tx.LockTime), LockTimeThreshold, lockTime.Int64()); err != nil {
 		return err
 	}
 
 	// The lock time feature can also be disabled, thereby bypassing
-	// bscript.OpCHECKLOCKTIMEVERIFY, if every transaction input has been finalised by
+	// bscript.OpCHECKLOCKTIMEVERIFY, if every transaction input has been finalized by
 	// setting its sequence to the maximum value (bt.MaxTxInSequenceNum).  This
-	// condition would result in the transaction being allowed into the blockchain
+	// condition would result in the transaction being allowed into the blockchain,
 	// making the opcode ineffective.
 	//
 	// This condition is prevented by enforcing that the input being used by
-	// the opcode is unlocked (its sequence number is less than the max
+	// the opcode is unlocked (its sequence number is lower than the max
 	// value).  This is sufficient to prove correctness without having to
 	// check every input.
 	//
-	// NOTE: This implies that even if the transaction is not finalised due to
+	// NOTE: This implies that even if the transaction is not finalized due to
 	// another input being unlocked, the opcode execution will still fail when the
 	// input being used by the opcode is locked.
 	if t.tx.Inputs[t.inputIdx].SequenceNumber == bt.MaxTxInSequenceNum {
@@ -692,10 +694,10 @@ func opcodeCheckLockTimeVerify(op *ParsedOpcode, t *thread) error {
 
 // opcodeCheckSequenceVerify compares the top item on the data stack to the
 // LockTime field of the transaction containing the script signature
-// validating if the transaction outputs are spendable yet.  If flag
+// validating if the transaction outputs aren't spendable yet.  If flag
 // ScriptVerifyCheckSequenceVerify is not set, the code continues as if bscript.OpNOP3
 // were executed.
-func opcodeCheckSequenceVerify(op *ParsedOpcode, t *thread) error {
+func opcodeCheckSequenceVerify(_ *ParsedOpcode, t *thread) error {
 	// If the ScriptVerifyCheckSequenceVerify script flag is not set, treat
 	// opcode as bscript.OpNOP3 instead.
 	if !t.hasFlag(scriptflag.VerifyCheckSequenceVerify) || t.afterGenesis {
@@ -767,7 +769,7 @@ func opcodeCheckSequenceVerify(op *ParsedOpcode, t *thread) error {
 //
 // Main data stack transformation: [... x1 x2 x3] -> [... x1 x2]
 // Alt data stack transformation:  [... y1 y2 y3] -> [... y1 y2 y3 x3]
-func opcodeToAltStack(op *ParsedOpcode, t *thread) error {
+func opcodeToAltStack(_ *ParsedOpcode, t *thread) error {
 	so, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
@@ -783,7 +785,7 @@ func opcodeToAltStack(op *ParsedOpcode, t *thread) error {
 //
 // Main data stack transformation: [... x1 x2 x3] -> [... x1 x2 x3 y3]
 // Alt data stack transformation:  [... y1 y2 y3] -> [... y1 y2]
-func opcodeFromAltStack(op *ParsedOpcode, t *thread) error {
+func opcodeFromAltStack(_ *ParsedOpcode, t *thread) error {
 	so, err := t.astack.PopByteArray()
 	if err != nil {
 		return err
@@ -797,35 +799,35 @@ func opcodeFromAltStack(op *ParsedOpcode, t *thread) error {
 // opcode2Drop removes the top 2 items from the data stack.
 //
 // Stack transformation: [... x1 x2 x3] -> [... x1]
-func opcode2Drop(op *ParsedOpcode, t *thread) error {
+func opcode2Drop(_ *ParsedOpcode, t *thread) error {
 	return t.dstack.DropN(2)
 }
 
 // opcode2Dup duplicates the top 2 items on the data stack.
 //
 // Stack transformation: [... x1 x2 x3] -> [... x1 x2 x3 x2 x3]
-func opcode2Dup(op *ParsedOpcode, t *thread) error {
+func opcode2Dup(_ *ParsedOpcode, t *thread) error {
 	return t.dstack.DupN(2)
 }
 
 // opcode3Dup duplicates the top 3 items on the data stack.
 //
 // Stack transformation: [... x1 x2 x3] -> [... x1 x2 x3 x1 x2 x3]
-func opcode3Dup(op *ParsedOpcode, t *thread) error {
+func opcode3Dup(_ *ParsedOpcode, t *thread) error {
 	return t.dstack.DupN(3)
 }
 
 // opcode2Over duplicates the 2 items before the top 2 items on the data stack.
 //
 // Stack transformation: [... x1 x2 x3 x4] -> [... x1 x2 x3 x4 x1 x2]
-func opcode2Over(op *ParsedOpcode, t *thread) error {
+func opcode2Over(_ *ParsedOpcode, t *thread) error {
 	return t.dstack.OverN(2)
 }
 
 // opcode2Rot rotates the top 6 items on the data stack to the left twice.
 //
 // Stack transformation: [... x1 x2 x3 x4 x5 x6] -> [... x3 x4 x5 x6 x1 x2]
-func opcode2Rot(op *ParsedOpcode, t *thread) error {
+func opcode2Rot(_ *ParsedOpcode, t *thread) error {
 	return t.dstack.RotN(2)
 }
 
@@ -833,7 +835,7 @@ func opcode2Rot(op *ParsedOpcode, t *thread) error {
 // before them.
 //
 // Stack transformation: [... x1 x2 x3 x4] -> [... x3 x4 x1 x2]
-func opcode2Swap(op *ParsedOpcode, t *thread) error {
+func opcode2Swap(_ *ParsedOpcode, t *thread) error {
 	return t.dstack.SwapN(2)
 }
 
@@ -841,7 +843,7 @@ func opcode2Swap(op *ParsedOpcode, t *thread) error {
 //
 // Stack transformation (x1==0): [... x1] -> [... x1]
 // Stack transformation (x1!=0): [... x1] -> [... x1 x1]
-func opcodeIfDup(op *ParsedOpcode, t *thread) error {
+func opcodeIfDup(_ *ParsedOpcode, t *thread) error {
 	so, err := t.dstack.PeekByteArray(0)
 	if err != nil {
 		return err
@@ -861,7 +863,7 @@ func opcodeIfDup(op *ParsedOpcode, t *thread) error {
 // Stack transformation: [...] -> [... <num of items on the stack>]
 // Example with 2 items: [x1 x2] -> [x1 x2 2]
 // Example with 3 items: [x1 x2 x3] -> [x1 x2 x3 3]
-func opcodeDepth(op *ParsedOpcode, t *thread) error {
+func opcodeDepth(_ *ParsedOpcode, t *thread) error {
 	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(int64(t.dstack.Depth())),
 		afterGenesis: t.afterGenesis,
@@ -872,28 +874,28 @@ func opcodeDepth(op *ParsedOpcode, t *thread) error {
 // opcodeDrop removes the top item from the data stack.
 //
 // Stack transformation: [... x1 x2 x3] -> [... x1 x2]
-func opcodeDrop(op *ParsedOpcode, t *thread) error {
+func opcodeDrop(_ *ParsedOpcode, t *thread) error {
 	return t.dstack.DropN(1)
 }
 
 // opcodeDup duplicates the top item on the data stack.
 //
 // Stack transformation: [... x1 x2 x3] -> [... x1 x2 x3 x3]
-func opcodeDup(op *ParsedOpcode, t *thread) error {
+func opcodeDup(_ *ParsedOpcode, t *thread) error {
 	return t.dstack.DupN(1)
 }
 
 // opcodeNip removes the item before the top item on the data stack.
 //
 // Stack transformation: [... x1 x2 x3] -> [... x1 x3]
-func opcodeNip(op *ParsedOpcode, t *thread) error {
+func opcodeNip(_ *ParsedOpcode, t *thread) error {
 	return t.dstack.NipN(1)
 }
 
 // opcodeOver duplicates the item before the top item on the data stack.
 //
 // Stack transformation: [... x1 x2 x3] -> [... x1 x2 x3 x2]
-func opcodeOver(op *ParsedOpcode, t *thread) error {
+func opcodeOver(_ *ParsedOpcode, t *thread) error {
 	return t.dstack.OverN(1)
 }
 
@@ -903,7 +905,7 @@ func opcodeOver(op *ParsedOpcode, t *thread) error {
 // Stack transformation: [xn ... x2 x1 x0 n] -> [xn ... x2 x1 x0 xn]
 // Example with n=1: [x2 x1 x0 1] -> [x2 x1 x0 x1]
 // Example with n=2: [x2 x1 x0 2] -> [x2 x1 x0 x2]
-func opcodePick(op *ParsedOpcode, t *thread) error {
+func opcodePick(_ *ParsedOpcode, t *thread) error {
 	val, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -918,7 +920,7 @@ func opcodePick(op *ParsedOpcode, t *thread) error {
 // Stack transformation: [xn ... x2 x1 x0 n] -> [... x2 x1 x0 xn]
 // Example with n=1: [x2 x1 x0 1] -> [x2 x0 x1]
 // Example with n=2: [x2 x1 x0 2] -> [x1 x0 x2]
-func opcodeRoll(op *ParsedOpcode, t *thread) error {
+func opcodeRoll(_ *ParsedOpcode, t *thread) error {
 	val, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -930,14 +932,14 @@ func opcodeRoll(op *ParsedOpcode, t *thread) error {
 // opcodeRot rotates the top 3 items on the data stack to the left.
 //
 // Stack transformation: [... x1 x2 x3] -> [... x2 x3 x1]
-func opcodeRot(op *ParsedOpcode, t *thread) error {
+func opcodeRot(_ *ParsedOpcode, t *thread) error {
 	return t.dstack.RotN(1)
 }
 
 // opcodeSwap swaps the top two items on the stack.
 //
 // Stack transformation: [... x1 x2] -> [... x2 x1]
-func opcodeSwap(op *ParsedOpcode, t *thread) error {
+func opcodeSwap(_ *ParsedOpcode, t *thread) error {
 	return t.dstack.SwapN(1)
 }
 
@@ -945,7 +947,7 @@ func opcodeSwap(op *ParsedOpcode, t *thread) error {
 // second-to-top item.
 //
 // Stack transformation: [... x1 x2] -> [... x2 x1 x2]
-func opcodeTuck(op *ParsedOpcode, t *thread) error {
+func opcodeTuck(_ *ParsedOpcode, t *thread) error {
 	return t.dstack.Tuck()
 }
 
@@ -953,7 +955,7 @@ func opcodeTuck(op *ParsedOpcode, t *thread) error {
 // not be larger than MaxScriptElementSize.
 //
 // Stack transformation: {Ox11} {0x22, 0x33} bscript.OpCAT -> 0x112233
-func opcodeCat(op *ParsedOpcode, t *thread) error {
+func opcodeCat(_ *ParsedOpcode, t *thread) error {
 	b, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
@@ -978,7 +980,7 @@ func opcodeCat(op *ParsedOpcode, t *thread) error {
 // This operation is the exact inverse of bscript.OpCAT
 //
 // Stack transformation: x n bscript.OpSPLIT -> x1 x2
-func opcodeSplit(op *ParsedOpcode, t *thread) error {
+func opcodeSplit(_ *ParsedOpcode, t *thread) error {
 	n, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1009,7 +1011,7 @@ func opcodeSplit(op *ParsedOpcode, t *thread) error {
 // produced uses the little-endian encoding.
 //
 // Stack transformation: a b bscript.OpNUM2BIN -> x
-func opcodeNum2bin(op *ParsedOpcode, t *thread) error {
+func opcodeNum2bin(_ *ParsedOpcode, t *thread) error {
 	n, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1061,7 +1063,7 @@ func opcodeNum2bin(op *ParsedOpcode, t *thread) error {
 // value in little-endian encoding.
 //
 // Stack transformation: a bscript.OpBIN2NUM -> x
-func opcodeBin2num(op *ParsedOpcode, t *thread) error {
+func opcodeBin2num(_ *ParsedOpcode, t *thread) error {
 	a, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
@@ -1080,7 +1082,7 @@ func opcodeBin2num(op *ParsedOpcode, t *thread) error {
 // stack.
 //
 // Stack transformation: [... x1] -> [... x1 len(x1)]
-func opcodeSize(op *ParsedOpcode, t *thread) error {
+func opcodeSize(_ *ParsedOpcode, t *thread) error {
 	so, err := t.dstack.PeekByteArray(0)
 	if err != nil {
 		return err
@@ -1096,7 +1098,7 @@ func opcodeSize(op *ParsedOpcode, t *thread) error {
 // opcodeInvert flips all of the top stack item's bits
 //
 // Stack transformation: a -> ~a
-func opcodeInvert(op *ParsedOpcode, t *thread) error {
+func opcodeInvert(_ *ParsedOpcode, t *thread) error {
 	ba, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
@@ -1117,7 +1119,7 @@ func opcodeInvert(op *ParsedOpcode, t *thread) error {
 // opcodeAnd executes a boolean and between each bit in the operands
 //
 // Stack transformation: x1 x2 bscript.OpAND -> out
-func opcodeAnd(op *ParsedOpcode, t *thread) error { //nolint:dupl // to keep functionality with function signature
+func opcodeAnd(_ *ParsedOpcode, t *thread) error { //nolint:dupl // to keep functionality with function signature
 	a, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
@@ -1144,7 +1146,7 @@ func opcodeAnd(op *ParsedOpcode, t *thread) error { //nolint:dupl // to keep fun
 // opcodeOr executes a boolean or between each bit in the operands
 //
 // Stack transformation: x1 x2 bscript.OpOR -> out
-func opcodeOr(op *ParsedOpcode, t *thread) error { //nolint:dupl // to keep functionality with function signature
+func opcodeOr(_ *ParsedOpcode, t *thread) error { //nolint:dupl // to keep functionality with function signature
 	a, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
@@ -1171,7 +1173,7 @@ func opcodeOr(op *ParsedOpcode, t *thread) error { //nolint:dupl // to keep func
 // opcodeXor executes a boolean xor between each bit in the operands
 //
 // Stack transformation: x1 x2 bscript.OpXOR -> out
-func opcodeXor(op *ParsedOpcode, t *thread) error { //nolint:dupl // to keep functionality with function signature
+func opcodeXor(_ *ParsedOpcode, t *thread) error { //nolint:dupl // to keep functionality with function signature
 	a, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
@@ -1199,7 +1201,7 @@ func opcodeXor(op *ParsedOpcode, t *thread) error { //nolint:dupl // to keep fun
 // bytes, and pushes the result, encoded as a boolean, back to the stack.
 //
 // Stack transformation: [... x1 x2] -> [... bool]
-func opcodeEqual(op *ParsedOpcode, t *thread) error {
+func opcodeEqual(_ *ParsedOpcode, t *thread) error {
 	a, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
@@ -1233,7 +1235,7 @@ func opcodeEqualVerify(op *ParsedOpcode, t *thread) error {
 // it with its incremented value (plus 1).
 //
 // Stack transformation: [... x1 x2] -> [... x1 x2+1]
-func opcode1Add(op *ParsedOpcode, t *thread) error {
+func opcode1Add(_ *ParsedOpcode, t *thread) error {
 	m, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1247,7 +1249,7 @@ func opcode1Add(op *ParsedOpcode, t *thread) error {
 // it with its decremented value (minus 1).
 //
 // Stack transformation: [... x1 x2] -> [... x1 x2-1]
-func opcode1Sub(op *ParsedOpcode, t *thread) error {
+func opcode1Sub(_ *ParsedOpcode, t *thread) error {
 	m, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1261,7 +1263,7 @@ func opcode1Sub(op *ParsedOpcode, t *thread) error {
 // it with its negation.
 //
 // Stack transformation: [... x1 x2] -> [... x1 -x2]
-func opcodeNegate(op *ParsedOpcode, t *thread) error {
+func opcodeNegate(_ *ParsedOpcode, t *thread) error {
 	m, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1272,10 +1274,11 @@ func opcodeNegate(op *ParsedOpcode, t *thread) error {
 }
 
 // opcodeAbs treats the top item on the data stack as an integer and replaces it
-// it with its absolute value.
+//
+//	with its absolute value.
 //
 // Stack transformation: [... x1 x2] -> [... x1 abs(x2)]
-func opcodeAbs(op *ParsedOpcode, t *thread) error {
+func opcodeAbs(_ *ParsedOpcode, t *thread) error {
 	m, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1290,14 +1293,14 @@ func opcodeAbs(op *ParsedOpcode, t *thread) error {
 //
 // NOTE: While it would probably make more sense to treat the top item as a
 // boolean, and push the opposite, which is really what the intention of this
-// opcode is, it is extremely important that is not done because integers are
+// opcode is, it is extremely important that it is not done because integers are
 // interpreted differently than booleans and the consensus rules for this opcode
 // dictate the item is interpreted as an integer.
 //
 // Stack transformation (x2==0): [... x1 0] -> [... x1 1]
 // Stack transformation (x2!=0): [... x1 1] -> [... x1 0]
 // Stack transformation (x2!=0): [... x1 17] -> [... x1 0]
-func opcodeNot(op *ParsedOpcode, t *thread) error {
+func opcodeNot(_ *ParsedOpcode, t *thread) error {
 	m, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1321,7 +1324,7 @@ func opcodeNot(op *ParsedOpcode, t *thread) error {
 // Stack transformation (x2==0): [... x1 0] -> [... x1 0]
 // Stack transformation (x2!=0): [... x1 1] -> [... x1 1]
 // Stack transformation (x2!=0): [... x1 17] -> [... x1 1]
-func opcode0NotEqual(op *ParsedOpcode, t *thread) error {
+func opcode0NotEqual(_ *ParsedOpcode, t *thread) error {
 	m, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1339,7 +1342,7 @@ func opcode0NotEqual(op *ParsedOpcode, t *thread) error {
 // them with their sum.
 //
 // Stack transformation: [... x1 x2] -> [... x1+x2]
-func opcodeAdd(op *ParsedOpcode, t *thread) error {
+func opcodeAdd(_ *ParsedOpcode, t *thread) error {
 	v0, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1359,7 +1362,7 @@ func opcodeAdd(op *ParsedOpcode, t *thread) error {
 // entry.
 //
 // Stack transformation: [... x1 x2] -> [... x1-x2]
-func opcodeSub(op *ParsedOpcode, t *thread) error {
+func opcodeSub(_ *ParsedOpcode, t *thread) error {
 	v0, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1377,7 +1380,7 @@ func opcodeSub(op *ParsedOpcode, t *thread) error {
 // opcodeMul treats the top two items on the data stack as integers and replaces
 // them with the result of subtracting the top entry from the second-to-top
 // entry.
-func opcodeMul(op *ParsedOpcode, t *thread) error {
+func opcodeMul(_ *ParsedOpcode, t *thread) error {
 	n1, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1393,10 +1396,11 @@ func opcodeMul(op *ParsedOpcode, t *thread) error {
 }
 
 // opcodeDiv return the integer quotient of a and b. If the result
-// would be a non-integer it is rounded towards zero.
+//
+//	is a non-integer it is rounded towards zero.
 //
 // Stack transformation: a b bscript.OpDIV -> out
-func opcodeDiv(op *ParsedOpcode, t *thread) error {
+func opcodeDiv(_ *ParsedOpcode, t *thread) error {
 	b, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1419,7 +1423,7 @@ func opcodeDiv(op *ParsedOpcode, t *thread) error {
 // be represented using the least number of bytes required.
 //
 // Stack transformation: a b bscript.OpMOD -> out
-func opcodeMod(op *ParsedOpcode, t *thread) error {
+func opcodeMod(_ *ParsedOpcode, t *thread) error {
 	b, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1438,7 +1442,8 @@ func opcodeMod(op *ParsedOpcode, t *thread) error {
 	return nil
 }
 
-func opcodeLShift(op *ParsedOpcode, t *thread) error {
+// opcodeLShift shifts the bits of the top item on the data stack to the left
+func opcodeLShift(_ *ParsedOpcode, t *thread) error {
 	num, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1464,7 +1469,8 @@ func opcodeLShift(op *ParsedOpcode, t *thread) error {
 	return nil
 }
 
-func opcodeRShift(op *ParsedOpcode, t *thread) error {
+// opcodeRShift shifts the bits of the top item on the data stack to the right
+func opcodeRShift(_ *ParsedOpcode, t *thread) error {
 	num, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1497,7 +1503,7 @@ func opcodeRShift(op *ParsedOpcode, t *thread) error {
 // Stack transformation (x1!=0, x2==0): [... 5 0] -> [... 0]
 // Stack transformation (x1==0, x2!=0): [... 0 7] -> [... 0]
 // Stack transformation (x1!=0, x2!=0): [... 4 8] -> [... 1]
-func opcodeBoolAnd(op *ParsedOpcode, t *thread) error {
+func opcodeBoolAnd(_ *ParsedOpcode, t *thread) error {
 	v0, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1521,13 +1527,13 @@ func opcodeBoolAnd(op *ParsedOpcode, t *thread) error {
 }
 
 // opcodeBoolOr treats the top two items on the data stack as integers.  When
-// either of them are not zero, they are replaced with a 1, otherwise a 0.
+// either of them is not zero, they are replaced with a 1, otherwise a 0.
 //
 // Stack transformation (x1==0, x2==0): [... 0 0] -> [... 0]
 // Stack transformation (x1!=0, x2==0): [... 5 0] -> [... 1]
 // Stack transformation (x1==0, x2!=0): [... 0 7] -> [... 1]
 // Stack transformation (x1!=0, x2!=0): [... 4 8] -> [... 1]
-func opcodeBoolOr(op *ParsedOpcode, t *thread) error {
+func opcodeBoolOr(_ *ParsedOpcode, t *thread) error {
 	v0, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1555,7 +1561,7 @@ func opcodeBoolOr(op *ParsedOpcode, t *thread) error {
 //
 // Stack transformation (x1==x2): [... 5 5] -> [... 1]
 // Stack transformation (x1!=x2): [... 5 7] -> [... 0]
-func opcodeNumEqual(op *ParsedOpcode, t *thread) error {
+func opcodeNumEqual(_ *ParsedOpcode, t *thread) error {
 	v0, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1580,7 +1586,7 @@ func opcodeNumEqual(op *ParsedOpcode, t *thread) error {
 
 // opcodeNumEqualVerify is a combination of opcodeNumEqual and opcodeVerify.
 //
-// Specifically, treats the top two items on the data stack as integers.  When
+// Specifically, treat the top two items on the data stack as integers.  When
 // they are equal, they are replaced with a 1, otherwise a 0.  Then, it examines
 // the top item on the data stack as a boolean value and verifies it evaluates
 // to true.  An error is returned if it does not.
@@ -1599,7 +1605,7 @@ func opcodeNumEqualVerify(op *ParsedOpcode, t *thread) error {
 //
 // Stack transformation (x1==x2): [... 5 5] -> [... 0]
 // Stack transformation (x1!=x2): [... 5 7] -> [... 1]
-func opcodeNumNotEqual(op *ParsedOpcode, t *thread) error {
+func opcodeNumNotEqual(_ *ParsedOpcode, t *thread) error {
 	v0, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1627,7 +1633,7 @@ func opcodeNumNotEqual(op *ParsedOpcode, t *thread) error {
 // otherwise a 0.
 //
 // Stack transformation: [... x1 x2] -> [... bool]
-func opcodeLessThan(op *ParsedOpcode, t *thread) error {
+func opcodeLessThan(_ *ParsedOpcode, t *thread) error {
 	v0, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1655,7 +1661,7 @@ func opcodeLessThan(op *ParsedOpcode, t *thread) error {
 // with a 1, otherwise a 0.
 //
 // Stack transformation: [... x1 x2] -> [... bool]
-func opcodeGreaterThan(op *ParsedOpcode, t *thread) error {
+func opcodeGreaterThan(_ *ParsedOpcode, t *thread) error {
 	v0, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1683,7 +1689,7 @@ func opcodeGreaterThan(op *ParsedOpcode, t *thread) error {
 // replaced with a 1, otherwise a 0.
 //
 // Stack transformation: [... x1 x2] -> [... bool]
-func opcodeLessThanOrEqual(op *ParsedOpcode, t *thread) error {
+func opcodeLessThanOrEqual(_ *ParsedOpcode, t *thread) error {
 	v0, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1711,7 +1717,7 @@ func opcodeLessThanOrEqual(op *ParsedOpcode, t *thread) error {
 // item, they are replaced with a 1, otherwise a 0.
 //
 // Stack transformation: [... x1 x2] -> [... bool]
-func opcodeGreaterThanOrEqual(op *ParsedOpcode, t *thread) error {
+func opcodeGreaterThanOrEqual(_ *ParsedOpcode, t *thread) error {
 	v0, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1738,7 +1744,7 @@ func opcodeGreaterThanOrEqual(op *ParsedOpcode, t *thread) error {
 // them with the minimum of the two.
 //
 // Stack transformation: [... x1 x2] -> [... min(x1, x2)]
-func opcodeMin(op *ParsedOpcode, t *thread) error {
+func opcodeMin(_ *ParsedOpcode, t *thread) error {
 	v0, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1762,7 +1768,7 @@ func opcodeMin(op *ParsedOpcode, t *thread) error {
 // them with the maximum of the two.
 //
 // Stack transformation: [... x1 x2] -> [... max(x1, x2)]
-func opcodeMax(op *ParsedOpcode, t *thread) error {
+func opcodeMax(_ *ParsedOpcode, t *thread) error {
 	v0, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1790,7 +1796,7 @@ func opcodeMax(op *ParsedOpcode, t *thread) error {
 // the third-to-top item is the value to test.
 //
 // Stack transformation: [... x1 min max] -> [... bool]
-func opcodeWithin(op *ParsedOpcode, t *thread) error {
+func opcodeWithin(_ *ParsedOpcode, t *thread) error {
 	maxVal, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -1828,13 +1834,13 @@ func calcHash(buf []byte, hasher hash.Hash) []byte {
 // replaces it with ripemd160(data).
 //
 // Stack transformation: [... x1] -> [... ripemd160(x1)]
-func opcodeRipemd160(op *ParsedOpcode, t *thread) error {
+func opcodeRipemd160(_ *ParsedOpcode, t *thread) error {
 	buf, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
 	}
 
-	t.dstack.PushByteArray(calcHash(buf, ripemd160.New()))
+	t.dstack.PushByteArray(calcHash(buf, ripemd160.New())) //nolint:gosec // OP_RIPEMD160 support requires this
 	return nil
 }
 
@@ -1842,14 +1848,14 @@ func opcodeRipemd160(op *ParsedOpcode, t *thread) error {
 // with sha1(data).
 //
 // Stack transformation: [... x1] -> [... sha1(x1)]
-func opcodeSha1(op *ParsedOpcode, t *thread) error {
+func opcodeSha1(_ *ParsedOpcode, t *thread) error {
 	buf, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
 	}
 
-	hash := sha1.Sum(buf) //nolint:gosec // operation is for sha1
-	t.dstack.PushByteArray(hash[:])
+	h := sha1.Sum(buf) //nolint:gosec // operation is for sha1
+	t.dstack.PushByteArray(h[:])
 	return nil
 }
 
@@ -1857,14 +1863,14 @@ func opcodeSha1(op *ParsedOpcode, t *thread) error {
 // it with sha256(data).
 //
 // Stack transformation: [... x1] -> [... sha256(x1)]
-func opcodeSha256(op *ParsedOpcode, t *thread) error {
+func opcodeSha256(_ *ParsedOpcode, t *thread) error {
 	buf, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
 	}
 
-	hash := sha256.Sum256(buf)
-	t.dstack.PushByteArray(hash[:])
+	h := sha256.Sum256(buf)
+	t.dstack.PushByteArray(h[:])
 	return nil
 }
 
@@ -1872,14 +1878,14 @@ func opcodeSha256(op *ParsedOpcode, t *thread) error {
 // it with ripemd160(sha256(data)).
 //
 // Stack transformation: [... x1] -> [... ripemd160(sha256(x1))]
-func opcodeHash160(op *ParsedOpcode, t *thread) error {
+func opcodeHash160(_ *ParsedOpcode, t *thread) error {
 	buf, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
 	}
 
-	hash := sha256.Sum256(buf)
-	t.dstack.PushByteArray(calcHash(hash[:], ripemd160.New()))
+	h := sha256.Sum256(buf)
+	t.dstack.PushByteArray(calcHash(h[:], ripemd160.New())) //nolint:gosec // OP_RIPEMD160 support requires this
 	return nil
 }
 
@@ -1887,7 +1893,7 @@ func opcodeHash160(op *ParsedOpcode, t *thread) error {
 // it with sha256(sha256(data)).
 //
 // Stack transformation: [... x1] -> [... sha256(sha256(x1))]
-func opcodeHash256(op *ParsedOpcode, t *thread) error {
+func opcodeHash256(_ *ParsedOpcode, t *thread) error {
 	buf, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
@@ -1901,7 +1907,7 @@ func opcodeHash256(op *ParsedOpcode, t *thread) error {
 // seen bscript.OpCODESEPARATOR which is used during signature checking.
 //
 // This opcode does not change the contents of the data stack.
-func opcodeCodeSeparator(op *ParsedOpcode, t *thread) error {
+func opcodeCodeSeparator(_ *ParsedOpcode, t *thread) error {
 	t.lastCodeSep = t.scriptOff
 	return nil
 }
@@ -1920,7 +1926,7 @@ func opcodeCodeSeparator(op *ParsedOpcode, t *thread) error {
 // cryptographic methods against the provided public key.
 //
 // Stack transformation: [... signature pubkey] -> [... bool]
-func opcodeCheckSig(op *ParsedOpcode, t *thread) error {
+func opcodeCheckSig(_ *ParsedOpcode, t *thread) error {
 	pkBytes, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
@@ -1931,7 +1937,7 @@ func opcodeCheckSig(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	// The signature actually needs needs to be longer than this, but at
+	// The signature actually needs to be longer than this, but at
 	// least 1 byte is needed for the hash type below.  The full length is
 	// checked depending on the script flags and upon parsing the signature.
 	if len(fullSigBytes) < 1 {
@@ -1967,7 +1973,7 @@ func opcodeCheckSig(op *ParsedOpcode, t *thread) error {
 	subScript := t.subScript()
 
 	// Generate the signature hash based on the signature hash type.
-	var hash []byte
+	var hashBytes []byte
 
 	// Remove the signature since there is no way for a signature
 	// to sign itself.
@@ -1984,7 +1990,7 @@ func opcodeCheckSig(op *ParsedOpcode, t *thread) error {
 	txCopy := t.tx.ShallowClone()
 	txCopy.Inputs[t.inputIdx].PreviousTxScript = up
 
-	hash, err = txCopy.CalcInputSignatureHash(uint32(t.inputIdx), shf)
+	hashBytes, err = txCopy.CalcInputSignatureHash(uint32(t.inputIdx), shf)
 	if err != nil {
 		t.dstack.PushBool(false)
 		return err
@@ -2010,7 +2016,7 @@ func opcodeCheckSig(op *ParsedOpcode, t *thread) error {
 			}
 			sigBytesDer = signature.Serialise()
 		}
-		ok = externalVerifySignatureFn(hash, sigBytesDer, pkBytes)
+		ok = externalVerifySignatureFn(hashBytes, sigBytesDer, pkBytes)
 	} else {
 		var pubKey *bec.PublicKey
 		pubKey, err = bec.ParsePubKey(pkBytes, bec.S256())
@@ -2029,7 +2035,7 @@ func opcodeCheckSig(op *ParsedOpcode, t *thread) error {
 			return nil //nolint:nilerr // only need a false push in this case
 		}
 
-		ok = signature.Verify(hash, pubKey)
+		ok = signature.Verify(hashBytes, pubKey)
 	}
 
 	if !ok && t.hasFlag(scriptflag.VerifyNullFail) && len(sigBytes) > 0 {
@@ -2054,7 +2060,7 @@ func opcodeCheckSigVerify(op *ParsedOpcode, t *thread) error {
 }
 
 // parsedSigInfo houses a raw signature along with its parsed form and a flag
-// for whether or not it has already been parsed.  It is used to prevent parsing
+// for whether it has already been parsed.  It is used to prevent parsing
 // the same signature multiple times when verifying a multisig.
 type parsedSigInfo struct {
 	signature       []byte
@@ -2068,12 +2074,12 @@ type parsedSigInfo struct {
 // entries as raw data representing the signatures.
 //
 // Due to a bug in the original Satoshi client implementation, an additional
-// dummy argument is also required by the consensus rules, although it is not
-// used.  The dummy value SHOULD be an bscript.Op0, although that is not required by
+// fake argument is also required by the consensus rules, although it is not
+// used.  The fake value SHOULD be a bscript.Op0, although that is not required by
 // the consensus rules.  When the ScriptStrictMultiSig flag is set, it must be
 // bscript.Op0.
 //
-// All of the aforementioned stack items are replaced with a bool which
+// All the aforementioned stack items are replaced with a bool which
 // indicates if the requisite number of signatures were successfully verified.
 //
 // See the opcodeCheckSigVerify documentation for more details about the process
@@ -2081,7 +2087,7 @@ type parsedSigInfo struct {
 //
 // Stack transformation:
 // [... dummy [sig ...] numsigs [pubkey ...] numpubkeys] -> [... bool]
-func opcodeCheckMultiSig(op *ParsedOpcode, t *thread) error {
+func opcodeCheckMultiSig(_ *ParsedOpcode, t *thread) error {
 	numKeys, err := t.dstack.PopInt()
 	if err != nil {
 		return err
@@ -2141,15 +2147,15 @@ func opcodeCheckMultiSig(op *ParsedOpcode, t *thread) error {
 
 	// A bug in the original Satoshi client implementation means one more
 	// stack value than should be used must be popped.  Unfortunately, this
-	// buggy behaviour is now part of the consensus and a hard fork would be
+	// buggy behavior is now part of the consensus and a hard fork would be
 	// required to fix it.
 	dummy, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
 	}
 
-	// Since the dummy argument is otherwise not checked, it could be any
-	// value which unfortunately provides a source of malleability.  Thus,
+	// Since the fake argument is otherwise not checked, it could be any
+	// value that unfortunately provides a source of malleability.  Thus,
 	// there is a script flag to force an error when the value is NOT 0.
 	if t.hasFlag(scriptflag.StrictMultiSig) && len(dummy) != 0 {
 		return errs.NewError(errs.ErrSigNullDummy, "multisig dummy argument has length %d instead of 0", len(dummy))
@@ -2182,12 +2188,12 @@ func opcodeCheckMultiSig(op *ParsedOpcode, t *thread) error {
 		pubKey := pubKeys[pubKeyIdx]
 
 		// The order of the signature and public key evaluation is
-		// important here since it can be distinguished by an
+		// important here since it can be distinguished by a
 		// bscript.OpCHECKMULTISIG NOT when the strict encoding flag is set.
 
 		rawSig := sigInfo.signature
 		if len(rawSig) == 0 {
-			// Skip to the next pubkey if signature is empty.
+			// Skip to the next pubkey if the signature is empty.
 			continue
 		}
 
@@ -2288,6 +2294,7 @@ func opcodeCheckMultiSigVerify(op *ParsedOpcode, t *thread) error {
 	return abstractVerify(op, t, errs.ErrCheckMultiSigVerify)
 }
 
+// success returns a new error with the code ErrOK and a message of "success".
 func success() errs.Error {
 	return errs.NewError(errs.ErrOK, "success")
 }

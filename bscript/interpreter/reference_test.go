@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"os"
 	"strconv"
@@ -24,7 +25,7 @@ import (
 
 var opcodeByName = make(map[string]byte)
 
-func init() {
+func init() { //nolint:gochecknoinits // this is in a test, still should be refactored
 	// Initialise the opcode name to value map using the contents of the
 	// opcode array.  Also add entries for "OP_FALSE", "OP_TRUE", and
 	// "OP_NOP2" since they are aliases for "OP_0", "OP_1",
@@ -136,7 +137,7 @@ func scriptTestName(test []interface{}) (string, error) {
 	// The test must consist of at least a signature script, public key script,
 	// flags, and expected error.  Finally, it may optionally contain a comment.
 	if len(test) < 4 || 6 < len(test) {
-		fmt.Printf("%#v\n", test)
+		log.Printf("%#v\n", test)
 		return "", fmt.Errorf("invalid test length %d", len(test))
 	}
 
@@ -302,7 +303,7 @@ func parseExpectedResult(expected string) ([]errs.ErrorCode, error) {
 		return []errs.ErrorCode{errs.ErrIllegalForkID}, nil
 	}
 
-	return nil, fmt.Errorf("unrecognised expected result in test data: %v",
+	return nil, fmt.Errorf("unrecognized expected result in test data: %v",
 		expected)
 }
 
@@ -600,7 +601,8 @@ testloop:
 				continue testloop
 			}
 
-			script, err := parseShortForm(oscript)
+			var script *bscript.Script
+			script, err = parseShortForm(oscript)
 			if err != nil {
 				t.Errorf("bad test (%dth input script doesn't "+
 					"parse %v) %d: %v", j, err, i, test)
@@ -681,14 +683,16 @@ testloop:
 			t.Errorf("bad test (arg 2 not string) %d: %v", i, test)
 			continue
 		}
-		serializedTx, err := hex.DecodeString(serializedhex)
+		var serializedTx []byte
+		serializedTx, err = hex.DecodeString(serializedhex)
 		if err != nil {
 			t.Errorf("bad test (arg 2 not hex %v) %d: %v", err, i,
 				test)
 			continue
 		}
 
-		tx, err := bt.NewTxFromBytes(serializedTx)
+		var tx *bt.Tx
+		tx, err = bt.NewTxFromBytes(serializedTx)
 		if err != nil {
 			t.Errorf("bad test (arg 2 not msgtx %v) %d: %v", err,
 				i, test)
@@ -701,7 +705,8 @@ testloop:
 			continue
 		}
 
-		flags, err := parseScriptFlags(verifyFlags)
+		var flags scriptflag.Flag
+		flags, err = parseScriptFlags(verifyFlags)
 		if err != nil {
 			t.Errorf("bad test %d: %v", i, err)
 			continue
@@ -744,7 +749,8 @@ testloop:
 				continue
 			}
 
-			script, err := parseShortForm(oscript)
+			var script *bscript.Script
+			script, err = parseShortForm(oscript)
 			if err != nil {
 				t.Errorf("bad test (%dth input script doesn't "+
 					"parse %v) %d: %v", j, err, i, test)

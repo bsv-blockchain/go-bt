@@ -1,8 +1,10 @@
+// Package chainhash provides a type for representing hashes used in the
+// Bitcoin protocol and provides functions for working with them.
+//
 // Copyright (c) 2013-2016 The btcsuite developers
 // Copyright (c) 2015 The Decred developers
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
-
 package chainhash
 
 import (
@@ -17,10 +19,10 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// HashSize of array used to store hashes.  See Hash.
+// HashSize of an array used to store hashes.  See Hash.
 const HashSize = 32
 
-// MaxHashStringSize is the maximum length of a Hash hash string.
+// MaxHashStringSize is the maximum length of a Hash string.
 const MaxHashStringSize = HashSize * 2
 
 // ErrHashStrSize describes an error that indicates the caller specified a hash
@@ -33,63 +35,65 @@ type Hash [HashSize]byte
 
 // String returns the Hash as the hexadecimal string of the byte-reversed
 // hash.
-func (hash Hash) String() string {
+func (h Hash) String() string {
 	for i := 0; i < HashSize/2; i++ {
-		hash[i], hash[HashSize-1-i] = hash[HashSize-1-i], hash[i]
+		h[i], h[HashSize-1-i] = h[HashSize-1-i], h[i]
 	}
-	return hex.EncodeToString(hash[:])
+	return hex.EncodeToString(h[:])
 }
 
 // CloneBytes returns a copy of the bytes which represent the hash as a byte
 // slice.
 //
-// NOTE: It is generally cheaper to just slice the hash directly thereby reusing
+// NOTE: It is generally less expensive to just slice the hash directly thereby reusing
 // the same bytes rather than calling this method.
-func (hash *Hash) CloneBytes() []byte {
+func (h *Hash) CloneBytes() []byte {
 	newHash := make([]byte, HashSize)
-	copy(newHash, hash[:])
+	copy(newHash, h[:])
 
 	return newHash
 }
 
 // SetBytes sets the bytes which represent the hash.  An error is returned if
 // the number of bytes passed in is not HashSize.
-func (hash *Hash) SetBytes(newHash []byte) error {
+func (h *Hash) SetBytes(newHash []byte) error {
 	nhLen := len(newHash)
 	if nhLen != HashSize {
 		return fmt.Errorf("invalid hash length of %v, want %v", nhLen,
 			HashSize)
 	}
-	copy(hash[:], newHash)
+	copy(h[:], newHash)
 
 	return nil
 }
 
 // IsEqual returns true if target is the same as hash.
-func (hash *Hash) IsEqual(target *Hash) bool {
-	if hash == nil && target == nil {
+func (h *Hash) IsEqual(target *Hash) bool {
+	if h == nil && target == nil {
 		return true
 	}
-	if hash == nil || target == nil {
+	if h == nil || target == nil {
 		return false
 	}
-	return *hash == *target
+	return *h == *target
 }
 
-func (hash *Hash) MarshalJSON() ([]byte, error) {
-	return json.Marshal(hash.String())
+// MarshalJSON returns the JSON encoding of the hash as a hexadecimal
+func (h *Hash) MarshalJSON() ([]byte, error) {
+	return json.Marshal(h.String())
 }
 
-func (hash *Hash) UnmarshalJSON(data []byte) error {
+// UnmarshalJSON parses the JSON-encoded hash string and sets the hash to the
+func (h *Hash) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
 	}
-	h, err := NewHashFromStr(s)
+	hs, err := NewHashFromStr(s)
 	if err != nil {
 		return err
 	}
-	*hash = *h
+	*h = *hs
 	return nil
 }
 
@@ -161,12 +165,13 @@ func Decode(dst *Hash, src string) error {
 	return nil
 }
 
-func (hash *Hash) Marshal() ([]byte, error) {
-	if hash == nil {
+// Marshal converts a chainhash.Hash to a protobuf []byte.
+func (h *Hash) Marshal() ([]byte, error) {
+	if h == nil {
 		return nil, nil
 	}
 
-	return hash[:], nil
+	return h[:], nil
 }
 
 // Unmarshal converts a protobuf []byte to chainhash.Hash.
@@ -180,42 +185,44 @@ func (h *Hash) Unmarshal(data []byte) error {
 
 var _ proto.Message = (*Hash)(nil)
 
+// ProtoReflect implements proto.Message
 func (h *Hash) ProtoReflect() protoreflect.Message {
 	return nil // `nil` is acceptable for non-nested fields like bytes
 }
 
 // Size implements proto.Sizer
-func (hash *Hash) Size() int {
-	if hash == nil {
+func (h *Hash) Size() int {
+	if h == nil {
 		return 0
 	}
 
 	return HashSize
 }
 
-func (hash Hash) Equal(other Hash) bool {
-	return bytes.Equal(hash[0:], other[0:])
+// Equal compares two Hashes for equality.
+func (h Hash) Equal(other Hash) bool {
+	return bytes.Equal(h[0:], other[0:])
 }
 
 // Scan implements the sql.Scanner
-func (hash *Hash) Scan(value interface{}) error {
+func (h *Hash) Scan(value interface{}) error {
 	switch v := value.(type) {
 	case []byte:
-		h, err := NewHash(v)
+		hs, err := NewHash(v)
 		if err != nil {
-			return fmt.Errorf("failed to convert bytes to hash: %v", err)
+			return fmt.Errorf("failed to convert bytes to hash: %w", err)
 		}
 
-		*hash = *h
+		*h = *hs
 
 		return nil
 	case string:
-		h, err := NewHashFromStr(v)
+		hs, err := NewHashFromStr(v)
 		if err != nil {
-			return fmt.Errorf("failed to convert string to hash: %v", err)
+			return fmt.Errorf("failed to convert string to hash: %w", err)
 		}
 
-		*hash = *h
+		*h = *hs
 
 		return nil
 	default:
@@ -224,10 +231,10 @@ func (hash *Hash) Scan(value interface{}) error {
 }
 
 // Value implements the driver.Valuer
-func (hash *Hash) Value() (driver.Value, error) {
-	if hash == nil {
-		return nil, nil
+func (h *Hash) Value() (driver.Value, error) {
+	if h == nil {
+		return nil, nil //nolint:nilnil // allow nil values
 	}
 
-	return hash[:], nil
+	return h[:], nil
 }

@@ -57,7 +57,7 @@ func main() {
 	// own internal mapping for later spending.
 	for i := 0; i < 3; i++ {
 		destination := myAccount.createDestination()
-		if err := baseTx.AddP2PKHOutputFromScript(destination, 400); err != nil {
+		if err = baseTx.AddP2PKHOutputFromScript(destination, 400); err != nil {
 			panic(err)
 		}
 	}

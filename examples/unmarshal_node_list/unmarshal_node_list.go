@@ -3,7 +3,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 
 	"github.com/bsv-blockchain/go-bt/v2"
 )
@@ -99,6 +99,6 @@ func main() {
 	}
 
 	for _, tx := range txs {
-		fmt.Println(tx)
+		log.Println(tx)
 	}
 }

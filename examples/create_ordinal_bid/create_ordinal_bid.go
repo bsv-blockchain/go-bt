@@ -4,7 +4,6 @@ package main
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"log"
 
 	"github.com/bsv-blockchain/go-bt/v2"
@@ -81,5 +80,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	fmt.Println(pstx.String())
+	log.Println(pstx.String())
 }

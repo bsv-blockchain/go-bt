@@ -4,7 +4,6 @@ package main
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"log"
 	"mime"
 	"os"
@@ -22,7 +21,7 @@ func main() {
 	pubkey := decodedWif.SerialisePubKey()
 	addr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(pubkey), true)
 	s, _ := bscript.NewP2PKHFromAddress(addr.AddressString)
-	fmt.Println(addr.AddressString)
+	log.Println(addr.AddressString)
 
 	tx := bt.NewTx()
 
@@ -36,7 +35,7 @@ func main() {
 	// Read the image file
 	data, err := os.ReadFile("1SatLogoLight.png")
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 
@@ -62,5 +61,5 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	fmt.Println(tx.String())
+	log.Println(tx.String())
 }

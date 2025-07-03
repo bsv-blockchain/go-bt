@@ -42,7 +42,7 @@ func (v VarInt) Length() int {
 	return 9
 }
 
-// Bytes takes the underlying unsigned integer and returns a byte array in VarInt format.
+// Bytes take the underlying unsigned integer and return a byte array in VarInt format.
 // See http://learnmeabitcoin.com/glossary/varint
 func (v VarInt) Bytes() []byte {
 	b := make([]byte, 9)
@@ -106,8 +106,10 @@ func (v *VarInt) ReadFrom(r io.Reader) (int64, error) {
 // UpperLimitInc returns true if a number is at the
 // upper limit of a VarInt and will result in a VarInt
 // length change if incremented. The value returned will
-// indicate how many bytes will be increase if the length
-// in incremented. -1 will be returned when the upper limit
+// indicate how many bytes will be increased if the length
+//
+//	is incremented. -1 will be returned when the upper limit
+//
 // of VarInt is reached.
 func (v VarInt) UpperLimitInc() int {
 	switch uint64(v) {

@@ -31,7 +31,7 @@ type outputJSON struct {
 	LockingScript string `json:"lockingScript"`
 }
 
-// MarshalJSON will serialise a transaction to json.
+// MarshalJSON will serialize a transaction to json.
 func (tx *Tx) MarshalJSON() ([]byte, error) {
 	if tx == nil {
 		return nil, errors.Wrap(ErrTxNil, "cannot marshal tx")
@@ -46,7 +46,7 @@ func (tx *Tx) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// UnmarshalJSON will unmarshall a transaction that has been marshalled with this library.
+// UnmarshalJSON will unmarshall a transaction that has been marshaled with this library.
 func (tx *Tx) UnmarshalJSON(b []byte) error {
 	var txj txJSON
 	if err := json.Unmarshal(b, &txj); err != nil {
@@ -58,7 +58,7 @@ func (tx *Tx) UnmarshalJSON(b []byte) error {
 		if err != nil {
 			return err
 		}
-		*tx = *t
+		*tx = *t //nolint:govet // this needs to be refactored to use a constructor
 		return nil
 	}
 	tx.LockTime = txj.LockTime
@@ -118,7 +118,7 @@ func (i *Input) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// MarshalJSON will serialise an output to json.
+// MarshalJSON will serialize an output to json.
 func (o *Output) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&outputJSON{
 		Satoshis:      o.Satoshis,
@@ -126,7 +126,7 @@ func (o *Output) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// UnmarshalJSON will convert a json serialised output to a bt Output.
+// UnmarshalJSON will convert a json serialized output to a bt Output.
 func (o *Output) UnmarshalJSON(b []byte) error {
 	var oj outputJSON
 	if err := json.Unmarshal(b, &oj); err != nil {

@@ -5,9 +5,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/libsv/go-bk/bip32"
 	"github.com/libsv/go-bk/crypto"
-	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/pkg/errors"
 )
 

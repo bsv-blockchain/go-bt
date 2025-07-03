@@ -37,7 +37,7 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 
 // Tx wraps a bitcoin transaction
 //
-// DO NOT CHANGE ORDER - Optimised memory via malign
+// DO NOT CHANGE ORDER - Optimized memory via malign
 type Tx struct {
 	Inputs   []*Input  `json:"inputs"`
 	Outputs  []*Output `json:"outputs"`
@@ -499,9 +499,9 @@ func (tx *Tx) NodeJSON() interface{} {
 	return &nodeTxWrapper{Tx: tx}
 }
 
-// NodeJSON returns a wrapped bt.Txs for marshalling/unmarshalling into a node tx format.
+// NodeJSON returns a wrapped bt.Txs for marshaling/unmarshalling into a node tx format.
 //
-// Marshalling usage example:
+// Marshaling usage example:
 //
 //	bb, err := json.Marshal(txs.NodeJSON())
 //

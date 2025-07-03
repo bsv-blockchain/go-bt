@@ -58,7 +58,7 @@ type nodeOutputJSON struct {
 
 func (n *nodeTxWrapper) MarshalJSON() ([]byte, error) {
 	if n == nil || n.Tx == nil {
-		return nil, errors.New("tx is nil so cannot be marshalled")
+		return nil, errors.New("tx is nil so cannot be marshaled")
 	}
 	tx := n.Tx
 	oo := make([]*nodeOutputJSON, 0, len(tx.Outputs))
@@ -91,7 +91,7 @@ func (n *nodeTxWrapper) MarshalJSON() ([]byte, error) {
 	return json.Marshal(txj)
 }
 
-// UnmarshalJSON will unmarshall a transaction that has been marshalled with this library.
+// UnmarshalJSON will unmarshall a transaction that has been marshaled with this library.
 func (n *nodeTxWrapper) UnmarshalJSON(b []byte) error {
 	tx := n.Tx
 
@@ -105,7 +105,7 @@ func (n *nodeTxWrapper) UnmarshalJSON(b []byte) error {
 		if err != nil {
 			return err
 		}
-		*tx = *t
+		*tx = *t //nolint:govet // this needs to be refactored to use a constructor
 		return nil
 	}
 	oo := make([]*Output, 0, len(txj.Outputs))
@@ -232,7 +232,7 @@ func (i *nodeInputJSON) fromInput(input *Input) error {
 	return nil
 }
 
-// MarshalJSON will marshal a transaction that has been marshalled with this library.
+// MarshalJSON will marshal a transaction that has been marshaled with this library.
 func (nn nodeTxsWrapper) MarshalJSON() ([]byte, error) {
 	txs := make([]*nodeTxWrapper, len(nn))
 	for i, n := range nn {
@@ -241,7 +241,7 @@ func (nn nodeTxsWrapper) MarshalJSON() ([]byte, error) {
 	return json.Marshal(txs)
 }
 
-// UnmarshalJSON will unmarshal a transaction that has been marshalled with this library.
+// UnmarshalJSON will unmarshal a transaction that has been marshaled with this library.
 func (nn *nodeTxsWrapper) UnmarshalJSON(b []byte) error {
 	var jj []json.RawMessage
 	if err := json.Unmarshal(b, &jj); err != nil {

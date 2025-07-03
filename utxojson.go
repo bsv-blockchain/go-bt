@@ -27,7 +27,7 @@ type utxoNodeJSON struct {
 	Amount       float64 `json:"amount"`
 }
 
-// UnmarshalJSON will convert a json serialised utxo to a bt.UTXO.
+// UnmarshalJSON will convert a JSON serialized utxo to a bt.UTXO.
 func (u *UTXO) UnmarshalJSON(body []byte) error {
 	var j utxoJSON
 	if err := json.Unmarshal(body, &j); err != nil {
@@ -52,7 +52,7 @@ func (u *UTXO) UnmarshalJSON(body []byte) error {
 	return nil
 }
 
-// MarshalJSON will serialise a utxo to json.
+// MarshalJSON will serialize an utxo to JSON.
 func (u *UTXO) MarshalJSON() ([]byte, error) {
 	return json.Marshal(utxoJSON{
 		TxID:          u.TxIDStr(),
@@ -62,6 +62,7 @@ func (u *UTXO) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// MarshalJSON will marshal a transaction that has been marshaled with this library.
 func (n *nodeUTXOWrapper) MarshalJSON() ([]byte, error) {
 	utxo := n.UTXO
 	return json.Marshal(utxoNodeJSON{
@@ -72,6 +73,7 @@ func (n *nodeUTXOWrapper) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// UnmarshalJSON will unmarshal a transaction that has been marshaled with this library.
 func (n *nodeUTXOWrapper) UnmarshalJSON(b []byte) error {
 	var uj utxoNodeJSON
 	if err := json.Unmarshal(b, &uj); err != nil {
@@ -96,7 +98,7 @@ func (n *nodeUTXOWrapper) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// MarshalJSON will marshal a transaction that has been marshalled with this library.
+// MarshalJSON will marshal a transaction that has been marshaled with this library.
 func (nn nodeUTXOsWrapper) MarshalJSON() ([]byte, error) {
 	utxos := make([]*nodeUTXOWrapper, len(nn))
 	for i, n := range nn {
@@ -105,7 +107,7 @@ func (nn nodeUTXOsWrapper) MarshalJSON() ([]byte, error) {
 	return json.Marshal(utxos)
 }
 
-// UnmarshalJSON will unmarshal a transaction that has been marshalled with this library.
+// UnmarshalJSON will unmarshal a transaction that has been marshaled with this library.
 func (nn *nodeUTXOsWrapper) UnmarshalJSON(b []byte) error {
 	var jj []json.RawMessage
 	if err := json.Unmarshal(b, &jj); err != nil {

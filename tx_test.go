@@ -3,11 +3,12 @@ package bt_test
 import (
 	"bufio"
 	"context"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
-	"math/rand"
+	"math/big"
 	"reflect"
 	"testing"
 
@@ -532,8 +533,12 @@ func TestTx_Clone(t *testing.T) {
 	require.NoError(t, err)
 
 	for i, ipt := range tx.Inputs {
-		ipt.PreviousTxSatoshis = rand.Uint64()
-		script, err := bscript.NewFromASM(fmt.Sprintf("OP_%d OP_IF OP_ENDIF", i+1))
+		n, _ := rand.Int(rand.Reader, big.NewInt(0).Lsh(big.NewInt(1), 63))
+		ipt.PreviousTxSatoshis = n.Uint64()
+
+		//ipt.PreviousTxSatoshis = rand.Uint64()
+		var script *bscript.Script
+		script, err = bscript.NewFromASM(fmt.Sprintf("OP_%d OP_IF OP_ENDIF", i+1))
 		require.NoError(t, err)
 
 		ipt.PreviousTxScript = script

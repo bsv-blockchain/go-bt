@@ -61,8 +61,8 @@ func (a *account) createDestination() *bscript.Script {
 	return s
 }
 
-// Unlocker get the correct unlocker for a given locking script.
-func (a *account) Unlocker(ctx context.Context, lockingScript *bscript.Script) (bt.Unlocker, error) {
+// Unlocker is a method that returns an unlocker for a given locking script.
+func (a *account) Unlocker(_ context.Context, lockingScript *bscript.Script) (bt.Unlocker, error) {
 	// Retrieve the path for the given locking script.
 	path, ok := a.scriptToPathMap[lockingScript.String()]
 	if !ok {

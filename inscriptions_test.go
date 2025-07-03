@@ -3,7 +3,6 @@ package bt
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
 	"log"
 	"mime"
 	"os"
@@ -154,7 +153,7 @@ func TestInscribeFromFile(t *testing.T) {
 	// Read the image file
 	data, err := os.ReadFile("./examples/create_tx_with_inscription/1SatLogoLight.png")
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 

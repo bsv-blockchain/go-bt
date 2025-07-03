@@ -590,7 +590,7 @@ func TestTx_Fund_Deficit(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			deficits := make([]uint64, 0)
-			test.tx.Fund(context.Background(), FQPoint5SatPerByte, func(ctx context.Context, deficit uint64) ([]*bt.UTXO, error) {
+			_ = test.tx.Fund(context.Background(), FQPoint5SatPerByte, func(_ context.Context, deficit uint64) ([]*bt.UTXO, error) {
 				if len(test.utxos) == 0 {
 					return nil, bt.ErrNoUTXO
 				}

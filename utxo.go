@@ -18,9 +18,9 @@ type UTXO struct {
 // UTXOs a collection of *bt.UTXO.
 type UTXOs []*UTXO
 
-// NodeJSON returns a wrapped *bt.UTXO for marshalling/unmarshalling into a node utxo format.
+// NodeJSON returns a wrapped *bt.UTXO for marshaling/unmarshaling into a node utxo format.
 //
-// Marshalling usage example:
+// Marshaling usage example:
 //
 //	bb, err := json.Marshal(utxo.NodeJSON())
 //
@@ -32,9 +32,9 @@ func (u *UTXO) NodeJSON() interface{} {
 	return &nodeUTXOWrapper{UTXO: u}
 }
 
-// NodeJSON returns a wrapped bt.UTXOs for marshalling/unmarshalling into a node utxo format.
+// NodeJSON returns a wrapped bt.UTXOs for marshaling/unmarshalling into a node utxo format.
 //
-// Marshalling usage example:
+// Marshaling usage example:
 //
 //	bb, err := json.Marshal(utxos.NodeJSON())
 //
@@ -51,7 +51,7 @@ func (u *UTXO) TxIDStr() string {
 	return u.TxIDHash.String()
 }
 
-// LockingScriptHexString retur nthe locking script in hex format.
+// LockingScriptHexString return the locking script in hex format.
 func (u *UTXO) LockingScriptHexString() string {
 	return u.LockingScript.String()
 }

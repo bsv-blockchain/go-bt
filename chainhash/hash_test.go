@@ -200,7 +200,7 @@ func TestNewHashFromStr(t *testing.T) {
 	}
 }
 
-func TestMarshalling(t *testing.T) {
+func TestMarshaling(t *testing.T) {
 	type test struct {
 		Hash Hash `json:"hash"`
 	}
@@ -378,7 +378,7 @@ func TestHashProtobufSerialization(t *testing.T) {
 	err = unmarshaled.Unmarshal(data)
 	require.NoError(t, err)
 
-	// Verify the unmarshalled hash matches the original
+	// Verify the unmarshaled hash matches the original
 	assert.Equal(t, h[:], unmarshaled[:])
 	assert.Equal(t, original[:], unmarshaled[:])
 }
