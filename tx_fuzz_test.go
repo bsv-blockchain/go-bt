@@ -1,1 +1,1 @@
-package bt
+package bt_test
