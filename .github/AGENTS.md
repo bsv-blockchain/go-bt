@@ -40,7 +40,7 @@ Additional `AGENTS.md` files **may exist in subdirectories** to provide more con
 | `testing/`       | Package for testing utilities, including mocks and test helpers                   |
 | `unlocker/`      | Package for Bitcoin transaction unlocking                                         |
 | `examples/`      | Example program demonstrating package usage                                       |
-| `.` (root)       | Source files and tests for the `go-wire` package                                  |
+| `.` (root)       | Source files and tests for the local package                                      |
 
 <br/>
 
