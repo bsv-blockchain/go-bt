@@ -47,11 +47,12 @@ func (tx *Tx) AddP2PKHInputsFromTx(pvsTx *Tx, matchPK []byte) error {
 		}
 
 		if bytes.Equal(utxoPkHASH160, crypto.Hash160(matchPK)) {
-			prevTxIDHash, err := chainhash.NewHash(prevTxIDBytes)
+			var prevTxIDHash *chainhash.Hash
+			prevTxIDHash, err = chainhash.NewHash(prevTxIDBytes)
 			if err != nil {
 				return err
 			}
-			if err := tx.FromUTXOs(&UTXO{
+			if err = tx.FromUTXOs(&UTXO{
 				TxIDHash:      prevTxIDHash,
 				Vout:          uint32(i),
 				Satoshis:      utxo.Satoshis,

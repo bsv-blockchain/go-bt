@@ -11,6 +11,7 @@ import (
 
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
+	"github.com/libsv/go-bk/crypto"
 )
 
 /*
@@ -738,4 +739,10 @@ func (tx *Tx) estimateDeficit(fees *FeeQuote) (uint64, error) {
 	}
 
 	return totalOutputSatoshis + expFeesPaid.TotalFeePaid - totalInputSatoshis, nil
+}
+
+// TxIDBytes returns the transaction ID of the transaction as bytes
+// (which is also the transaction hash).
+func (tx *Tx) TxIDBytes() []byte {
+	return ReverseBytes(crypto.Sha256d(tx.Bytes()))
 }
