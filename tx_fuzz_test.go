@@ -47,7 +47,7 @@ func FuzzNewTxFromBytes(f *testing.F) {
 		tx, err := bt.NewTxFromBytes(txBytes)
 		if err != nil {
 			// On invalid input an error is expected and the tx should be nil
-			assert.Nil(t, tx)
+			require.Nil(t, tx)
 			return
 		}
 
