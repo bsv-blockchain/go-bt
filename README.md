@@ -27,8 +27,8 @@
         </a>
       </td>
       <td valign="top" align="left">
-        <a href="https://goreportcard.com/report/github.com/bsv-blockchain/go-bt">
-          <img src="https://goreportcard.com/badge/github.com/bsv-blockchain/go-bt?style=flat" alt="Go Report Card">
+        <a href="https://goreportcard.com/report/github.com/bsv-blockchain/go-bt/v2/">
+          <img src="https://goreportcard.com/badge/github.com/bsv-blockchain/go-bt/v2/?style=flat" alt="Go Report Card">
         </a><br/>
 		<a href="https://codecov.io/gh/bsv-blockchain/go-bt">
           <img src="https://codecov.io/gh/bsv-blockchain/go-bt/branch/master/graph/badge.svg?style=flat&token=iBdJQpOej9" alt="Code Coverage">
