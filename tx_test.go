@@ -46,6 +46,7 @@ var FQPoint5SatPerByte = bt.NewFeeQuote().
 	},
 })
 
+// TestNewTx tests the creation of a new transaction using the bt package.
 func TestNewTx(t *testing.T) {
 	t.Parallel()
 
@@ -62,6 +63,7 @@ func TestNewTx(t *testing.T) {
 	})
 }
 
+// TestNewTxFromString tests the creation of a new transaction from a hex string.
 func TestNewTxFromString(t *testing.T) {
 	t.Parallel()
 
@@ -123,6 +125,7 @@ func TestNewTxFromString(t *testing.T) {
 	})
 }
 
+// TestNewTxFromBytes tests the creation of a new transaction from a byte slice.
 func TestNewTxFromBytes(t *testing.T) {
 	t.Parallel()
 
@@ -149,7 +152,8 @@ func TestNewTxFromBytes(t *testing.T) {
 	})
 }
 
-func TestTx_TxID(t *testing.T) {
+// TestTxTxID tests the transaction ID generation for a transaction.
+func TestTxTxID(t *testing.T) {
 	t.Parallel()
 
 	t.Run("valid tx id", func(t *testing.T) {
@@ -166,6 +170,7 @@ func TestTx_TxID(t *testing.T) {
 	})
 }
 
+// TestVersion tests the version field of a transaction.
 func TestVersion(t *testing.T) {
 	t.Parallel()
 
@@ -176,7 +181,8 @@ func TestVersion(t *testing.T) {
 	assert.Equal(t, uint32(1), tx.Version)
 }
 
-func TestTx_IsCoinbase(t *testing.T) {
+// TestTxIsCoinbase tests the IsCoinbase method of a transaction.
+func TestTxIsCoinbase(t *testing.T) {
 	t.Parallel()
 
 	t.Run("invalid number of Inputs", func(t *testing.T) {
@@ -220,7 +226,8 @@ func TestTx_IsCoinbase(t *testing.T) {
 	})
 }
 
-func TestTx_CreateTx(t *testing.T) {
+// TestTxCreateTx tests the creation of a transaction with inputs and outputs.
+func TestTxCreateTx(t *testing.T) {
 	t.Parallel()
 
 	tx := bt.NewTx()
@@ -246,7 +253,8 @@ func TestTx_CreateTx(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestTx_HasDataOutputs(t *testing.T) {
+// TestTxHasDataOutputs tests whether a transaction has data outputs.
+func TestTxHasDataOutputs(t *testing.T) {
 	t.Parallel()
 
 	t.Run("has data Outputs", func(t *testing.T) {
@@ -309,7 +317,8 @@ func TestTx_HasDataOutputs(t *testing.T) {
 	})
 }
 
-func TestTx_OutputIdx(t *testing.T) {
+// TestTxOutputIdx tests the OutputIdx method of a transaction.
+func TestTxOutputIdx(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
 		tx        *bt.Tx
@@ -376,7 +385,8 @@ func TestTx_OutputIdx(t *testing.T) {
 	}
 }
 
-func TestTx_InputIdx(t *testing.T) {
+// TestTxInputIdx tests the InputIdx method of a transaction.
+func TestTxInputIdx(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
 		tx       *bt.Tx
@@ -500,7 +510,8 @@ func TestTx_InputIdx(t *testing.T) {
 	}
 }
 
-func Test_IsValidTxID(t *testing.T) {
+// TestIsValidTxID tests the IsValidTxID function for validating transaction IDs.
+func TestIsValidTxID(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
 		txid string
@@ -526,7 +537,8 @@ func Test_IsValidTxID(t *testing.T) {
 	}
 }
 
-func TestTx_Clone(t *testing.T) {
+// TestTxClone tests the Clone method of a transaction.
+func TestTxClone(t *testing.T) {
 	t.Parallel()
 
 	tx, err := bt.NewTxFromString("0200000003a9bc457fdc6a54d99300fb137b23714d860c350a9d19ff0f571e694a419ff3a0010000006b48304502210086c83beb2b2663e4709a583d261d75be538aedcafa7766bd983e5c8db2f8b2fc02201a88b178624ab0ad1748b37c875f885930166237c88f5af78ee4e61d337f935f412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff0092bb9a47e27bf64fc98f557c530c04d9ac25e2f2a8b600e92a0b1ae7c89c20010000006b483045022100f06b3db1c0a11af348401f9cebe10ae2659d6e766a9dcd9e3a04690ba10a160f02203f7fbd7dfcfc70863aface1a306fcc91bbadf6bc884c21a55ef0d32bd6b088c8412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff9d0d4554fa692420a0830ca614b6c60f1bf8eaaa21afca4aa8c99fb052d9f398000000006b483045022100d920f2290548e92a6235f8b2513b7f693a64a0d3fa699f81a034f4b4608ff82f0220767d7d98025aff3c7bd5f2a66aab6a824f5990392e6489aae1e1ae3472d8dffb412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff02807c814a000000001976a9143a6bf34ebfcf30e8541bbb33a7882845e5a29cb488ac76b0e60e000000001976a914bd492b67f90cb85918494767ebb23102c4f06b7088ac67000000")
@@ -579,40 +591,8 @@ func TestTx_Clone(t *testing.T) {
 	})
 }
 
-func Benchmark_Bytes(b *testing.B) {
-	tx, _ := bt.NewTxFromString("0200000003a9bc457fdc6a54d99300fb137b23714d860c350a9d19ff0f571e694a419ff3a0010000006b48304502210086c83beb2b2663e4709a583d261d75be538aedcafa7766bd983e5c8db2f8b2fc02201a88b178624ab0ad1748b37c875f885930166237c88f5af78ee4e61d337f935f412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff0092bb9a47e27bf64fc98f557c530c04d9ac25e2f2a8b600e92a0b1ae7c89c20010000006b483045022100f06b3db1c0a11af348401f9cebe10ae2659d6e766a9dcd9e3a04690ba10a160f02203f7fbd7dfcfc70863aface1a306fcc91bbadf6bc884c21a55ef0d32bd6b088c8412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff9d0d4554fa692420a0830ca614b6c60f1bf8eaaa21afca4aa8c99fb052d9f398000000006b483045022100d920f2290548e92a6235f8b2513b7f693a64a0d3fa699f81a034f4b4608ff82f0220767d7d98025aff3c7bd5f2a66aab6a824f5990392e6489aae1e1ae3472d8dffb412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff02807c814a000000001976a9143a6bf34ebfcf30e8541bbb33a7882845e5a29cb488ac76b0e60e000000001976a914bd492b67f90cb85918494767ebb23102c4f06b7088ac67000000")
-
-	b.Run("toBytesHelper", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			txBytes := tx.Bytes()
-			_ = txBytes
-		}
-	})
-}
-
-func Benchmark_Clone(b *testing.B) {
-	tx, _ := bt.NewTxFromString("0200000003a9bc457fdc6a54d99300fb137b23714d860c350a9d19ff0f571e694a419ff3a0010000006b48304502210086c83beb2b2663e4709a583d261d75be538aedcafa7766bd983e5c8db2f8b2fc02201a88b178624ab0ad1748b37c875f885930166237c88f5af78ee4e61d337f935f412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff0092bb9a47e27bf64fc98f557c530c04d9ac25e2f2a8b600e92a0b1ae7c89c20010000006b483045022100f06b3db1c0a11af348401f9cebe10ae2659d6e766a9dcd9e3a04690ba10a160f02203f7fbd7dfcfc70863aface1a306fcc91bbadf6bc884c21a55ef0d32bd6b088c8412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff9d0d4554fa692420a0830ca614b6c60f1bf8eaaa21afca4aa8c99fb052d9f398000000006b483045022100d920f2290548e92a6235f8b2513b7f693a64a0d3fa699f81a034f4b4608ff82f0220767d7d98025aff3c7bd5f2a66aab6a824f5990392e6489aae1e1ae3472d8dffb412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff02807c814a000000001976a9143a6bf34ebfcf30e8541bbb33a7882845e5a29cb488ac76b0e60e000000001976a914bd492b67f90cb85918494767ebb23102c4f06b7088ac67000000")
-
-	b.Run("clone", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			clone := tx.Clone()
-			_ = clone
-		}
-	})
-}
-
-func Benchmark_ShallowClone(b *testing.B) {
-	tx, _ := bt.NewTxFromString("0200000003a9bc457fdc6a54d99300fb137b23714d860c350a9d19ff0f571e694a419ff3a0010000006b48304502210086c83beb2b2663e4709a583d261d75be538aedcafa7766bd983e5c8db2f8b2fc02201a88b178624ab0ad1748b37c875f885930166237c88f5af78ee4e61d337f935f412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff0092bb9a47e27bf64fc98f557c530c04d9ac25e2f2a8b600e92a0b1ae7c89c20010000006b483045022100f06b3db1c0a11af348401f9cebe10ae2659d6e766a9dcd9e3a04690ba10a160f02203f7fbd7dfcfc70863aface1a306fcc91bbadf6bc884c21a55ef0d32bd6b088c8412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff9d0d4554fa692420a0830ca614b6c60f1bf8eaaa21afca4aa8c99fb052d9f398000000006b483045022100d920f2290548e92a6235f8b2513b7f693a64a0d3fa699f81a034f4b4608ff82f0220767d7d98025aff3c7bd5f2a66aab6a824f5990392e6489aae1e1ae3472d8dffb412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff02807c814a000000001976a9143a6bf34ebfcf30e8541bbb33a7882845e5a29cb488ac76b0e60e000000001976a914bd492b67f90cb85918494767ebb23102c4f06b7088ac67000000")
-
-	b.Run("clone", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			clone := tx.ShallowClone()
-			_ = clone
-		}
-	})
-}
-
-func Test_EstimateIsFeePaidEnough(t *testing.T) {
+// TestEstimateIsFeePaidEnough tests the IsFeePaidEnough method of a transaction.
+func TestEstimateIsFeePaidEnough(t *testing.T) {
 	tests := map[string]struct {
 		tx         *bt.Tx
 		dataLength uint64
@@ -807,7 +787,8 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 	}
 }
 
-func Test_IsFeePaidEnough(t *testing.T) {
+// TestIsFeePaidEnough tests the IsFeePaidEnough method of a transaction.
+func TestIsFeePaidEnough(t *testing.T) {
 	tests := map[string]struct {
 		tx         *bt.Tx
 		dataLength uint64
@@ -988,7 +969,8 @@ func Test_IsFeePaidEnough(t *testing.T) {
 	}
 }
 
-func Test_EstimateFeesPaid(t *testing.T) {
+// TestEstimateFeesPaid tests the EstimateFeesPaid method of a transaction.
+func TestEstimateFeesPaid(t *testing.T) {
 	tests := map[string]struct {
 		tx         *bt.Tx
 		dataLength uint64
@@ -1145,7 +1127,8 @@ func Test_EstimateFeesPaid(t *testing.T) {
 	}
 }
 
-func TestTx_EstimateFeesPaidTotal(t *testing.T) {
+// TestTxEstimateFeesPaidTotal tests the EstimateFeesPaidTotal method of a transaction.
+func TestTxEstimateFeesPaidTotal(t *testing.T) {
 	tests := map[string]struct {
 		tx      *bt.Tx
 		fees    *bt.FeeQuote
@@ -1264,7 +1247,9 @@ func TestTx_EstimateFeesPaidTotal(t *testing.T) {
 	}
 	Then use resp.Body as in the test below
 */
-func TestTx_ReadFrom(t *testing.T) {
+
+// TestTxReadFrom reads a transaction from a binary file and checks its ID and size.
+func TestTxReadFrom(t *testing.T) {
 	f, err := data.TxBinData.Open("block.bin")
 	defer func() {
 		if f != nil {
@@ -1296,7 +1281,8 @@ func TestTx_ReadFrom(t *testing.T) {
 	assert.Equal(t, int64(340216), bytesRead)
 }
 
-func TestTxs_ReadFrom(t *testing.T) {
+// TestTxReadFrom reads a transaction from a binary file and checks its ID and size.
+func TestTxsReadFrom(t *testing.T) {
 	f, err := data.TxBinData.Open("block.bin")
 	defer func() {
 		if f != nil {
@@ -1319,6 +1305,7 @@ func TestTxs_ReadFrom(t *testing.T) {
 	assert.Equal(t, int64(340219), bytesRead)
 }
 
+// TestExtendedFormat tests the ExtendedBytes and NewTxFromBytes methods for transactions.
 func TestExtendedFormat(t *testing.T) {
 	tx, err := bt.NewTxFromString("0100000001478a4ac0c8e4dae42db983bc720d95ed2099dec4c8c3f2d9eedfbeb74e18cdbb1b0100006b483045022100b05368f9855a28f21d3cb6f3e278752d3c5202f1de927862bbaaf5ef7d67adc50220728d4671cd4c34b1fa28d15d5cd2712b68166ea885522baa35c0b9e399fe9ed74121030d4ad284751daf629af387b1af30e02cf5794139c4e05836b43b1ca376624f7fffffffff01000000000000000070006a0963657274696861736822314c6d763150594d70387339594a556e374d3948565473446b64626155386b514e4a406164386337373536356335363935353261626463636634646362353537376164633936633866613933623332663630373865353664666232326265623766353600000000")
 	if err != nil {
@@ -1344,12 +1331,14 @@ func TestExtendedFormat(t *testing.T) {
 	assert.Equal(t, s, []byte(*tx2.Inputs[0].PreviousTxScript))
 }
 
+// TestFromNodeJS tests if a transaction can be created from a Node.js serialized string.
 func TestFromNodeJS(t *testing.T) {
 	_, err := bt.NewTxFromString("010000000000000000ef01478a4ac0c8e4dae42db983bc720d95ed2099dec4c8c3f2d9eedfbeb74e18cdbb1b0100006b483045022100b05368f9855a28f21d3cb6f3e278752d3c5202f1de927862bbaaf5ef7d67adc50220728d4671cd4c34b1fa28d15d5cd2712b68166ea885522baa35c0b9e399fe9ed74121030d4ad284751daf629af387b1af30e02cf5794139c4e05836b43b1ca376624f7fffffffff10000000000000001976a9140c77a935b45abdcf3e472606d3bc647c5cc0efee88ac01000000000000000070006a0963657274696861736822314c6d763150594d70387339594a556e374d3948565473446b64626155386b514e4a406164386337373536356335363935353261626463636634646362353537376164633936633866613933623332663630373865353664666232326265623766353600000000")
 
 	require.NoError(t, err)
 }
 
+// TestSetTxHash tests if the SetTxHash method correctly sets the transaction hash to zero.
 func TestSetTxHash(t *testing.T) {
 	tx, err := bt.NewTxFromString("010000000000000000ef01478a4ac0c8e4dae42db983bc720d95ed2099dec4c8c3f2d9eedfbeb74e18cdbb1b0100006b483045022100b05368f9855a28f21d3cb6f3e278752d3c5202f1de927862bbaaf5ef7d67adc50220728d4671cd4c34b1fa28d15d5cd2712b68166ea885522baa35c0b9e399fe9ed74121030d4ad284751daf629af387b1af30e02cf5794139c4e05836b43b1ca376624f7fffffffff10000000000000001976a9140c77a935b45abdcf3e472606d3bc647c5cc0efee88ac01000000000000000070006a0963657274696861736822314c6d763150594d70387339594a556e374d3948565473446b64626155386b514e4a406164386337373536356335363935353261626463636634646362353537376164633936633866613933623332663630373865353664666232326265623766353600000000")
 	require.NoError(t, err)
