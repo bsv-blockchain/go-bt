@@ -13,7 +13,7 @@
     },
     "go.useLanguageServer": true,
     "gopls": {
-        "formatting.local": "github.com/bsv-blockchain/go-safe-conversion",
+        "formatting.local": "github.com/bsv-blockchain/go-bt",
         "formatting.gofumpt": true
     },
     "go.lintTool": "golangci-lint",
