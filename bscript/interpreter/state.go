@@ -46,8 +46,11 @@ func (n *nopStateHandler) State() *State {
 	return &State{}
 }
 
-// SetState does nothing.
-func (n *nopStateHandler) SetState(_ *State) {}
+// SetState implements StateHandler but intentionally does nothing.
+func (n *nopStateHandler) SetState(_ *State) {
+	// The nopStateHandler is used when state persistence is unnecessary,
+	// so this method is purposely left blank.
+}
 
 // State returns the current state of the thread.
 func (t *thread) State() *State {
