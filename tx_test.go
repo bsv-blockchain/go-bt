@@ -45,14 +45,14 @@ var FQPoint5SatPerByte = bt.NewFeeQuote().
 	},
 })
 
-func decodeWIF(t testing.TB, wifStr string) *wifpkg.WIF {
+func mustDecodeWIF(t testing.TB, wifStr string) *wifpkg.WIF {
 	w, err := wifpkg.DecodeWIF(wifStr)
 	require.NoError(t, err)
 	require.NotNil(t, w)
 	return w
 }
 
-func fillAllInputs(t testing.TB, tx *bt.Tx, wif *wifpkg.WIF) {
+func mustFillAllInputs(t testing.TB, tx *bt.Tx, wif *wifpkg.WIF) {
 	require.NoError(t, tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: wif.PrivKey}))
 }
 
