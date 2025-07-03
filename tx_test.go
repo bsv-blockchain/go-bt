@@ -260,7 +260,7 @@ func TestTxCreateTx(t *testing.T) {
 
 	mustPayToAddress(t, tx, "n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 
-	wif := decodeWIF(t, "KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+	wif := decodeWIF(t, testWIFKey)
 	fillAllInputs(t, tx, wif)
 }
 
