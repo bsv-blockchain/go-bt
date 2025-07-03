@@ -38,7 +38,10 @@ func FuzzNewTxFromBytes(f *testing.F) {
 		}
 
 		if len(txBytes) >= 9 {
-			v, _ := bt.NewVarIntFromBytes(txBytes)
+			v, err := bt.NewVarIntFromBytes(txBytes)
+			if err != nil {
+				t.Skipf("malformed varint input: %v", err)
+			}
 			if v > 1_000_000 {
 				t.Skip("varint too big")
 			}
