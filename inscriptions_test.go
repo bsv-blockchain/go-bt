@@ -3,14 +3,13 @@ package bt
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"mime"
+	"os"
 	"testing"
 
-	"github.com/libsv/go-bk/wif"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
+	"github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/require"
 )
 
@@ -94,22 +93,26 @@ func TestMultipleInscriptionsIn1Tx(t *testing.T) {
 		500,
 	)
 
-	tx.Inscribe(&bscript.InscriptionArgs{
+	err := tx.Inscribe(&bscript.InscriptionArgs{
 		LockingScriptPrefix: s,
 		Data:                []byte("Hello, world!"),
 		ContentType:         "text/plain;charset=utf-8",
 	})
-	tx.Inscribe(&bscript.InscriptionArgs{
-		LockingScriptPrefix: s,
-		Data:                []byte("Hello, world!"),
-		ContentType:         "text/plain;charset=utf-8",
-	})
+	require.NoError(t, err)
 
-	tx.Inscribe(&bscript.InscriptionArgs{
+	err = tx.Inscribe(&bscript.InscriptionArgs{
 		LockingScriptPrefix: s,
 		Data:                []byte("Hello, world!"),
 		ContentType:         "text/plain;charset=utf-8",
 	})
+	require.NoError(t, err)
+
+	err = tx.Inscribe(&bscript.InscriptionArgs{
+		LockingScriptPrefix: s,
+		Data:                []byte("Hello, world!"),
+		ContentType:         "text/plain;charset=utf-8",
+	})
+	require.NoError(t, err)
 
 	// Check if the output has the expected LockingScript value
 	expectedLockingScript := s
@@ -148,20 +151,21 @@ func TestInscribeFromFile(t *testing.T) {
 	)
 
 	// Read the image file
-	data, err := ioutil.ReadFile("./examples/create_tx_with_inscription/1SatLogoLight.png")
+	data, err := os.ReadFile("./examples/create_tx_with_inscription/1SatLogoLight.png")
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 
 	// Get the content type of the image
 	contentType := mime.TypeByExtension(".png")
 
-	tx.Inscribe(&bscript.InscriptionArgs{
+	err = tx.Inscribe(&bscript.InscriptionArgs{
 		LockingScriptPrefix: s,
 		Data:                data,
 		ContentType:         contentType,
 	})
+	require.NoError(t, err)
 
 	err = tx.ChangeToAddress("17ujiveRLkf2JQiGR8Sjtwb37evX7vG3WG", NewFeeQuote())
 	if err != nil {

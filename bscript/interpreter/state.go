@@ -2,7 +2,7 @@ package interpreter
 
 import "github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/scriptflag"
 
-// State a snapshot of a threads state during execution.
+// State a snapshot of a thread state during execution.
 type State struct {
 	DataStack            [][]byte
 	AltStack             [][]byte
@@ -23,7 +23,7 @@ type State struct {
 }
 
 // Opcode the current interpreter.ParsedOpcode from the
-// threads program counter.
+// thread program counter.
 func (s *State) Opcode() ParsedOpcode {
 	return s.Scripts[s.ScriptIdx][s.OpcodeIdx]
 }
@@ -41,11 +41,15 @@ type StateHandler interface {
 
 type nopStateHandler struct{}
 
+// State returns a new empty State.
 func (n *nopStateHandler) State() *State {
 	return &State{}
 }
-func (n *nopStateHandler) SetState(state *State) {}
 
+// SetState does nothing.
+func (n *nopStateHandler) SetState(_ *State) {}
+
+// State returns the current state of the thread.
 func (t *thread) State() *State {
 	scriptIdx := t.scriptIdx
 	offsetIdx := t.scriptOff
@@ -111,6 +115,7 @@ func (t *thread) State() *State {
 	return &ts
 }
 
+// SetState sets the thread state from a given State.
 func (t *thread) SetState(state *State) {
 	setStack(&t.dstack, state.DataStack)
 	setStack(&t.astack, state.AltStack)

@@ -9,9 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func convertIntToBytes(int uint64) []byte {
+// convertIntToBytes converts a uint64 integer to a byte slice
+func convertIntToBytes(val uint64) []byte {
 	buf := new(bytes.Buffer)
-	if err := binary.Write(buf, binary.LittleEndian, int); err != nil {
+	if err := binary.Write(buf, binary.LittleEndian, val); err != nil {
 		return nil
 	}
 	return buf.Bytes()

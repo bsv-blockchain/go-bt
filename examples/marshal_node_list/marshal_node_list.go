@@ -1,8 +1,9 @@
+// Package main demonstrates how to marshal a list of transactions into a Node JSON format using the go-bt library.
 package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 
 	"github.com/bsv-blockchain/go-bt/v2"
 )
@@ -24,5 +25,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(string(bb))
+	log.Println(string(bb))
 }

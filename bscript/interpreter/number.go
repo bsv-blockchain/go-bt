@@ -17,7 +17,7 @@ import (
 // and remain valid so long as they are not used as inputs to other numeric
 // operations or otherwise interpreted as an integer.
 //
-// For example, it is possible for OP_ADD to have 2^31 - 1 for its two operands
+// For example, it is possible for OP_ADD to have 2^31-1 for its two operands
 // resulting 2^32 - 2, which overflows, but is still pushed to the stack as the
 // result of the addition.  That value can then be used as input to OP_VERIFY
 // which will succeed because the data is being interpreted as a boolean.
@@ -26,13 +26,13 @@ import (
 //
 // This type handles the aforementioned requirements by storing all numeric
 // operation results as an int64 to handle overflow and provides the Bytes
-// method to get the serialised representation (including values that overflow).
+// method to get the serialized representation (including values that overflow).
 //
 // Then, whenever data is interpreted as an integer, it is converted to this
 // type by using the NewNumber function which will return an error if the
 // number is out of range or not minimally encoded depending on parameters.
 // Since all numeric opcodes involve pulling data from the stack and
-// interpreting it as an integer, it provides the required behaviour.
+// interpreting it as an integer, it provides the required behavior.
 type scriptNumber struct {
 	val          *big.Int
 	afterGenesis bool
@@ -41,22 +41,22 @@ type scriptNumber struct {
 var zero = big.NewInt(0)
 var one = big.NewInt(1)
 
-// makeScriptNumber interprets the passed serialised bytes as an encoded integer
+// makeScriptNumber interprets the passed serialized bytes as an encoded integer
 // and returns the result as a Number.
 //
-// Since the consensus rules dictate that serialised bytes interpreted as integers
+// Since the consensus rules dictate that serialized bytes interpreted as integers
 // are only allowed to be in the range determined by a maximum number of bytes,
 // on a per opcode basis, an error will be returned when the provided bytes
 // would result in a number outside that range.  In particular, the range for
-// the vast majority of opcodes dealing with numeric values are limited to 4
+// the vast majority of opcodes dealing with numeric values is limited to 4
 // bytes and therefore will pass that value to this function resulting in an
-// allowed range of [-2^31 + 1, 2^31 - 1].
+// allowed range of [-2^31 + 1, 2^31-1].
 //
 // The requireMinimal flag causes an error to be returned if additional checks
 // on the encoding determine it is not represented with the smallest possible
 // number of bytes or is the negative 0 encoding, [0x80].  For example, consider
 // the number 127.  It could be encoded as [0x7f], [0x7f 0x00],
-// [0x7f 0x00 0x00 ...], etc.  All forms except [0x7f] will return an error with
+// [0x7f 0x00 0x00 ...], etc. All forms except [0x7f] will return an error with
 // requireMinimal enabled.
 //
 // The scriptNumLen is the maximum number of bytes the encoded value can be
@@ -200,7 +200,7 @@ func (n *scriptNumber) Equal(o *scriptNumber) bool {
 	return n.val.Cmp(o.val) == 0
 }
 
-// IsZero return strue if hte receiver equals zero.
+// IsZero return true if hte receiver equals zero.
 func (n *scriptNumber) IsZero() bool {
 	return n.val.Cmp(zero) == 0
 }
@@ -223,30 +223,30 @@ func (n *scriptNumber) Neg() *scriptNumber {
 	return n
 }
 
-// Abs sets the receiver to the absolute value of hte receiver.
+// Abs sets the receiver to the absolute value of the receiver.
 func (n *scriptNumber) Abs() *scriptNumber {
 	*n.val = *new(big.Int).Abs(n.val)
 	return n
 }
 
-// Int returns the receivers value as an int.
+// Int returns the receiver value as an int.
 func (n *scriptNumber) Int() int {
 	return int(n.val.Int64())
 }
 
-// Int32 returns the Number clamped to a valid int32.  That is to say
+// Int32 returns the Number clamped to a valid int32.  That is to say,
 // when the script number is higher than the max allowed int32, the max int32
 // value is returned and vice versa for the minimum value.  Note that this
-// behaviour is different from a simple int32 cast because that truncates
+// behavior is different from a simple int32 cast because that truncating
 // and the consensus rules dictate numbers which are directly cast to integers
-// provide this behaviour.
+// provide this behavior.
 //
 // In practice, for most opcodes, the number should never be out of range since
 // it will have been created with makeScriptNumber using the defaultScriptLen
 // value, which rejects them.  In case something in the future ends up calling
 // this function against the result of some arithmetic, which IS allowed to be
-// out of range before being reinterpreted as an integer, this will provide the
-// correct behaviour.
+// out of range before being reinterpreted as an integer; this will provide the
+// correct behavior.
 func (n *scriptNumber) Int32() int32 {
 	v := n.val.Int64()
 	if v > math.MaxInt32 {
@@ -258,19 +258,19 @@ func (n *scriptNumber) Int32() int32 {
 	return int32(v)
 }
 
-// Int64 returns the Number clamped to a valid int64.  That is to say
+// Int64 returns the Number clamped to a valid int64.  That is to say,
 // when the script number is higher than the max allowed int64, the max int64
 // value is returned and vice versa for the minimum value.  Note that this
-// behaviour is different from a simple int64 cast because that truncates
+// behavior is different from a simple int64 cast because that truncating
 // and the consensus rules dictate numbers which are directly cast to integers
-// provide this behaviour.
+// provide this behavior.
 //
 // In practice, for most opcodes, the number should never be out of range since
 // it will have been created with makeScriptNumber using the defaultScriptLen
 // value, which rejects them.  In case something in the future ends up calling
 // this function against the result of some arithmetic, which IS allowed to be
-// out of range before being reinterpreted as an integer, this will provide the
-// correct behaviour.
+// out of range before being reinterpreted as an integer; this will provide the
+// correct behavior.
 func (n *scriptNumber) Int64() int64 {
 	if n.GreaterThanInt(math.MaxInt64) {
 		return math.MaxInt64
@@ -287,21 +287,22 @@ func (n *scriptNumber) Set(i int64) *scriptNumber {
 	return n
 }
 
-// Bytes returns the number serialised as a little endian with a sign bit.
+// Bytes returns the number serialized as a little endian with a sign bit.
 //
 // Example encodings:
-//       127 -> [0x7f]
-//      -127 -> [0xff]
-//       128 -> [0x80 0x00]
-//      -128 -> [0x80 0x80]
-//       129 -> [0x81 0x00]
-//      -129 -> [0x81 0x80]
-//       256 -> [0x00 0x01]
-//      -256 -> [0x00 0x81]
-//     32767 -> [0xff 0x7f]
-//    -32767 -> [0xff 0xff]
-//     32768 -> [0x00 0x80 0x00]
-//    -32768 -> [0x00 0x80 0x80]
+//
+//	   127 -> [0x7f]
+//	  -127 -> [0xff]
+//	   128 -> [0x80 0x00]
+//	  -128 -> [0x80 0x80]
+//	   129 -> [0x81 0x00]
+//	  -129 -> [0x81 0x80]
+//	   256 -> [0x00 0x01]
+//	  -256 -> [0x00 0x81]
+//	 32767 -> [0xff 0x7f]
+//	-32767 -> [0xff 0xff]
+//	 32768 -> [0x00 0x80 0x00]
+//	-32768 -> [0x00 0x80 0x80]
 func (n *scriptNumber) Bytes() []byte {
 	// Zero encodes as an empty byte slice.
 	if n.IsZero() {
@@ -347,7 +348,7 @@ func (n *scriptNumber) Bytes() []byte {
 	// When the most significant byte already has the high bit set, an
 	// additional high byte is required to indicate whether the number is
 	// negative or positive.  The additional byte is removed when converting
-	// back to an integral and its high bit is used to denote the sign.
+	// back to an integral, and its high bit is used to denote the sign.
 	//
 	// Otherwise, when the most significant byte does not already have the
 	// high bit set, use it to indicate the value is negative, if needed.
@@ -408,12 +409,12 @@ func checkMinimalDataEncoding(v []byte) error {
 	// Check that the number is encoded with the minimum possible
 	// number of bytes.
 	//
-	// If the most-significant-byte - excluding the sign bit - is zero
+	// If the most-significant-byte - excluding the sign bit - is zero,
 	// then we're not minimal.  Note how this test also rejects the
 	// negative-zero encoding, [0x80].
 	if v[len(v)-1]&0x7f == 0 {
 		// One exception: if there's more than one byte and the most
-		// significant bit of the second-most-significant-byte is set
+		// significant bit, of the second-most-significant-byte is set,
 		// it would conflict with the sign bit.  An example of this case
 		// is +-255, which encode to 0xff00 and 0xff80 respectively.
 		// (big-endian).

@@ -56,11 +56,12 @@ type nodeOutputJSON struct {
 	} `json:"scriptPubKey,omitempty"`
 }
 
-func (n *nodeTxWrapper) MarshalJSON() ([]byte, error) {
-	if n == nil || n.Tx == nil {
-		return nil, errors.New("tx is nil so cannot be marshalled")
+// MarshalJSON will marshal a transaction that has been marshaled with this library.
+func (w *nodeTxWrapper) MarshalJSON() ([]byte, error) {
+	if w == nil || w.Tx == nil {
+		return nil, errors.New("tx is nil so cannot be marshaled")
 	}
-	tx := n.Tx
+	tx := w.Tx
 	oo := make([]*nodeOutputJSON, 0, len(tx.Outputs))
 	for i, o := range tx.Outputs {
 		out := &nodeOutputJSON{}
@@ -91,7 +92,7 @@ func (n *nodeTxWrapper) MarshalJSON() ([]byte, error) {
 	return json.Marshal(txj)
 }
 
-// UnmarshalJSON will unmarshall a transaction that has been marshalled with this library.
+/*// UnmarshalJSON will unmarshall a transaction that has been marshaled with this library.
 func (n *nodeTxWrapper) UnmarshalJSON(b []byte) error {
 	tx := n.Tx
 
@@ -105,7 +106,7 @@ func (n *nodeTxWrapper) UnmarshalJSON(b []byte) error {
 		if err != nil {
 			return err
 		}
-		*tx = *t
+		*tx = *t //nolint:govet // this needs to be refactored to use a constructor
 		return nil
 	}
 	oo := make([]*Output, 0, len(txj.Outputs))
@@ -129,8 +130,60 @@ func (n *nodeTxWrapper) UnmarshalJSON(b []byte) error {
 	tx.LockTime = txj.LockTime
 	tx.Version = txj.Version
 	return nil
+}*/
+
+// UnmarshalJSON will unmarshal a transaction that has been marshaled with this library.
+func (w *nodeTxWrapper) UnmarshalJSON(b []byte) error {
+	// Ensure we have a Tx to populate
+	if w.Tx == nil {
+		w.Tx = &Tx{}
+	}
+
+	var txj nodeTxJSON
+	if err := json.Unmarshal(b, &txj); err != nil {
+		return err
+	}
+
+	// Fast‑path: is the raw hex present
+	if txj.Hex != "" {
+		parsed, err := NewTxFromString(txj.Hex)
+		if err != nil {
+			return err
+		}
+		w.copyFrom(parsed) // safe deep‑copy; keeps the original pointer
+		return nil
+	}
+
+	// Build Outputs
+	outs := make([]*Output, 0, len(txj.Outputs))
+	for _, o := range txj.Outputs {
+		out, err := o.toOutput()
+		if err != nil {
+			return err
+		}
+		outs = append(outs, out)
+	}
+
+	// Build Inputs
+	ins := make([]*Input, 0, len(txj.Inputs))
+	for _, i := range txj.Inputs {
+		in, err := i.toInput()
+		if err != nil {
+			return err
+		}
+		ins = append(ins, in)
+	}
+
+	tx := w.Tx
+	tx.Inputs = ins
+	tx.Outputs = outs
+	tx.LockTime = txj.LockTime
+	tx.Version = txj.Version
+
+	return nil
 }
 
+// fromOutput converts an Output to a nodeOutputJSON.
 func (o *nodeOutputJSON) fromOutput(out *Output) error {
 	asm, err := out.LockingScript.ToASM()
 	if err != nil {
@@ -160,6 +213,7 @@ func (o *nodeOutputJSON) fromOutput(out *Output) error {
 	return nil
 }
 
+// toOutput converts a nodeOutputJSON to an Output.
 func (o *nodeOutputJSON) toOutput() (*Output, error) {
 	out := &Output{}
 	s, err := bscript.NewFromHexString(o.ScriptPubKey.Hex)
@@ -171,6 +225,7 @@ func (o *nodeOutputJSON) toOutput() (*Output, error) {
 	return out, nil
 }
 
+// toInput converts a nodeInputJSON to an Input.
 func (i *nodeInputJSON) toInput() (*Input, error) {
 	input := &Input{}
 	s, err := bscript.NewFromHexString(i.ScriptSig.Hex)
@@ -188,6 +243,7 @@ func (i *nodeInputJSON) toInput() (*Input, error) {
 	return input, nil
 }
 
+// fromInput converts an Input to a nodeInputJSON.
 func (i *nodeInputJSON) fromInput(input *Input) error {
 	asm, err := input.UnlockingScript.ToASM()
 	if err != nil {
@@ -232,7 +288,7 @@ func (i *nodeInputJSON) fromInput(input *Input) error {
 	return nil
 }
 
-// MarshalJSON will marshal a transaction that has been marshalled with this library.
+// MarshalJSON will marshal a transaction that has been marshaled with this library.
 func (nn nodeTxsWrapper) MarshalJSON() ([]byte, error) {
 	txs := make([]*nodeTxWrapper, len(nn))
 	for i, n := range nn {
@@ -241,7 +297,7 @@ func (nn nodeTxsWrapper) MarshalJSON() ([]byte, error) {
 	return json.Marshal(txs)
 }
 
-// UnmarshalJSON will unmarshal a transaction that has been marshalled with this library.
+// UnmarshalJSON will unmarshal a transaction that has been marshaled with this library.
 func (nn *nodeTxsWrapper) UnmarshalJSON(b []byte) error {
 	var jj []json.RawMessage
 	if err := json.Unmarshal(b, &jj); err != nil {
@@ -259,6 +315,7 @@ func (nn *nodeTxsWrapper) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// MarshalJSON will marshal the Output to JSON.
 func (n *nodeOutputWrapper) MarshalJSON() ([]byte, error) {
 	oj := &nodeOutputJSON{}
 	if err := oj.fromOutput(n.Output); err != nil {
@@ -267,6 +324,7 @@ func (n *nodeOutputWrapper) MarshalJSON() ([]byte, error) {
 	return json.Marshal(oj)
 }
 
+// UnmarshalJSON will unmarshal the Output from JSON.
 func (n *nodeOutputWrapper) UnmarshalJSON(b []byte) error {
 	oj := &nodeOutputJSON{}
 	if err := json.Unmarshal(b, &oj); err != nil {

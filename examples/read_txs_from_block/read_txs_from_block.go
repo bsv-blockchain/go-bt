@@ -1,9 +1,10 @@
+// Package main demonstrates how to read transactions from a block file in a memory-efficient way using the go-bt library.
 package main
 
 import (
 	"bufio"
-	"fmt"
 	"io"
+	"log"
 
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/testing/data"
@@ -21,7 +22,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	// Create buffered reader for this file.
 	r := bufio.NewReader(f)
@@ -38,6 +41,6 @@ func main() {
 		panic(err)
 	}
 	for _, tx := range txs {
-		fmt.Println(tx.TxID())
+		log.Println(tx.TxID())
 	}
 }

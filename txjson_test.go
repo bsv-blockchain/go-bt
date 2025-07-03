@@ -3,16 +3,19 @@ package bt_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"testing"
 
-	"github.com/libsv/go-bk/wif"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
+	"github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
+// TestTx_JSON tests the JSON marshaling and unmarshaling of transactions.
 func TestTx_JSON(t *testing.T) {
 	tests := map[string]struct {
 		tx  *bt.Tx
@@ -76,6 +79,7 @@ func TestTx_JSON(t *testing.T) {
 	}
 }
 
+// TestTx_MarshallJSON tests the JSON marshaling of transactions.
 func TestTx_MarshallJSON(t *testing.T) {
 	tests := map[string]struct {
 		tx      *bt.Tx
@@ -188,6 +192,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 	// TODO add tests for extended format
 }
 
+// TestTx_UnmarshalJSON tests the JSON unmarshaling of transactions.
 func TestTx_UnmarshalJSON(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
@@ -244,9 +249,48 @@ func TestTx_UnmarshalJSON(t *testing.T) {
 	}
 }
 
+// TestTx_ToJson tests the JSON marshaling of a transaction to ensure it can be converted to JSON format.
 func TestTx_ToJson(t *testing.T) {
 	tx, _ := bt.NewTxFromString("0100000001abad53d72f342dd3f338e5e3346b492440f8ea821f8b8800e318f461cc5ea5a2010000006a4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8ffffffff02000000000000000008006a0548656c6c6f7f030000000000001976a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac00000000")
 
 	_, err := json.MarshalIndent(tx, "", "\t")
 	require.NoError(t, err)
+}
+
+// TestSuite is a test suite for the transaction JSON tests.
+type TestSuite struct {
+	suite.Suite
+}
+
+// TestRunTestSuite runs the test suite for transaction JSON tests.
+func TestRunTestSuite(t *testing.T) {
+	suite.Run(t, new(TestSuite))
+}
+
+// TestTx_UnmarshalJSON tests the unmarshaling of transactions from JSON format.
+func (ts *TestSuite) TestTx_UnmarshalJSON() {
+	ts.Run("hex path", func() {
+		const sampleHex = "01000000000000000000" // TODO: replace with a valid tx hex
+		data := fmt.Sprintf(`{"hex":"%s"}`, sampleHex)
+
+		var got bt.Tx
+		ts.Require().NoError(json.Unmarshal([]byte(data), &got))
+
+		want, err := bt.NewTxFromString(sampleHex)
+		ts.Require().NoError(err)
+		ts.Require().Equal(want, &got)
+	})
+
+	ts.Run("fallback fields", func() {
+		const (
+			version  = uint32(2) // ← match Tx.Version’s type
+			lockTime = uint32(0)
+		)
+		data := fmt.Sprintf(`{"version":%d,"lockTime":%d}`, version, lockTime)
+
+		var got bt.Tx
+		ts.Require().NoError(json.Unmarshal([]byte(data), &got))
+		ts.Require().Equal(version, got.Version) // types now align
+		ts.Require().Equal(lockTime, got.LockTime)
+	})
 }

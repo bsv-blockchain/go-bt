@@ -171,7 +171,7 @@ func (s *stack) nipN(idx int32) ([]byte, error) {
 	}
 
 	so := s.stk[sz-idx-1]
-	if idx == 0 {
+	if idx == 0 { //nolint:staticcheck // ignore for now
 		s.stk = s.stk[:sz-1]
 	} else if idx == sz-1 {
 		s1 := make([][]byte, sz-1)

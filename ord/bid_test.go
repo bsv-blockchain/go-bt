@@ -3,15 +3,15 @@ package ord_test
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
+	"log"
 	"testing"
 
-	"github.com/libsv/go-bk/wif"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
 	"github.com/bsv-blockchain/go-bt/v2/ord"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
+	"github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -94,7 +94,7 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 		assert.True(t, vba.Validate(pstx))
 	})
 
-	fmt.Println(pstx.String())
+	log.Println(pstx.String())
 
 	t.Run("no errors when accepting bid", func(t *testing.T) {
 		ordWif, _ := wif.DecodeWIF("KwQq67d4Jds3wxs3kQHB8PPwaoaBQfNKkzAacZeMesb7zXojVYpj") // 1HebepswCi6huw1KJ7LvkrgemAV63TyVUs
@@ -118,6 +118,6 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 			})
 
 		require.NoError(t, err)
-		fmt.Println(tx.String())
+		log.Println(tx.String())
 	})
 }

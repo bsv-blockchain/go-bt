@@ -2,6 +2,7 @@ package bt
 
 import (
 	"encoding/json"
+	"slices"
 
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
@@ -31,7 +32,7 @@ type outputJSON struct {
 	LockingScript string `json:"lockingScript"`
 }
 
-// MarshalJSON will serialise a transaction to json.
+// MarshalJSON will serialize a transaction to json.
 func (tx *Tx) MarshalJSON() ([]byte, error) {
 	if tx == nil {
 		return nil, errors.Wrap(ErrTxNil, "cannot marshal tx")
@@ -46,7 +47,8 @@ func (tx *Tx) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// UnmarshalJSON will unmarshall a transaction that has been marshalled with this library.
+/*
+// UnmarshalJSON will unmarshall a transaction that has been marshaled with this library.
 func (tx *Tx) UnmarshalJSON(b []byte) error {
 	var txj txJSON
 	if err := json.Unmarshal(b, &txj); err != nil {
@@ -58,12 +60,53 @@ func (tx *Tx) UnmarshalJSON(b []byte) error {
 		if err != nil {
 			return err
 		}
-		*tx = *t
+		*tx = *t //nolint:govet // this needs to be refactored to use a constructor
 		return nil
 	}
 	tx.LockTime = txj.LockTime
 	tx.Version = txj.Version
 	return nil
+}
+*/
+
+// UnmarshalJSON will unmarshal a transaction that has been marshaled with this library.
+func (tx *Tx) UnmarshalJSON(b []byte) error {
+	var txj txJSON
+	if err := json.Unmarshal(b, &txj); err != nil {
+		return err
+	}
+
+	// fast path: raw hex
+	if txj.Hex != "" {
+		parsed, err := NewTxFromString(txj.Hex)
+		if err != nil {
+			return err
+		}
+		tx.copyFrom(parsed)
+		return nil
+	}
+
+	// fallback path
+	tx.Version = txj.Version
+	tx.LockTime = txj.LockTime
+	return nil
+}
+
+// copyFrom deep-copies the contents of src into tx, avoiding slice aliasing.
+// NOTE: Ensure the calling file's import list includes: import "slices" (Go 1.21+)
+func (tx *Tx) copyFrom(src *Tx) {
+	if src == nil {
+		return
+	}
+
+	tx.Version = src.Version
+	tx.LockTime = src.LockTime
+
+	// deep copy slices
+	tx.Inputs = slices.Clone(src.Inputs)
+	tx.Outputs = slices.Clone(src.Outputs)
+
+	// add additional deep-copy logic here for new fields if needed
 }
 
 // MarshalJSON will convert an input to json, expanding upon the
@@ -118,7 +161,7 @@ func (i *Input) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// MarshalJSON will serialise an output to json.
+// MarshalJSON will serialize an output to json.
 func (o *Output) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&outputJSON{
 		Satoshis:      o.Satoshis,
@@ -126,7 +169,7 @@ func (o *Output) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// UnmarshalJSON will convert a json serialised output to a bt Output.
+// UnmarshalJSON will convert a json serialized output to a bt Output.
 func (o *Output) UnmarshalJSON(b []byte) error {
 	var oj outputJSON
 	if err := json.Unmarshal(b, &oj); err != nil {

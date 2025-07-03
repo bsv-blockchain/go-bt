@@ -104,7 +104,7 @@ func (o *Output) Bytes(inBytes ...[]byte) []byte {
 	return h
 }
 
-// BytesForSigHash returns the proper serialisation
+// BytesForSigHash returns the proper serialization
 // of an output to be hashed and signed (sighash).
 func (o *Output) BytesForSigHash() []byte {
 	buf := make([]byte, 0)
@@ -119,9 +119,9 @@ func (o *Output) BytesForSigHash() []byte {
 	return buf
 }
 
-// NodeJSON returns a wrapped *bt.Output for marshalling/unmarshalling into a node output format.
+// NodeJSON returns a wrapped *bt.Output for marshaling/unmarshalling into a node output format.
 //
-// Marshalling usage example:
+// Marshaling usage example:
 //
 //	bb, err := json.Marshal(output.NodeJSON())
 //

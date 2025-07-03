@@ -1,8 +1,9 @@
+// Package main demonstrates how to unmarshal a transaction from Node JSON format using the go-bt library.
 package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 
 	"github.com/bsv-blockchain/go-bt/v2"
 )
@@ -54,5 +55,5 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(tx.String())
+	log.Println(tx.String())
 }

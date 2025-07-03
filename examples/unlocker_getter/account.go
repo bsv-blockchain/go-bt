@@ -2,15 +2,13 @@ package main
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/binary"
 	"errors"
 
-	"github.com/libsv/go-bk/bip32"
-	"github.com/libsv/go-bk/chaincfg"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
+	"github.com/libsv/go-bk/bip32"
+	"github.com/libsv/go-bk/chaincfg"
 )
 
 // account for creating destination scripts and stores these scripts with their derivations.
@@ -63,8 +61,8 @@ func (a *account) createDestination() *bscript.Script {
 	return s
 }
 
-// Unlocker get the correct unlocker for a given locking script.
-func (a *account) Unlocker(ctx context.Context, lockingScript *bscript.Script) (bt.Unlocker, error) {
+// Unlocker is a method that returns an unlocker for a given locking script.
+func (a *account) Unlocker(_ context.Context, lockingScript *bscript.Script) (bt.Unlocker, error) {
 	// Retrieve the path for the given locking script.
 	path, ok := a.scriptToPathMap[lockingScript.String()]
 	if !ok {
@@ -89,6 +87,7 @@ func (a *account) Unlocker(ctx context.Context, lockingScript *bscript.Script) (
 	}, nil
 }
 
+/*
 func randUint64() uint64 {
 	var bb [8]byte
 	if _, err := rand.Read(bb[:]); err != nil {
@@ -97,3 +96,4 @@ func randUint64() uint64 {
 
 	return binary.LittleEndian.Uint64(bb[:])
 }
+*/

@@ -3,21 +3,22 @@ package bt_test
 import (
 	"bufio"
 	"context"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
-	"math/rand"
+	"math/big"
 	"reflect"
 	"testing"
 
-	"github.com/libsv/go-bk/wif"
-	. "github.com/libsv/go-bk/wif"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
 	"github.com/bsv-blockchain/go-bt/v2/testing/data"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
+
+	wifpkg "github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -88,7 +89,7 @@ func TestNewTxFromString(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, tx)
 
-		// Check version, locktime, Inputs
+		// Check a version, locktime, Inputs
 		assert.Equal(t, uint32(2), tx.Version)
 		assert.Equal(t, uint32(0), tx.LockTime)
 		assert.Len(t, tx.Inputs, 1)
@@ -104,7 +105,7 @@ func TestNewTxFromString(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, i.UnlockingScript)
 
-		// Check input type
+		// Check an input type
 		assert.Equal(t, tx.InputIdx(0), i)
 
 		// Check output
@@ -236,8 +237,8 @@ func TestTx_CreateTx(t *testing.T) {
 	err = tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 	require.NoError(t, err)
 
-	var wif *WIF
-	wif, err = DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+	var wif *wifpkg.WIF
+	wif, err = wifpkg.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 	require.NoError(t, err)
 	assert.NotNil(t, wif)
 
@@ -270,8 +271,8 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		err = tx.AddOpReturnPartsOutput(ops)
 		require.NoError(t, err)
 
-		var wif *WIF
-		wif, err = DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+		var wif *wifpkg.WIF
+		wif, err = wifpkg.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 		require.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -296,8 +297,8 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		err = tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 		require.NoError(t, err)
 
-		var wif *WIF
-		wif, err = DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+		var wif *wifpkg.WIF
+		wif, err = wifpkg.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 		require.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -532,8 +533,12 @@ func TestTx_Clone(t *testing.T) {
 	require.NoError(t, err)
 
 	for i, ipt := range tx.Inputs {
-		ipt.PreviousTxSatoshis = rand.Uint64()
-		script, err := bscript.NewFromASM(fmt.Sprintf("OP_%d OP_IF OP_ENDIF", i+1))
+		n, _ := rand.Int(rand.Reader, big.NewInt(0).Lsh(big.NewInt(1), 63))
+		ipt.PreviousTxSatoshis = n.Uint64()
+
+		//ipt.PreviousTxSatoshis = rand.Uint64()
+		var script *bscript.Script
+		script, err = bscript.NewFromASM(fmt.Sprintf("OP_%d OP_IF OP_ENDIF", i+1))
 		require.NoError(t, err)
 
 		ipt.PreviousTxScript = script
@@ -700,7 +705,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 		}, "226B signed transaction (1 input 1 P2PKHOutput + change) no data should return 113 sats fee": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				w, err := wif.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				w, err := wifpkg.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -711,7 +716,8 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
 				require.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte))
-				tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				require.NoError(t, err)
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -722,7 +728,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 		}, "192B signed transaction (1 input 1 P2PKHOutput + no change) should pay exact amount": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				w, err := wif.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				w, err := wifpkg.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -732,7 +738,8 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 				))
 
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 904))
-				tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				require.NoError(t, err)
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -742,7 +749,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 			isEnough: true,
 		}, "214B signed transaction (1 input, 1 change output, 1 opreturn) should pay exact amount": {
 			tx: func() *bt.Tx {
-				w, err := wif.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				w, err := wifpkg.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -764,7 +771,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 			isEnough: true,
 		}, "214B signed transaction (1 input, 1 change output, 1 opreturn) should fail paying less by 1 sat": {
 			tx: func() *bt.Tx {
-				w, err := wif.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				w, err := wifpkg.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -885,7 +892,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 		}, "226B signed transaction (1 input 1 P2PKHOutput + change) no data should return 113 sats fee": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				w, err := wif.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				w, err := wifpkg.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -894,7 +901,8 @@ func Test_IsFeePaidEnough(t *testing.T) {
 
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
 				require.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte))
-				tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				require.NoError(t, err)
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -905,7 +913,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 		}, "192B signed transaction (1 input 1 P2PKHOutput + no change) should pay exact amount": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				w, err := wif.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				w, err := wifpkg.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -913,7 +921,8 @@ func Test_IsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 904))
-				tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				require.NoError(t, err)
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -923,7 +932,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 			isEnough: true,
 		}, "214B signed transaction (1 input, 1 change output, 1 opreturn) should pay exact amount": {
 			tx: func() *bt.Tx {
-				w, err := wif.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				w, err := wifpkg.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -944,7 +953,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 			isEnough: true,
 		}, "214B signed transaction (1 input, 1 change output, 1 opreturn) should fail paying less by 1 sat": {
 			tx: func() *bt.Tx {
-				w, err := wif.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				w, err := wifpkg.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -1080,7 +1089,8 @@ func Test_EstimateFeesPaid(t *testing.T) {
 					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 1000))
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
-				tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte)
+				err = tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte)
+				require.NoError(t, err)
 				return tx
 			}(),
 			expFees: &bt.TxFees{
@@ -1105,7 +1115,8 @@ func Test_EstimateFeesPaid(t *testing.T) {
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
 				require.NoError(t, tx.AddOpReturnOutput(make([]byte, 0x64)))
-				tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte)
+				err := tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte)
+				require.NoError(t, err)
 				return tx
 			}(),
 			expFees: &bt.TxFees{
@@ -1164,7 +1175,7 @@ func TestTx_EstimateFeesPaidTotal(t *testing.T) {
 						Bytes:    10,
 					},
 				}
-				data := &bt.Fee{
+				dataVal := &bt.Fee{
 					FeeType: bt.FeeTypeData,
 					MiningFee: bt.FeeUnit{
 						Satoshis: 5,
@@ -1177,7 +1188,7 @@ func TestTx_EstimateFeesPaidTotal(t *testing.T) {
 				}
 				return bt.NewFeeQuote().
 					AddQuote(bt.FeeTypeStandard, std).
-					AddQuote(bt.FeeTypeData, data)
+					AddQuote(bt.FeeTypeData, dataVal)
 
 			}(),
 			expFees: 96,
@@ -1208,7 +1219,7 @@ func TestTx_EstimateFeesPaidTotal(t *testing.T) {
 						Bytes:    10,
 					},
 				}
-				data := &bt.Fee{
+				dataVal := &bt.Fee{
 					FeeType: bt.FeeTypeData,
 					MiningFee: bt.FeeUnit{
 						Satoshis: 5,
@@ -1221,7 +1232,7 @@ func TestTx_EstimateFeesPaidTotal(t *testing.T) {
 				}
 				return bt.NewFeeQuote().
 					AddQuote(bt.FeeTypeStandard, std).
-					AddQuote(bt.FeeTypeData, data)
+					AddQuote(bt.FeeTypeData, dataVal)
 
 			}(),
 			expFees: 147,
@@ -1257,7 +1268,7 @@ func TestTx_ReadFrom(t *testing.T) {
 	f, err := data.TxBinData.Open("block.bin")
 	defer func() {
 		if f != nil {
-			f.Close()
+			_ = f.Close()
 		}
 	}()
 	require.NoError(t, err)
@@ -1289,7 +1300,7 @@ func TestTxs_ReadFrom(t *testing.T) {
 	f, err := data.TxBinData.Open("block.bin")
 	defer func() {
 		if f != nil {
-			f.Close()
+			_ = f.Close()
 		}
 	}()
 	require.NoError(t, err)

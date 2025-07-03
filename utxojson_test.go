@@ -158,7 +158,7 @@ func TestUTXO_Node_UnmarshalJSON(t *testing.T) {
 		utxoJSON string
 		expUTXO  *bt.UTXO
 	}{
-		"node json can be unmarshalled": {
+		"node json can be unmarshaled": {
 			utxoJSON: `{
     "txid": "31ad4b5ef1d0d48340e063087cbfa6a3f3dea3cd5d34c983e0028c18daf3d2a7",
     "vout": 0,

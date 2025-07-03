@@ -7,12 +7,12 @@ import (
 	"math"
 	"testing"
 
-	. "github.com/libsv/go-bk/wif"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
+	wifpkg "github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -215,7 +215,7 @@ func TestTx_Fund(t *testing.T) {
 				return tx
 			}(),
 			utxoGetterFuncOverrider: func(utxos []*bt.UTXO) bt.UTXOGetterFunc {
-				return func(ctx context.Context, satoshis uint64) ([]*bt.UTXO, error) {
+				return func(_ context.Context, _ uint64) ([]*bt.UTXO, error) {
 					return utxos[:2], nil
 				}
 			},
@@ -293,7 +293,7 @@ func TestTx_Fund(t *testing.T) {
 			utxoGetterFuncOverrider: func(utxos []*bt.UTXO) bt.UTXOGetterFunc {
 				utxosCopy := make([]*bt.UTXO, len(utxos))
 				copy(utxosCopy, utxos)
-				return func(ctx context.Context, sat uint64) ([]*bt.UTXO, error) {
+				return func(_ context.Context, _ uint64) ([]*bt.UTXO, error) {
 					defer func() { utxosCopy = utxosCopy[1:] }()
 					return utxosCopy[:1], nil
 				}
@@ -420,7 +420,7 @@ func TestTx_Fund(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			iptFn := func() bt.UTXOGetterFunc {
 				idx := 0
-				return func(ctx context.Context, deficit uint64) ([]*bt.UTXO, error) {
+				return func(_ context.Context, _ uint64) ([]*bt.UTXO, error) {
 					if idx == len(test.utxos) {
 						return nil, bt.ErrNoUTXO
 					}
@@ -590,7 +590,7 @@ func TestTx_Fund_Deficit(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			deficits := make([]uint64, 0)
-			test.tx.Fund(context.Background(), FQPoint5SatPerByte, func(ctx context.Context, deficit uint64) ([]*bt.UTXO, error) {
+			_ = test.tx.Fund(context.Background(), FQPoint5SatPerByte, func(_ context.Context, deficit uint64) ([]*bt.UTXO, error) {
 				if len(test.utxos) == 0 {
 					return nil, bt.ErrNoUTXO
 				}
@@ -622,8 +622,8 @@ func TestTx_FillInput(t *testing.T) {
 			inputIdx: 0,
 			shf:      sighash.AllForkID,
 			unlocker: func() bt.Unlocker {
-				var wif *WIF
-				wif, err := DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+				var wif *wifpkg.WIF
+				wif, err := wifpkg.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 				require.NoError(t, err)
 
 				return &unlocker.Simple{PrivateKey: wif.PrivKey}
@@ -633,8 +633,8 @@ func TestTx_FillInput(t *testing.T) {
 		"sighash all is used as default": {
 			inputIdx: 0,
 			unlocker: func() bt.Unlocker {
-				var wif *WIF
-				wif, err := DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+				var wif *wifpkg.WIF
+				wif, err := wifpkg.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 				require.NoError(t, err)
 
 				return &unlocker.Simple{PrivateKey: wif.PrivKey}
@@ -691,8 +691,8 @@ func TestTx_FillAllInputs(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", FQPoint5SatPerByte)
 		require.NoError(t, err)
 
-		var wif *WIF
-		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *wifpkg.WIF
+		wif, err = wifpkg.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		require.NoError(t, err)
 		assert.NotNil(t, wif)
 

@@ -66,8 +66,8 @@ func (tx *Tx) AddP2PKHInputsFromTx(pvsTx *Tx, matchPK []byte) error {
 }
 
 // From adds a new input to the transaction from the specified UTXO fields, using the default
-// finalised sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
-// afterwards.
+// finalized sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
+// afterward.
 func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, satoshis uint64) error {
 	pts, err := bscript.NewFromHexString(prevTxLockingScript)
 	if err != nil {
@@ -87,8 +87,8 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 }
 
 // FromUTXOs adds a new input to the transaction from the specified *bt.UTXO fields, using the default
-// finalised sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
-// afterwards.
+// finalized sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
+// afterward.
 func (tx *Tx) FromUTXOs(utxos ...*UTXO) error {
 	for _, utxo := range utxos {
 		i := &Input{
@@ -96,7 +96,7 @@ func (tx *Tx) FromUTXOs(utxos ...*UTXO) error {
 			PreviousTxOutIndex: utxo.Vout,
 			PreviousTxSatoshis: utxo.Satoshis,
 			PreviousTxScript:   utxo.LockingScript,
-			SequenceNumber:     DefaultSequenceNumber, // use default finalised sequence number
+			SequenceNumber:     DefaultSequenceNumber, // use default finalized sequence number
 		}
 
 		tx.addInput(i)

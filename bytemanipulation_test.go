@@ -4,16 +4,18 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/libsv/go-bk/crypto"
 	"github.com/bsv-blockchain/go-bt/v2"
+	"github.com/libsv/go-bk/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestLittleEndianBytes(t *testing.T) {
+// TestLittleEndianBytes tests the LittleEndianBytes function.
+func TestLittleEndianBytes(_ *testing.T) {
 	// todo: add test coverage
 }
 
+// TestReverseBytes tests the ReverseBytes function.
 func TestReverseBytes(t *testing.T) {
 	t.Parallel()
 

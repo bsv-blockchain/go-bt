@@ -7,13 +7,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/libsv/go-bk/bip32"
-	"github.com/libsv/go-bk/chaincfg"
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
+	"github.com/libsv/go-bk/bip32"
+	"github.com/libsv/go-bk/chaincfg"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewP2PKHOutputFromPubKeyHashStr(t *testing.T) {
