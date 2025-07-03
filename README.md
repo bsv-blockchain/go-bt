@@ -1,5 +1,6 @@
 # 🚀 go-bt
 > The go-to Bitcoin Transaction (BT) GoLang library
+> Forked from [libsv/go-bt](https://github.com/libsv/go-bt)
 
 <table>
   <thead>
