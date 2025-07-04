@@ -9,9 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/libsv/go-bk/bec"
-	"github.com/libsv/go-bk/bip32"
-	"github.com/libsv/go-bk/chaincfg"
+	transaction "github.com/bsv-blockchain/go-sdk/transaction/chaincfg"
+
+	bip32 "github.com/bsv-blockchain/go-sdk/compat/bip32"
+	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -38,7 +39,7 @@ func TestNewP2PKHFromPubKey(t *testing.T) {
 
 	pk, _ := hex.DecodeString("023717efaec6761e457f55c8417815505b695209d0bbfed8c3265be425b373c2d6")
 
-	pubkey, err := bec.ParsePubKey(pk, bec.S256())
+	pubkey, err := bec.ParsePubKey(pk)
 	require.NoError(t, err)
 
 	scriptP2PKH, err := bscript.NewP2PKHFromPubKeyEC(pubkey)
@@ -58,7 +59,7 @@ func TestNewP2PKHFromBip32ExtKey(t *testing.T) {
 		_, err := rand.Read(b[:])
 		require.NoError(t, err)
 
-		key, err := bip32.NewMaster(b[:], &chaincfg.TestNet)
+		key, err := bip32.NewMaster(b[:], &transaction.TestNet)
 		require.NoError(t, err)
 
 		script, derivationPath, err := bscript.NewP2PKHFromBip32ExtKey(key)

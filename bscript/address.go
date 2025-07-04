@@ -5,9 +5,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/libsv/go-bk/base58"
-	"github.com/libsv/go-bk/bec"
-	"github.com/libsv/go-bk/crypto"
+	base58 "github.com/bsv-blockchain/go-sdk/compat/base58"
+	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
+	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
 )
 
 const (
@@ -39,7 +39,10 @@ func NewAddressFromString(addr string) (*Address, error) {
 }
 
 func addressToPubKeyHashStr(address string) (string, error) {
-	decoded := base58.Decode(address)
+	decoded, err := base58.Decode(address)
+	if err != nil {
+		return "", err
+	}
 
 	if len(decoded) != 25 {
 		return "", fmt.Errorf("%w for '%s'", ErrInvalidAddressLength, address)
@@ -97,7 +100,7 @@ func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise, (mainnet is false) it will return a testnet address (starting with an m or n).
 func NewAddressFromPublicKey(pubKey *bec.PublicKey, mainnet bool) (*Address, error) {
-	hash := crypto.Hash160(pubKey.SerialiseCompressed())
+	hash := crypto.Hash160(pubKey.Compressed())
 
 	// regtest := 111
 	// mainnet: 0

@@ -8,8 +8,7 @@ import (
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	"github.com/libsv/go-bk/bec"
-	"github.com/libsv/go-bk/wif"
+	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,11 +27,10 @@ func TestLocalUnlocker_UnlockAllInputs(t *testing.T) {
 	require.NoError(t, err)
 
 	// Our private key
-	var w *wif.WIF
-	w, err = wif.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
+	pk, err := bec.PrivateKeyFromWif("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 	require.NoError(t, err)
 
-	unlockerVal := unlocker.Getter{PrivateKey: w.PrivKey}
+	unlockerVal := unlocker.Getter{PrivateKey: pk}
 	err = tx.FillAllInputs(context.Background(), &unlockerVal)
 	require.NoError(t, err)
 
@@ -91,11 +89,10 @@ func TestLocalUnlocker_ValidSignature(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tx := test.tx
 
-			var w *wif.WIF
-			w, err := wif.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
+			pk, err := bec.PrivateKeyFromWif("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 			require.NoError(t, err)
 
-			unlockerVal := &unlocker.Simple{PrivateKey: w.PrivKey}
+			unlockerVal := &unlocker.Simple{PrivateKey: pk}
 			uscript, err := unlockerVal.UnlockingScript(context.Background(), tx, bt.UnlockerParams{})
 			require.NoError(t, err)
 
@@ -107,10 +104,10 @@ func TestLocalUnlocker_ValidSignature(t *testing.T) {
 			sigBytes := parts[0]
 			publicKeyBytes := parts[1]
 
-			publicKey, err := bec.ParsePubKey(publicKeyBytes, bec.S256())
+			publicKey, err := bec.ParsePubKey(publicKeyBytes)
 			require.NoError(t, err)
 
-			sig, err := bec.ParseDERSignature(sigBytes, bec.S256())
+			sig, err := bec.ParseDERSignature(sigBytes)
 			require.NoError(t, err)
 
 			sh, err := tx.CalcInputSignatureHash(0, sighash.AllForkID)

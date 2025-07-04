@@ -4,10 +4,11 @@ package main
 import (
 	"context"
 
+	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	"github.com/libsv/go-bk/wif"
 )
 
 // This example gives a simple in-memory-based example of how to implement and use a `bt.UnlockerGetter`
@@ -45,9 +46,9 @@ func main() {
 		panic(err)
 	}
 
-	// decoded Wif just for signing the base tx. It isn't relevant to myAccount or merchantAccount,
+	// pk used just for signing the base tx. It isn't relevant to myAccount or merchantAccount,
 	// and can be ignored.
-	decodedWif, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+	pk, err := primitives.PrivateKeyFromWif("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 	if err != nil {
 		panic(err)
 	}
@@ -62,7 +63,7 @@ func main() {
 		}
 	}
 
-	changeScript, err := bscript.NewP2PKHFromPubKeyEC(decodedWif.PrivKey.PubKey())
+	changeScript, err := bscript.NewP2PKHFromPubKeyEC(pk.PubKey())
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +74,7 @@ func main() {
 
 	if err = baseTx.FillInput(
 		context.Background(),
-		&unlocker.Simple{PrivateKey: decodedWif.PrivKey},
+		&unlocker.Simple{PrivateKey: pk},
 		bt.UnlockerParams{},
 	); err != nil {
 		panic(err)

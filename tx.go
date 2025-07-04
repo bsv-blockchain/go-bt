@@ -11,7 +11,7 @@ import (
 
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
-	"github.com/libsv/go-bk/crypto"
+	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
 )
 
 /*

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/libsv/go-bk/crypto"
+	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
 )
 
 type a25 [25]byte

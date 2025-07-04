@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
-	"github.com/libsv/go-bk/bec"
+	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -90,7 +90,7 @@ func TestNewAddressFromPublicKey(t *testing.T) {
 	require.NoError(t, err)
 
 	var pubKey *bec.PublicKey
-	pubKey, err = bec.ParsePubKey(pubKeyBytes, bec.S256())
+	pubKey, err = bec.ParsePubKey(pubKeyBytes)
 	require.NoError(t, err)
 	assert.NotNil(t, pubKey)
 

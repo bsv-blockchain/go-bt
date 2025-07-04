@@ -8,7 +8,7 @@ import (
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
-	"github.com/libsv/go-bk/bec"
+	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
 )
 
 var (
@@ -67,7 +67,7 @@ func (l *Simple) UnlockingScript(_ context.Context, tx *bt.Tx, params bt.Unlocke
 		var signature []byte
 
 		if externalSignerFn != nil {
-			signature, err = externalSignerFn(sh, l.PrivateKey.Serialise())
+			signature, err = externalSignerFn(sh, l.PrivateKey.Serialize())
 			if err != nil {
 				return nil, err
 			}
@@ -81,10 +81,10 @@ func (l *Simple) UnlockingScript(_ context.Context, tx *bt.Tx, params bt.Unlocke
 				return nil, err
 			}
 
-			signature = sig.Serialise()
+			signature = sig.Serialize()
 		}
 
-		pubKey := l.PrivateKey.PubKey().SerialiseCompressed()
+		pubKey := l.PrivateKey.PubKey().Compressed()
 
 		uscript, err := bscript.NewP2PKHUnlockingScript(pubKey, signature, params.SigHashFlags)
 		if err != nil {

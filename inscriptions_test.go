@@ -8,8 +8,9 @@ import (
 	"os"
 	"testing"
 
+	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
+
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
-	"github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/require"
 )
 
@@ -77,10 +78,10 @@ func TestInscribe(t *testing.T) {
 }
 
 func TestMultipleInscriptionsIn1Tx(t *testing.T) {
-	decodedWif, _ := wif.DecodeWIF("KznpA63DPFrmHecASyL6sFmcRgrNT9oM8Ebso8mwq1dfJF3ZgZ3V")
+	decodedPk, _ := primitives.PrivateKeyFromWif("KznpA63DPFrmHecASyL6sFmcRgrNT9oM8Ebso8mwq1dfJF3ZgZ3V")
 
 	// get public key bytes and address
-	pubkey := decodedWif.SerialisePubKey()
+	pubkey := decodedPk.PubKey().Compressed()
 	addr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(pubkey), true)
 	s, _ := bscript.NewP2PKHFromAddress(addr.AddressString)
 
@@ -134,10 +135,10 @@ func TestMultipleInscriptionsIn1Tx(t *testing.T) {
 }
 
 func TestInscribeFromFile(t *testing.T) {
-	decodedWif, _ := wif.DecodeWIF("KznpA63DPFrmHecASyL6sFmcRgrNT9oM8Ebso8mwq1dfJF3ZgZ3V")
+	decodedPk, _ := primitives.PrivateKeyFromWif("KznpA63DPFrmHecASyL6sFmcRgrNT9oM8Ebso8mwq1dfJF3ZgZ3V")
 
 	// get public key bytes and address
-	pubkey := decodedWif.SerialisePubKey()
+	pubkey := decodedPk.PubKey().Compressed()
 	addr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(pubkey), true)
 	s, _ := bscript.NewP2PKHFromAddress(addr.AddressString)
 

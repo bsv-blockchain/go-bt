@@ -12,8 +12,8 @@ import (
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/errs"
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/scriptflag"
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
-	"github.com/libsv/go-bk/bec"
-	"github.com/libsv/go-bk/crypto"
+	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
+	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
 	"golang.org/x/crypto/ripemd160" //nolint:staticcheck // OP_RIPEMD160 support requires this
 )
 
@@ -27,11 +27,6 @@ const (
 var (
 	externalVerifySignatureFn func(payload, signature, publicKey []byte) bool
 )
-
-// InjectExternalVerifySignatureFn allows the injection of an external
-func InjectExternalVerifySignatureFn(fn func(payload, signature, publicKey []byte) bool) {
-	externalVerifySignatureFn = fn
-}
 
 type opcode struct {
 	val    byte
@@ -2009,26 +2004,26 @@ func opcodeCheckSig(_ *ParsedOpcode, t *thread) error {
 	if externalVerifySignatureFn != nil {
 		if sigBytesDer == nil {
 			// signature is not in DER format, so we must parse it and set the bytes
-			signature, err = bec.ParseSignature(sigBytes, bec.S256())
+			signature, err = bec.ParseSignature(sigBytes)
 			if err != nil {
 				t.dstack.PushBool(false)
 				return nil //nolint:nilerr // only need a false push in this case
 			}
-			sigBytesDer = signature.Serialise()
+			sigBytesDer = signature.Serialize()
 		}
 		ok = externalVerifySignatureFn(hashBytes, sigBytesDer, pkBytes)
 	} else {
 		var pubKey *bec.PublicKey
-		pubKey, err = bec.ParsePubKey(pkBytes, bec.S256())
+		pubKey, err = bec.ParsePubKey(pkBytes)
 		if err != nil {
 			t.dstack.PushBool(false)
 			return nil //nolint:nilerr // only need a false push in this case
 		}
 
 		if t.hasAny(scriptflag.VerifyStrictEncoding, scriptflag.VerifyDERSignatures) {
-			signature, err = bec.ParseDERSignature(sigBytes, bec.S256())
+			signature, err = bec.ParseDERSignature(sigBytes)
 		} else {
-			signature, err = bec.ParseSignature(sigBytes, bec.S256())
+			signature, err = bec.ParseSignature(sigBytes)
 		}
 		if err != nil {
 			t.dstack.PushBool(false)
@@ -2214,11 +2209,9 @@ func opcodeCheckMultiSig(_ *ParsedOpcode, t *thread) error {
 			// Parse the signature.
 			var err error
 			if t.hasAny(scriptflag.VerifyStrictEncoding, scriptflag.VerifyDERSignatures) {
-				parsedSig, err = bec.ParseDERSignature(signature,
-					bec.S256())
+				parsedSig, err = bec.ParseDERSignature(signature)
 			} else {
-				parsedSig, err = bec.ParseSignature(signature,
-					bec.S256())
+				parsedSig, err = bec.ParseSignature(signature)
 			}
 			sigInfo.parsed = true
 			if err != nil {
@@ -2240,7 +2233,7 @@ func opcodeCheckMultiSig(_ *ParsedOpcode, t *thread) error {
 		}
 
 		// Parse the pubkey.
-		parsedPubKey, err := bec.ParsePubKey(pubKey, bec.S256())
+		parsedPubKey, err := bec.ParsePubKey(pubKey)
 		if err != nil {
 			continue
 		}

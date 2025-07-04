@@ -5,22 +5,23 @@ import (
 	"encoding/hex"
 	"testing"
 
+	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
 	"github.com/bsv-blockchain/go-bt/v2/ord"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	"github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestOfferToSellPSBTNoErrors(t *testing.T) {
-	ordWif, _ := wif.DecodeWIF("L42PyNwEKE4XRaa8PzPh7JZurSAWJmx49nbVfaXYuiQg3RCubwn7") // 1JijRHzVfub38S2hizxkxEcVKQwuCTZmxJ
-	ordPrefixAddr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(ordWif.SerialisePubKey()), true)
+	ordPk, _ := primitives.PrivateKeyFromWif("L42PyNwEKE4XRaa8PzPh7JZurSAWJmx49nbVfaXYuiQg3RCubwn7") // 1JijRHzVfub38S2hizxkxEcVKQwuCTZmxJ
+	ordPrefixAddr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(ordPk.PubKey().Compressed()), true)
 	ordPrefixScript, _ := bscript.NewP2PKHFromAddress(ordPrefixAddr.AddressString)
 
-	ordUnlockerGetter := unlocker.Getter{PrivateKey: ordWif.PrivKey}
+	ordUnlockerGetter := unlocker.Getter{PrivateKey: ordPk}
 	ordUnlocker, _ := ordUnlockerGetter.Unlocker(context.Background(), ordPrefixScript)
 
 	ordUTXO := &bt.UTXO{
