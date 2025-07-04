@@ -11,13 +11,14 @@ import (
 	"reflect"
 	"testing"
 
+	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
 	"github.com/bsv-blockchain/go-bt/v2/testing/data"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
 
-	wifpkg "github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -46,16 +47,16 @@ var FQPoint5SatPerByte = bt.NewFeeQuote().
 })
 
 // mustDecodeWIF is a helper function to decode a WIF string and return the WIF object.
-func mustDecodeWIF(t testing.TB, wifStr string) *wifpkg.WIF {
-	w, err := wifpkg.DecodeWIF(wifStr)
+func mustDecodeWIF(t testing.TB, wifStr string) *bec.PrivateKey {
+	pk, err := bec.PrivateKeyFromWif(wifStr)
 	require.NoError(t, err)
-	require.NotNil(t, w)
-	return w
+	require.NotNil(t, pk)
+	return pk
 }
 
 // mustFillAllInputs is a helper function to fill all inputs with a transaction using the provided WIF.
-func mustFillAllInputs(t testing.TB, tx *bt.Tx, wif *wifpkg.WIF) {
-	require.NoError(t, tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: wif.PrivKey}))
+func mustFillAllInputs(t testing.TB, tx *bt.Tx, pk *bec.PrivateKey) {
+	require.NoError(t, tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: pk}))
 }
 
 // mustPayToAddress is a helper function to pay a specified amount of satoshis to a given address in a transaction.
@@ -264,8 +265,8 @@ func TestTxCreateTx(t *testing.T) {
 
 	mustPayToAddress(t, tx, "n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 
-	wif := mustDecodeWIF(t, "KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
-	mustFillAllInputs(t, tx, wif)
+	pk := mustDecodeWIF(t, "KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+	mustFillAllInputs(t, tx, pk)
 }
 
 // TestTxHasDataOutputs tests whether a transaction has data outputs.
@@ -292,8 +293,8 @@ func TestTxHasDataOutputs(t *testing.T) {
 		err := tx.AddOpReturnPartsOutput(ops)
 		require.NoError(t, err)
 
-		wif := mustDecodeWIF(t, "KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
-		mustFillAllInputs(t, tx, wif)
+		pk := mustDecodeWIF(t, "KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+		mustFillAllInputs(t, tx, pk)
 
 		assert.True(t, tx.HasDataOutputs())
 	})
@@ -311,8 +312,8 @@ func TestTxHasDataOutputs(t *testing.T) {
 
 		mustPayToAddress(t, tx, "n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 
-		wif := mustDecodeWIF(t, "KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
-		mustFillAllInputs(t, tx, wif)
+		pk := mustDecodeWIF(t, "KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+		mustFillAllInputs(t, tx, pk)
 
 		assert.False(t, tx.HasDataOutputs())
 	})
@@ -686,7 +687,7 @@ func TestEstimateIsFeePaidEnough(t *testing.T) {
 		}, "226B signed transaction (1 input 1 P2PKHOutput + change) no data should return 113 sats fee": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				w := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				pk := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				require.NoError(t, tx.From(
 					"a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 834709,
@@ -694,7 +695,7 @@ func TestEstimateIsFeePaidEnough(t *testing.T) {
 
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
 				require.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte))
-				mustFillAllInputs(t, tx, w)
+				mustFillAllInputs(t, tx, pk)
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -705,14 +706,14 @@ func TestEstimateIsFeePaidEnough(t *testing.T) {
 		}, "192B signed transaction (1 input 1 P2PKHOutput + no change) should pay exact amount": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				w := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				pk := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				require.NoError(t, tx.From(
 					"a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000,
 				))
 
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 904))
-				mustFillAllInputs(t, tx, w)
+				mustFillAllInputs(t, tx, pk)
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -722,7 +723,7 @@ func TestEstimateIsFeePaidEnough(t *testing.T) {
 			isEnough: true,
 		}, "214B signed transaction (1 input, 1 change output, 1 opreturn) should pay exact amount": {
 			tx: func() *bt.Tx {
-				w := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				pk := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				tx := bt.NewTx()
 				require.NoError(t, tx.From(
 					"160f06232540dcb0e9b6db9b36a27f01da1e7e473989df67859742cf098d498f",
@@ -730,7 +731,7 @@ func TestEstimateIsFeePaidEnough(t *testing.T) {
 				))
 				require.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 89))
-				mustFillAllInputs(t, tx, w)
+				mustFillAllInputs(t, tx, pk)
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -741,7 +742,7 @@ func TestEstimateIsFeePaidEnough(t *testing.T) {
 			isEnough: true,
 		}, "214B signed transaction (1 input, 1 change output, 1 opreturn) should fail paying less by 1 sat": {
 			tx: func() *bt.Tx {
-				w := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				pk := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				tx := bt.NewTx()
 				require.NoError(t, tx.From(
 					"160f06232540dcb0e9b6db9b36a27f01da1e7e473989df67859742cf098d498f",
@@ -749,7 +750,7 @@ func TestEstimateIsFeePaidEnough(t *testing.T) {
 				))
 				require.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 895))
-				mustFillAllInputs(t, tx, w)
+				mustFillAllInputs(t, tx, pk)
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -860,13 +861,13 @@ func TestIsFeePaidEnough(t *testing.T) {
 		}, "226B signed transaction (1 input 1 P2PKHOutput + change) no data should return 113 sats fee": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				w := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				pk := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				require.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 834709))
 
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
 				require.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte))
-				mustFillAllInputs(t, tx, w)
+				mustFillAllInputs(t, tx, pk)
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -877,12 +878,12 @@ func TestIsFeePaidEnough(t *testing.T) {
 		}, "192B signed transaction (1 input 1 P2PKHOutput + no change) should pay exact amount": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				w := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				pk := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				require.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 904))
-				mustFillAllInputs(t, tx, w)
+				mustFillAllInputs(t, tx, pk)
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -892,13 +893,13 @@ func TestIsFeePaidEnough(t *testing.T) {
 			isEnough: true,
 		}, "214B signed transaction (1 input, 1 change output, 1 opreturn) should pay exact amount": {
 			tx: func() *bt.Tx {
-				w := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				pk := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				tx := bt.NewTx()
 				require.NoError(t, tx.From("160f06232540dcb0e9b6db9b36a27f01da1e7e473989df67859742cf098d498f",
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 				require.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 893))
-				mustFillAllInputs(t, tx, w)
+				mustFillAllInputs(t, tx, pk)
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -909,13 +910,13 @@ func TestIsFeePaidEnough(t *testing.T) {
 			isEnough: true,
 		}, "214B signed transaction (1 input, 1 change output, 1 opreturn) should fail paying less by 1 sat": {
 			tx: func() *bt.Tx {
-				w := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				pk := mustDecodeWIF(t, "cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				tx := bt.NewTx()
 				require.NoError(t, tx.From("160f06232540dcb0e9b6db9b36a27f01da1e7e473989df67859742cf098d498f",
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 				require.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				require.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 895))
-				mustFillAllInputs(t, tx, w)
+				mustFillAllInputs(t, tx, pk)
 				return tx
 			}(),
 			expSize: &bt.TxSize{

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/libsv/go-bk/crypto"
+	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
 )
 
 // BIP276 proposes a scheme for encoding typed bitcoin related data in a user-friendly way

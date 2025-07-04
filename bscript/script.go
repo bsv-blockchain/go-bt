@@ -9,9 +9,9 @@ import (
 	"math/bits"
 	"strings"
 
-	"github.com/libsv/go-bk/bec"
-	"github.com/libsv/go-bk/bip32"
-	"github.com/libsv/go-bk/crypto"
+	bip32 "github.com/bsv-blockchain/go-sdk/compat/bip32"
+	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
+	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
 )
 
 // ScriptKey types.
@@ -64,7 +64,7 @@ func NewFromASM(str string) (*Script, error) {
 // NewP2PKHFromPubKeyEC takes a public key hex string (in
 // compressed format) and creates a P2PKH script from it.
 func NewP2PKHFromPubKeyEC(pubKey *bec.PublicKey) (*Script, error) {
-	return NewP2PKHFromPubKeyBytes(pubKey.SerialiseCompressed())
+	return NewP2PKHFromPubKeyBytes(pubKey.Compressed())
 }
 
 // NewP2PKHFromPubKeyStr takes a public key hex string (in

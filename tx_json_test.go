@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"testing"
 
+	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	"github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -31,12 +32,11 @@ func TestTx_JSON(t *testing.T) {
 					2000000,
 				))
 				require.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
-				var w *wif.WIF
-				w, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+				pk, err := primitives.PrivateKeyFromWif("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				require.NoError(t, err)
-				assert.NotNil(t, w)
+				assert.NotNil(t, pk)
 
-				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: pk})
 				require.NoError(t, err)
 				return tx
 			}(),
@@ -50,16 +50,15 @@ func TestTx_JSON(t *testing.T) {
 					2000000,
 				))
 				require.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
-				var w *wif.WIF
-				w, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+				pk, err := primitives.PrivateKeyFromWif("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				require.NoError(t, err)
-				assert.NotNil(t, w)
+				assert.NotNil(t, pk)
 				s := &bscript.Script{}
 				require.NoError(t, s.AppendPushDataString("test"))
 				tx.AddOutput(&bt.Output{
 					LockingScript: s,
 				})
-				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: pk})
 				require.NoError(t, err)
 				return tx
 			}(),
@@ -137,11 +136,10 @@ func TestTx_MarshallJSON(t *testing.T) {
 					10000,
 				))
 				require.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
-				var w *wif.WIF
-				w, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+				pk, err := primitives.PrivateKeyFromWif("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				require.NoError(t, err)
-				assert.NotNil(t, w)
-				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				assert.NotNil(t, pk)
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: pk})
 				require.NoError(t, err)
 				return tx
 			}(),

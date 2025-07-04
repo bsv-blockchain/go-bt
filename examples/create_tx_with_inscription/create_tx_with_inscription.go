@@ -8,17 +8,18 @@ import (
 	"mime"
 	"os"
 
+	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	"github.com/libsv/go-bk/wif"
 )
 
 func main() {
-	decodedWif, _ := wif.DecodeWIF("KznpA63DPFrmHecASyL6sFmcRgrNT9oM8Ebso8mwq1dfJF3ZgZ3V")
+	pk, _ := primitives.PrivateKeyFromWif("KznpA63DPFrmHecASyL6sFmcRgrNT9oM8Ebso8mwq1dfJF3ZgZ3V")
 
 	// get public key bytes and address
-	pubkey := decodedWif.SerialisePubKey()
+	pubkey := pk.PubKey().Compressed()
 	addr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(pubkey), true)
 	s, _ := bscript.NewP2PKHFromAddress(addr.AddressString)
 	log.Println(addr.AddressString)
@@ -56,7 +57,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: decodedWif.PrivKey})
+	err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: pk})
 	if err != nil {
 		log.Fatal(err.Error())
 	}

@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
+	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	wifpkg "github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,9 +24,9 @@ func newTxWithInput(t *testing.T, txID string, idx uint32, script string, satosh
 // signAllInputs signs all transaction inputs using the provided WIF key.
 func signAllInputs(t *testing.T, tx *bt.Tx, wifStr string) {
 	t.Helper()
-	wif, err := wifpkg.DecodeWIF(wifStr)
+	pk, err := primitives.PrivateKeyFromWif(wifStr)
 	require.NoError(t, err)
-	require.NoError(t, tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: wif.PrivKey}))
+	require.NoError(t, tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: pk}))
 }
 
 const testWIF = "L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw"

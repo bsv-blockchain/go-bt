@@ -5,9 +5,10 @@ import (
 	"context"
 	"log"
 
+	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	"github.com/libsv/go-bk/wif"
 )
 
 func main() {
@@ -22,9 +23,9 @@ func main() {
 
 	_ = tx.PayToAddress("1NRoySJ9Lvby6DuE2UQYnyT67AASwNZxGb", 1000)
 
-	decodedWif, _ := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+	pk, _ := primitives.PrivateKeyFromWif("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 
-	if err := tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: decodedWif.PrivKey}); err != nil {
+	if err := tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: pk}); err != nil {
 		log.Fatal(err.Error())
 	}
 	log.Printf("tx: %s\n", tx)

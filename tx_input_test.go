@@ -7,12 +7,13 @@ import (
 	"math"
 	"testing"
 
+	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	wifpkg "github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -622,22 +623,20 @@ func TestTx_FillInput(t *testing.T) {
 			inputIdx: 0,
 			shf:      sighash.AllForkID,
 			unlocker: func() bt.Unlocker {
-				var wif *wifpkg.WIF
-				wif, err := wifpkg.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+				pk, err := primitives.PrivateKeyFromWif("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 				require.NoError(t, err)
 
-				return &unlocker.Simple{PrivateKey: wif.PrivKey}
+				return &unlocker.Simple{PrivateKey: pk}
 			}(),
 			expHex: "01000000010b94a1ef0fb352aa2adc54207ce47ba55d5a1c1609afda58fe9520e472299107000000006a473044022049ee0c0f26c00e6a6b3af5990fc8296c66eab3e3e42ab075069b89b1be6fefec02206079e49dd8c9e1117ef06fbe99714d822620b1f0f5d19f32a1128f5d29b7c3c4412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff01a0083d00000000001976a914af2590a45ae401651fdbdf59a76ad43d1862534088ac00000000",
 		},
 		"sighash all is used as default": {
 			inputIdx: 0,
 			unlocker: func() bt.Unlocker {
-				var wif *wifpkg.WIF
-				wif, err := wifpkg.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+				pk, err := primitives.PrivateKeyFromWif("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 				require.NoError(t, err)
 
-				return &unlocker.Simple{PrivateKey: wif.PrivKey}
+				return &unlocker.Simple{PrivateKey: pk}
 			}(),
 			expHex: "01000000010b94a1ef0fb352aa2adc54207ce47ba55d5a1c1609afda58fe9520e472299107000000006a473044022049ee0c0f26c00e6a6b3af5990fc8296c66eab3e3e42ab075069b89b1be6fefec02206079e49dd8c9e1117ef06fbe99714d822620b1f0f5d19f32a1128f5d29b7c3c4412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff01a0083d00000000001976a914af2590a45ae401651fdbdf59a76ad43d1862534088ac00000000",
 		},
@@ -691,14 +690,13 @@ func TestTx_FillAllInputs(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", FQPoint5SatPerByte)
 		require.NoError(t, err)
 
-		var wif *wifpkg.WIF
-		wif, err = wifpkg.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		pk, err := primitives.PrivateKeyFromWif("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		require.NoError(t, err)
-		assert.NotNil(t, wif)
+		assert.NotNil(t, pk)
 
 		rawTxBefore := tx.String()
 
-		require.NoError(t, tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: wif.PrivKey}))
+		require.NoError(t, tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: pk}))
 
 		assert.NotEqual(t, rawTxBefore, tx.String())
 	})

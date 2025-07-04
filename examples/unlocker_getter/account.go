@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 
+	transaction "github.com/bsv-blockchain/go-sdk/transaction/chaincfg"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	"github.com/libsv/go-bk/bip32"
-	"github.com/libsv/go-bk/chaincfg"
+	bip32 "github.com/bsv-blockchain/go-sdk/compat/bip32"
 )
 
 // account for creating destination scripts and stores these scripts with their derivations.
@@ -27,7 +28,7 @@ func newAccount() *account {
 	if err != nil {
 		panic(err)
 	}
-	privKey, err := bip32.NewMaster(seed, &chaincfg.MainNet)
+	privKey, err := bip32.NewMaster(seed, &transaction.MainNet)
 	if err != nil {
 		panic(err)
 	}

@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"testing"
 
+	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	"github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,11 +29,11 @@ func TestTxJSON_Node_JSON(t *testing.T) {
 					2000000,
 				))
 				require.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
-				w, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+				pk, err := primitives.PrivateKeyFromWif("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				require.NoError(t, err)
-				assert.NotNil(t, w)
+				assert.NotNil(t, pk)
 
-				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: pk})
 				require.NoError(t, err)
 				return tx
 			}(),
@@ -46,15 +47,15 @@ func TestTxJSON_Node_JSON(t *testing.T) {
 					2000000,
 				))
 				require.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
-				w, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+				pk, err := primitives.PrivateKeyFromWif("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				require.NoError(t, err)
-				assert.NotNil(t, w)
+				assert.NotNil(t, pk)
 				s := &bscript.Script{}
 				require.NoError(t, s.AppendPushDataString("test"))
 				tx.AddOutput(&bt.Output{
 					LockingScript: s,
 				})
-				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: pk})
 				require.NoError(t, err)
 				return tx
 			}(),
@@ -147,11 +148,10 @@ func TestTxJSON_Node_MarshallJSON(t *testing.T) {
 					10000,
 				))
 				require.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
-				var w *wif.WIF
-				w, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+				pk, err := primitives.PrivateKeyFromWif("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				require.NoError(t, err)
-				assert.NotNil(t, w)
-				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				assert.NotNil(t, pk)
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: pk})
 				require.NoError(t, err)
 				return tx
 			}(),
@@ -439,11 +439,10 @@ func TestTxsJSON_Node_MarshallJSON(t *testing.T) {
 					10000,
 				))
 				require.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
-				var w *wif.WIF
-				w, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+				pk, err := primitives.PrivateKeyFromWif("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				require.NoError(t, err)
-				assert.NotNil(t, w)
-				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
+				assert.NotNil(t, pk)
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: pk})
 				require.NoError(t, err)
 
 				tx2, err := bt.NewTxFromString("020000000117d2011c2a3b8a309d481930bae86e88017b0f55845ada17f96c464684b3af520000000048473044022014a60c3e84cf0160cb7e4ee7d87a3b78c5efb6dd3b66c76970b680affdb95e8f02207f6d9e3268a934e5e278ae513a3bc6dee3bec7bae37204574480305bfb5dea0e41feffffff0240101024010000001976a9149933e4bad50e7dd4b48c1f0be98436ca7d4392a288ac00e1f505000000001976a914abbe187ad301e4326e59587e43d602edd318364e88ac77000000")

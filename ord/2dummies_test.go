@@ -5,21 +5,22 @@ import (
 	"encoding/hex"
 	"testing"
 
+	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
 	"github.com/bsv-blockchain/go-bt/v2/ord"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	"github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestBidToBuyPSBT2DNoErrors(t *testing.T) {
-	fundingWif, _ := wif.DecodeWIF("L5W2nyKUCsDStVUBwZj2Q3Ph5vcae4bgdzprZDYqDpvZA8AFguFH") // 19NfKd8aTwvb5ngfP29RxgfQzZt8KAYtQo
-	fundingAddr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(fundingWif.SerialisePubKey()), true)
+	fundingPk, _ := primitives.PrivateKeyFromWif("L5W2nyKUCsDStVUBwZj2Q3Ph5vcae4bgdzprZDYqDpvZA8AFguFH") // 19NfKd8aTwvb5ngfP29RxgfQzZt8KAYtQo
+	fundingAddr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(fundingPk.PubKey().Compressed()), true)
 	fundingScript, _ := bscript.NewP2PKHFromAddress(fundingAddr.AddressString)
-	fundingUnlockerGetter := unlocker.Getter{PrivateKey: fundingWif.PrivKey}
+	fundingUnlockerGetter := unlocker.Getter{PrivateKey: fundingPk}
 	fundingUnlocker, _ := fundingUnlockerGetter.Unlocker(context.Background(), fundingScript)
 
 	bidAmount := 250
@@ -57,10 +58,10 @@ func TestBidToBuyPSBT2DNoErrors(t *testing.T) {
 		},
 	}
 
-	ordWif, _ := wif.DecodeWIF("KwQq67d4Jds3wxs3kQHB8PPwaoaBQfNKkzAacZeMesb7zXojVYpj") // 1HebepswCi6huw1KJ7LvkrgemAV63TyVUs
-	ordPrefixAddr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(ordWif.SerialisePubKey()), true)
+	ordPk, _ := primitives.PrivateKeyFromWif("KwQq67d4Jds3wxs3kQHB8PPwaoaBQfNKkzAacZeMesb7zXojVYpj") // 1HebepswCi6huw1KJ7LvkrgemAV63TyVUs
+	ordPrefixAddr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(ordPk.PubKey().Compressed()), true)
 	ordPrefixScript, _ := bscript.NewP2PKHFromAddress(ordPrefixAddr.AddressString)
-	ordUnlockerGetter := unlocker.Getter{PrivateKey: ordWif.PrivKey}
+	ordUnlockerGetter := unlocker.Getter{PrivateKey: ordPk}
 	ordUnlocker, _ := ordUnlockerGetter.Unlocker(context.Background(), ordPrefixScript)
 
 	ordUTXO := &bt.UTXO{

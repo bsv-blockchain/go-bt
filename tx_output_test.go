@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"testing"
 
+	transaction "github.com/bsv-blockchain/go-sdk/transaction/chaincfg"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
-	"github.com/libsv/go-bk/bip32"
-	"github.com/libsv/go-bk/chaincfg"
+	bip32 "github.com/bsv-blockchain/go-sdk/compat/bip32"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -234,7 +235,7 @@ func TestTx_AddP2PKHOutputFromBip32ExtKey(t *testing.T) {
 		_, err := rand.Read(b[:])
 		require.NoError(t, err)
 
-		key, err := bip32.NewMaster(b[:], &chaincfg.TestNet)
+		key, err := bip32.NewMaster(b[:], &transaction.TestNet)
 		require.NoError(t, err)
 
 		derivationPath, err := tx.AddP2PKHOutputFromBip32ExtKey(key, 6000)
