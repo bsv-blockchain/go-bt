@@ -2291,3 +2291,8 @@ func opcodeCheckMultiSigVerify(op *ParsedOpcode, t *thread) error {
 func success() errs.Error {
 	return errs.NewError(errs.ErrOK, "success")
 }
+
+// InjectExternalVerifySignatureFn allows the injection of an external
+func InjectExternalVerifySignatureFn(fn func(payload, signature, publicKey []byte) bool) {
+	externalVerifySignatureFn = fn
+}
