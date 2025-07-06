@@ -62,6 +62,33 @@ stopwords = [
 	"abcdefghijklmnopqrstuvwxyz",
 ]
 
+[[allowlist.rules]]
+description = "Allow generic-api-key in bec/bench_test.go"
+file = "bec/bench_test.go"
+regex = ".*"
+ruleID = "generic-api-key"
+
+[[allowlist.rules]]
+description = "Allow generic-api-key in crypto/encryption_test.go"
+file = "crypto/encryption_test.go"
+regex = ".*"
+ruleID = "generic-api-key"
+
+[[allowlist.rules]]
+description = "Allow generic-api-key in bsvsuite/bsvec/bench_test.go"
+file = "bsvsuite/bsvec/bench_test.go"
+regex = ".*"
+ruleID = "generic-api-key"
+
+[[allowlist.rules]]
+description = "Allow generic-api-key in transaction/BitcoinTransaction_test.go"
+file = "transaction/BitcoinTransaction_test.go"
+regex = ".*"
+ruleID = "generic-api-key"
+
+[[allowlist.files]]
+regex = '''\.github/security/gitleaks\.toml'''
+
 [[rules]]
 id = "1password-secret-key"
 description = "Uncovered a possible 1Password secret key, potentially compromising access to secrets in vaults."
@@ -3141,37 +3168,3 @@ id = "zendesk-secret-key"
 description = "Detected a Zendesk Secret Key, risking unauthorized access to customer support services and sensitive ticketing data."
 regex = '''(?i)[\w.-]{0,50}?(?:zendesk)(?:[ \t\w.-]{0,20})[\s'"]{0,3}(?:=|>|:{1,3}=|\|\||:|=>|\?=|,)[\x60'"\s=]{0,5}([a-z0-9]{40})(?:[\x60'"\s;]|\\[nr]|$)'''
 keywords = ["zendesk"]
-
-# This is just the allowlist section added to the full config
-[allowlist]
-description = "Ignore generic-api-key in test files"
-
-[[allowlist.rules]]
-description = "Allow generic-api-key in bec/bench_test.go"
-file = "bec/bench_test.go"
-regex = ".*"
-ruleID = "generic-api-key"
-
-[[allowlist.rules]]
-description = "Allow generic-api-key in crypto/encryption_test.go"
-file = "crypto/encryption_test.go"
-regex = ".*"
-ruleID = "generic-api-key"
-
-[[allowlist.rules]]
-description = "Allow generic-api-key in bsvsuite/bsvec/bench_test.go"
-file = "bsvsuite/bsvec/bench_test.go"
-regex = ".*"
-ruleID = "generic-api-key"
-
-[[allowlist.rules]]
-description = "Allow generic-api-key in transaction/BitcoinTransaction_test.go"
-file = "transaction/BitcoinTransaction_test.go"
-regex = ".*"
-ruleID = "generic-api-key"
-
-[allowlist]
-description = "Ignore known test secrets and Gitleaks config"
-
-[[allowlist.files]]
-regex = '''\.github/gitleaks\.toml'''
