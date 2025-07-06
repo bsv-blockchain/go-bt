@@ -30,7 +30,6 @@ Additional `AGENTS.md` files **may exist in subdirectories** to provide more con
 | Directory        | Description                                                                       |
 |------------------|-----------------------------------------------------------------------------------|
 | `.github/`       | Issue templates, workflows, and community documentation                           |
-| `.devcontainer/` | VS Code dev container configuration for consistent local development environments |
 | `.vscode/`       | VS Code settings and extensions for development                                   |
 | `.make/`         | Shared Makefile targets used by `Makefile`                                        |
 | `bscript/`       | Package for Bitcoin Script operations, including parsing and execution            |
