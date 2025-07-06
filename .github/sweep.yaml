@@ -1,6 +1,6 @@
 gha_enabled: true
 branch: master
-blocked_dirs: []
+blocked_dirs: [ ]
 draft: false
 description: |
   go-bt is a production-ready Go library for building Bitcoin applications.
