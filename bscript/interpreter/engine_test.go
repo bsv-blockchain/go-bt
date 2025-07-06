@@ -508,10 +508,7 @@ func TestCheckPubKeyEncoding(t *testing.T) {
 
 }
 
-// TestCheckSignatureEncoding ensures the internal checkSignatureEncoding
-// function works as expected.
-//
-//nolint:goconst // reason: using constants would reduce readability in this specific case
+// TestCheckSignatureEncoding ensures the internal checkSignatureEncoding function works as expected.
 func TestCheckSignatureEncoding(t *testing.T) {
 	t.Parallel()
 

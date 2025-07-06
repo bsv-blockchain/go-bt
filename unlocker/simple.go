@@ -11,9 +11,7 @@ import (
 	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
 )
 
-var (
-	externalSignerFn func(message []byte, privateKey []byte) ([]byte, error)
-)
+var externalSignerFn func(message []byte, privateKey []byte) ([]byte, error)
 
 // InjectExternalSignerFn allows the injection of an external signing function.
 func InjectExternalSignerFn(fn func(message []byte, privateKey []byte) ([]byte, error)) {
