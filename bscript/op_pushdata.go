@@ -42,7 +42,6 @@ func PushDataPrefix(data []byte) ([]byte, error) {
 
 	if l <= 75 {
 		b = append(b, byte(l))
-
 	} else if l <= 0xFF {
 		b = append(b, OpPUSHDATA1)
 		b = append(b, byte(len(data)))
@@ -150,7 +149,6 @@ func DecodeParts(b []byte) ([][]byte, error) {
 				b = b[1:]
 			}
 		}
-
 	}
 
 	return r, nil

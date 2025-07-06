@@ -721,7 +721,6 @@ func (tx *Tx) feesPaid(size *TxSize, fees *FeeQuote) (*TxFees, error) {
 	}
 	txFees.TotalFeePaid = txFees.StdFeePaid + txFees.DataFeePaid
 	return txFees, nil
-
 }
 
 // estimateDeficit estimates the deficit of the transaction

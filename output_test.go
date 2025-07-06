@@ -46,7 +46,6 @@ func TestNewOutputFromBytes(t *testing.T) {
 
 func TestOutput_String(t *testing.T) {
 	t.Run("compare string output", func(t *testing.T) {
-
 		bytes, err := hex.DecodeString(outputHexStr)
 		require.NoError(t, err)
 

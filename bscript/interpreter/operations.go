@@ -24,9 +24,7 @@ const (
 	opCondSkip  = 2
 )
 
-var (
-	externalVerifySignatureFn func(payload, signature, publicKey []byte) bool
-)
+var externalVerifySignatureFn func(payload, signature, publicKey []byte) bool
 
 type opcode struct {
 	val    byte

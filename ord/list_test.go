@@ -88,7 +88,6 @@ func TestOfferToSellPSBTNoErrors(t *testing.T) {
 	changeS, _ := bscript.NewP2PKHFromAddress("19NfKd8aTwvb5ngfP29RxgfQzZt8KAYtQo")   // L5W2nyKUCsDStVUBwZj2Q3Ph5vcae4bgdzprZDYqDpvZA8AFguFH
 
 	t.Run("no errors when accepting listing", func(t *testing.T) {
-
 		_, err := ord.AcceptOrdinalSaleListing(context.Background(), &ord.ValidateListingArgs{
 			ListedOrdinalUTXO: ordUTXO,
 		},

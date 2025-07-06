@@ -78,7 +78,8 @@ func (tx *Tx) Inscribe(ia *bscript.InscriptionArgs) error {
 // One output will be created with the extra Satoshis and then another
 // output will be created with 1 Satoshi with the inscription in it.
 func (tx *Tx) InscribeSpecificOrdinal(ia *bscript.InscriptionArgs, inputIdx uint32, satoshiIdx uint64,
-	extraOutputScript *bscript.Script) error {
+	extraOutputScript *bscript.Script,
+) error {
 	amount, err := rangeAbove(tx.Inputs, inputIdx, satoshiIdx)
 	if err != nil {
 		return err

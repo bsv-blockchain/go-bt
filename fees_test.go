@@ -199,16 +199,17 @@ func TestFeeQuotes_AddMiner(t *testing.T) {
 		"adding a miner with custom fee should return custom fee": {
 			fee: &FeeQuote{
 				mu: sync.RWMutex{},
-				fees: map[FeeType]*Fee{"test": {
-					MiningFee: FeeUnit{
-						Satoshis: 100,
-						Bytes:    10,
+				fees: map[FeeType]*Fee{
+					"test": {
+						MiningFee: FeeUnit{
+							Satoshis: 100,
+							Bytes:    10,
+						},
+						RelayFee: FeeUnit{
+							Satoshis: 1000,
+							Bytes:    55,
+						},
 					},
-					RelayFee: FeeUnit{
-						Satoshis: 1000,
-						Bytes:    55,
-					},
-				},
 				},
 			},
 			minerName: "test",
@@ -567,7 +568,8 @@ func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
 						},
 						RelayFee: FeeUnit{
 							Satoshis: 10,
-							Bytes:    5},
+							Bytes:    5,
+						},
 					}, FeeTypeData: {
 						FeeType: FeeTypeData,
 						MiningFee: FeeUnit{
@@ -576,7 +578,8 @@ func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
 						},
 						RelayFee: FeeUnit{
 							Satoshis: 8,
-							Bytes:    4},
+							Bytes:    4,
+						},
 					},
 				},
 			},
@@ -593,7 +596,8 @@ func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
 						},
 						RelayFee: FeeUnit{
 							Satoshis: 10,
-							Bytes:    5},
+							Bytes:    5,
+						},
 					},
 				},
 			},
@@ -609,7 +613,8 @@ func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
 						},
 						RelayFee: FeeUnit{
 							Satoshis: 10,
-							Bytes:    5},
+							Bytes:    5,
+						},
 					},
 				},
 			},

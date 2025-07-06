@@ -38,8 +38,10 @@ type scriptNumber struct {
 	afterGenesis bool
 }
 
-var zero = big.NewInt(0)
-var one = big.NewInt(1)
+var (
+	zero = big.NewInt(0)
+	one  = big.NewInt(1)
+)
 
 // makeScriptNumber interprets the passed serialized bytes as an encoded integer
 // and returns the result as a Number.

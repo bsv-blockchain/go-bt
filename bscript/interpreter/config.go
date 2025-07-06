@@ -22,8 +22,10 @@ const (
 	MaxPubKeysPerMultiSigBeforeGenesis = 20
 )
 
-type beforeGenesisConfig struct{}
-type afterGenesisConfig struct{}
+type (
+	beforeGenesisConfig struct{}
+	afterGenesisConfig  struct{}
+)
 
 func (a *afterGenesisConfig) AfterGenesis() bool {
 	return true

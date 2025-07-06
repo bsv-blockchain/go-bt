@@ -20,8 +20,8 @@ import (
 // being fake utxos that will just pass through, and the rest with
 // the required payment and tx fees.
 func AcceptOrdinalSaleListing2Dummies(ctx context.Context, vla *ValidateListingArgs,
-	asoa *AcceptListingArgs) (*bt.Tx, error) {
-
+	asoa *AcceptListingArgs,
+) (*bt.Tx, error) {
 	if valid := vla.Validate(asoa.PSTx); !valid {
 		return nil, bt.ErrInvalidSellOffer
 	}
@@ -282,8 +282,8 @@ type AcceptBid2DArgs struct {
 // Transaction) that offers a specific ordinal UTXO for sale at a
 // specific price.
 func AcceptBidToBuy1SatOrdinal2Dummies(ctx context.Context, vba *ValidateBid2DArgs,
-	aba *AcceptBid2DArgs) (*bt.Tx, error) {
-
+	aba *AcceptBid2DArgs,
+) (*bt.Tx, error) {
 	if valid := vba.Validate(aba.PSTx); !valid {
 		return nil, bt.ErrInvalidSellOffer
 	}

@@ -75,7 +75,6 @@ func TestTx_Change(t *testing.T) {
 	})
 
 	t.Run("change output is added correctly - fee removed", func(t *testing.T) {
-
 		tx := newTxWithInput(t,
 			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 			0,
@@ -99,7 +98,6 @@ func TestTx_Change(t *testing.T) {
 	})
 
 	t.Run("determine fees are correct, correct change given", func(t *testing.T) {
-
 		tx := newTxWithInput(t,
 			"b7b0650a7c3a1bd4716369783876348b59f5404784970192cec1996e86950576",
 			0,

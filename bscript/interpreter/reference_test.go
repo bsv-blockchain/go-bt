@@ -38,7 +38,6 @@ func init() { //nolint:gochecknoinits // this is in a test, still should be refa
 	opcodeByName["OP_CHECKLOCKTIMEVERIFY"] = bscript.OpCHECKLOCKTIMEVERIFY
 	opcodeByName["OP_CHECKSEQUENCEVERIFY"] = bscript.OpCHECKSEQUENCEVERIFY
 	opcodeByName["OP_RESERVED"] = bscript.OpRESERVED
-
 }
 
 // parseShortForm parses a string as used in the Bitcoin Core reference tests
@@ -133,7 +132,6 @@ func parseShortForm(script string) (*bscript.Script, error) {
 // scriptTestName returns a descriptive test name for the given reference script
 // test data.
 func scriptTestName(test []interface{}) (string, error) {
-
 	// The test must consist of at least a signature script, public key script,
 	// flags, and expected error.  Finally, it may optionally contain a comment.
 	if len(test) < 4 || 6 < len(test) {
@@ -229,13 +227,15 @@ func parseExpectedResult(expected string) ([]errs.ErrorCode, error) {
 	case "PUBKEYTYPE":
 		return []errs.ErrorCode{errs.ErrPubKeyType}, nil
 	case "SIG_DER":
-		return []errs.ErrorCode{errs.ErrSigTooShort, errs.ErrSigTooLong,
+		return []errs.ErrorCode{
+			errs.ErrSigTooShort, errs.ErrSigTooLong,
 			errs.ErrSigInvalidSeqID, errs.ErrSigInvalidDataLen, errs.ErrSigMissingSTypeID,
 			errs.ErrSigMissingSLen, errs.ErrSigInvalidSLen,
 			errs.ErrSigInvalidRIntID, errs.ErrSigZeroRLen, errs.ErrSigNegativeR,
 			errs.ErrSigTooMuchRPadding, errs.ErrSigInvalidSIntID,
 			errs.ErrSigZeroSLen, errs.ErrSigNegativeS, errs.ErrSigTooMuchSPadding,
-			errs.ErrInvalidSigHashType}, nil
+			errs.ErrInvalidSigHashType,
+		}, nil
 	case "EVAL_FALSE":
 		return []errs.ErrorCode{errs.ErrEvalFalse, errs.ErrEmptyStack}, nil
 	case "EQUALVERIFY":
@@ -255,8 +255,10 @@ func parseExpectedResult(expected string) ([]errs.ErrorCode, error) {
 	case "BAD_OPCODE":
 		return []errs.ErrorCode{errs.ErrReservedOpcode, errs.ErrMalformedPush}, nil
 	case "UNBALANCED_CONDITIONAL":
-		return []errs.ErrorCode{errs.ErrUnbalancedConditional,
-			errs.ErrInvalidStackOperation}, nil
+		return []errs.ErrorCode{
+			errs.ErrUnbalancedConditional,
+			errs.ErrInvalidStackOperation,
+		}, nil
 	case "OP_RETURN":
 		return []errs.ErrorCode{errs.ErrEarlyReturn}, nil
 	case "VERIFY":
@@ -310,7 +312,6 @@ func parseExpectedResult(expected string) ([]errs.ErrorCode, error) {
 // createSpendTx generates a basic spending transaction given the passed
 // signature and locking scripts.
 func createSpendingTx(sigScript, pkScript *bscript.Script, outputValue int64) *bt.Tx {
-
 	coinbaseTx := &bt.Tx{
 		Version:  1,
 		LockTime: 0,

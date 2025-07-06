@@ -1144,7 +1144,6 @@ func TestTxEstimateFeesPaidTotal(t *testing.T) {
 				return bt.NewFeeQuote().
 					AddQuote(bt.FeeTypeStandard, std).
 					AddQuote(bt.FeeTypeData, dataVal)
-
 			}(),
 			expFees: 96,
 		}, "Transaction with one input 4 Outputs should return 147": {
@@ -1188,7 +1187,6 @@ func TestTxEstimateFeesPaidTotal(t *testing.T) {
 				return bt.NewFeeQuote().
 					AddQuote(bt.FeeTypeStandard, std).
 					AddQuote(bt.FeeTypeData, dataVal)
-
 			}(),
 			expFees: 147,
 		},

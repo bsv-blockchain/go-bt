@@ -52,7 +52,6 @@ func TestNewAddressFromString(t *testing.T) {
 		assert.Nil(t, addr)
 		require.EqualError(t, err, "address not supported "+unsupportedAddress)
 	})
-
 }
 
 func TestNewAddressFromPublicKeyString(t *testing.T) {

@@ -37,11 +37,11 @@ func TestInscribe(t *testing.T) {
 				}(),
 				ContentType: "model/gltf-binary",
 			},
-		}}
+		},
+	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			// Create a new transaction
 			tx := NewTx()
 
@@ -74,7 +74,6 @@ func TestInscribe(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestMultipleInscriptionsIn1Tx(t *testing.T) {

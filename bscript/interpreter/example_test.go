@@ -1,9 +1,8 @@
 package interpreter_test
 
 import (
-	"fmt"
-
 	"context"
+	"fmt"
 
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter"

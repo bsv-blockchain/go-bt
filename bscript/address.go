@@ -79,7 +79,6 @@ func NewAddressFromPublicKeyString(pubKey string, mainnet bool) (*Address, error
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise, (mainnet is false) it will return a testnet address (starting with an m or n).
 func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
-
 	// regtest := 111
 	// mainnet: 0
 
