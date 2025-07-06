@@ -61,33 +61,27 @@ stopwords = [
 	"014df517-39d1-4453-b7b3-9930c563627c",
 	"abcdefghijklmnopqrstuvwxyz",
 ]
-
-[[allowlist.rules]]
-description = "Allow generic-api-key in bec/bench_test.go"
-file = "bec/bench_test.go"
-regex = ".*"
-ruleID = "generic-api-key"
-
-[[allowlist.rules]]
-description = "Allow generic-api-key in crypto/encryption_test.go"
-file = "crypto/encryption_test.go"
-regex = ".*"
-ruleID = "generic-api-key"
-
-[[allowlist.rules]]
-description = "Allow generic-api-key in bsvsuite/bsvec/bench_test.go"
-file = "bsvsuite/bsvec/bench_test.go"
-regex = ".*"
-ruleID = "generic-api-key"
-
-[[allowlist.rules]]
-description = "Allow generic-api-key in transaction/BitcoinTransaction_test.go"
-file = "transaction/BitcoinTransaction_test.go"
-regex = ".*"
-ruleID = "generic-api-key"
-
-[[allowlist.files]]
-regex = '''\.github/security/gitleaks\.toml'''
+fingerprints = [
+	"21afed222e10d0be9fdc0d9e82f4e26c45899c21:bec/bench_test.go:generic-api-key:93",
+	"084a91c96e137ec64c4ed6ca840fbf62a1d55bf6:bec/bench_test.go:generic-api-key:93",
+	"8b52cb6e47ae936ca844f82a8090ddead656b2a8:crypto/encryption_test.go:generic-api-key:12",
+	"97a8373de14cc5e982cbef2d86499871bd5c009f:crypto/encryption_test.go:generic-api-key:70",
+	"565e54471a704c8f85e55091fab1dc97d6f051ae:crypto/encryption_test.go:generic-api-key:16",
+	"565e54471a704c8f85e55091fab1dc97d6f051ae:crypto/encryption_test.go:generic-api-key:47",
+	"63529fb9b945e24afb376c0f63bb7bcbd901b06d:bsvsuite/bsvec/bench_test.go:generic-api-key:90",
+	"dcd70454d45d8d9b5d05f467a7224d268475f1ab:transaction/BitcoinTransaction_test.go:generic-api-key:49",
+	"7e6e82a05d2358b21db9beb07350dd7ba7d3a89b:transaction/BitcoinTransaction_test.go:generic-api-key:50"
+]
+commits = [
+	"21afed222e10d0be9fdc0d9e82f4e26c45899c21",
+	"084a91c96e137ec64c4ed6ca840fbf62a1d55bf6",
+	"8b52cb6e47ae936ca844f82a8090ddead656b2a8",
+	"97a8373de14cc5e982cbef2d86499871bd5c009f",
+	"565e54471a704c8f85e55091fab1dc97d6f051ae",
+	"63529fb9b945e24afb376c0f63bb7bcbd901b06d",
+	"dcd70454d45d8d9b5d05f467a7224d268475f1ab",
+	"7e6e82a05d2358b21db9beb07350dd7ba7d3a89b"
+]
 
 [[rules]]
 id = "1password-secret-key"
