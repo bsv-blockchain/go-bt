@@ -1,25 +1,28 @@
 {
 	"formatters": {
 		"enable": [
-			"gofmt"
+			"gofmt",
+			"gofumpt"
 		],
 		"exclusions": {
 			"generated": "lax",
 			"paths": [
 				".*\\.my\\.go$",
 				"lib/bad.go",
-				".github",
 				".make",
+				".devcontainer",
+				".vscode",
 				"dist",
 				"third_party$",
-				"builtin$",
-				"examples$"
+				"builtin$"
 			]
 		},
 		"settings": {
 			"gci": {
 				"sections": [
-					"prefix(github.com/org/project)"
+					"standard",
+					"default",
+					"prefix(github.com/bsv-blockchain/go-bt)"
 				]
 			},
 			"gofmt": {
@@ -30,7 +33,7 @@
 			},
 			"goimports": {
 				"local-prefixes": [
-					"github.com/org/project"
+					"github.com/bsv-blockchain/go-bt"
 				]
 			}
 		}
@@ -44,15 +47,21 @@
 	},
 	"linters": {
 		"disable": [
+			"err113",
+			"funcorder",
 			"gochecknoglobals",
+			"gocognit",
 			"gocritic",
+			"gocyclo",
 			"godot",
-			"recvcheck",
-			"inamedparam",
 			"godox",
-			"err113"
+			"inamedparam",
+			"nestif",
+			"recvcheck",
+			"wsl_v5"
 		],
 		"enable": [
+			"arangolint",
 			"asasalint",
 			"asciicheck",
 			"bidichk",
@@ -62,23 +71,31 @@
 			"copyloopvar",
 			"dogsled",
 			"durationcheck",
+			"embeddedstructfieldcheck",
+			"errcheck",
 			"errchkjson",
 			"errname",
 			"errorlint",
 			"exhaustive",
 			"forbidigo",
 			"gocheckcompilerdirectives",
+			"gochecknoglobals",
 			"gochecknoinits",
 			"gochecksumtype",
+			"goconst",
 			"goheader",
 			"gomoddirectives",
 			"gosec",
 			"gosmopolitan",
+			"govet",
+			"inamedparam",
+			"ineffassign",
 			"loggercheck",
 			"makezero",
 			"mirror",
 			"misspell",
 			"musttag",
+			"nakedret",
 			"nilerr",
 			"nilnesserr",
 			"nilnil",
@@ -89,13 +106,16 @@
 			"predeclared",
 			"protogetter",
 			"reassign",
+			"recvcheck",
 			"revive",
 			"rowserrcheck",
 			"spancheck",
 			"sqlclosecheck",
+			"staticcheck",
 			"testifylint",
 			"unconvert",
 			"unparam",
+			"unused",
 			"wastedassign",
 			"zerologlint"
 		],
