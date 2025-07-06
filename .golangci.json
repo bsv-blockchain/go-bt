@@ -1,4 +1,5 @@
 {
+	"version": "2",
 	"formatters": {
 		"enable": [
 			"gofmt",
@@ -311,24 +312,22 @@
 		"path-prefix": ""
 	},
 	"run": {
-		"allow-parallel-runners": false,
-		"build-tags": [
-			"mytag"
-		],
-		"concurrency": 4,
+		"allow-parallel-runners": true,
+		"concurrency": 8,
 		"issues-exit-code": 1,
 		"tests": true
 	},
 	"severity": {
-		"default": "error",
+		"default": "warning",
 		"rules": [
 			{
 				"linters": [
-					"dupl"
+					"dupl",
+					"misspell",
+					"makezero"
 				],
 				"severity": "info"
 			}
 		]
-	},
-	"version": "2"
+	}
 }
