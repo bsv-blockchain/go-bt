@@ -16,7 +16,7 @@
 # Security Hardened Defaults:
 #   • Weekly cadence (Monday 09:00 America/New_York) – align with CVE dump cycle.
 #   • Direct dependencies only – prevents unsolicited transitive churn.
-#   • PRs labeled, assigned, and target the protected “master” branch.
+#   • PRs labeled, assigned, and target the protected "master" branch.
 #   • PR titles prefixed with chore(scope): – conventional commits.
 #   • Force‑push and delete‑branch disabled via branch‑protection rules.
 #   • PR limit = 10 to avoid queue flooding.
@@ -74,7 +74,7 @@ updates:
     assignees: [ "mrz1836","galt-tr" ]
     labels: [ "chore", "dependencies", "github-actions" ]
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "chore"
       include: "scope"
 
   # ──────────────────────────────────────────────────────────────
@@ -97,5 +97,5 @@ updates:
     assignees: [ "mrz1836","galt-tr" ]
     labels: [ "chore", "dependencies", "devcontainer" ]
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "chore"
       include: "scope"
