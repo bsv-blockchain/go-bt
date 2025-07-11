@@ -381,6 +381,17 @@ func (tx *Tx) ExtendedBytes() []byte {
 	return tx.toBytesHelper(0, nil, true)
 }
 
+// SerializeBytes returns the serialized byte representation of the transaction.
+// If the transaction is in extended format, it includes additional data such as
+// PreviousTxSatoshis and PreviousTxScript.
+func (tx *Tx) SerializeBytes() []byte {
+	if tx.IsExtended() {
+		return tx.ExtendedBytes()
+	}
+
+	return tx.Bytes()
+}
+
 // BytesWithClearedInputs encodes the transaction into a byte array but clears its Inputs first.
 // This is used when signing transactions.
 func (tx *Tx) BytesWithClearedInputs(index int, lockingScript []byte) []byte {
