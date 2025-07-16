@@ -315,10 +315,15 @@ The hooks are configured in [.pre-commit-config.yaml](.pre-commit-config.yaml) a
 
 All unit tests and [examples](examples) run via [GitHub Actions](https://github.com/bsv-blockchain/go-bt/actions) and use [Go version 1.24.x](https://go.dev/doc/go1.24). View the [configuration file](.github/workflows/fortress.yml).
 
-Run all tests:
+Run all tests (fast):
 
 ```bash script
 make test
+```
+
+Run all tests with race detector (slower):
+```bash script
+make test-race
 ```
 
 <br/>
