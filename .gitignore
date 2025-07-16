@@ -39,3 +39,6 @@ testdata
 
 # vim
 *.swp
+
+# AI Models
+.claude
