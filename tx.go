@@ -9,9 +9,10 @@ import (
 	"log"
 	"sync/atomic"
 
+	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
+
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
-	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
 )
 
 /*
@@ -44,7 +45,6 @@ type Tx struct {
 	Outputs  []*Output `json:"outputs"`
 	Version  uint32    `json:"version"`
 	LockTime uint32    `json:"locktime"`
-	extended bool
 
 	// local cache of the txid
 	txHash atomic.Pointer[chainhash.Hash]
@@ -134,6 +134,8 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	var outputCount VarInt
 	locktime := make([]byte, 4)
 
+	var extended bool
+
 	// ----------------------------------------------------------------------------------
 	// If the inputCount is 0, we may be parsing an incomplete transaction, or we may be
 	// both of these cases without needing to rewind (peek) the incoming stream of bytes.
@@ -158,7 +160,7 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 				return bytesRead, nil
 			}
 
-			tx.extended = true
+			extended = true
 
 			n64, err = inputCount.ReadFrom(r)
 			bytesRead += n64
@@ -176,7 +178,7 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	// create Inputs
 	for i := uint64(0); i < uint64(inputCount); i++ {
 		input := &Input{}
-		n64, err = input.readFrom(r, tx.extended)
+		n64, err = input.readFrom(r, extended)
 		bytesRead += n64
 		if err != nil {
 			return bytesRead, err
@@ -184,7 +186,7 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 		tx.Inputs = append(tx.Inputs, input)
 	}
 
-	if inputCount > 0 || tx.extended {
+	if inputCount > 0 || extended {
 		// Re-read the actual output count...
 		n64, err = outputCount.ReadFrom(r)
 		bytesRead += n64
@@ -301,22 +303,13 @@ func (tx *Tx) IsExtended() bool {
 		return false
 	}
 
-	if tx.extended {
-		return true
-	}
-
 	for _, input := range tx.Inputs {
-		if input.PreviousTxScript == nil {
+		if input.PreviousTxScript == nil || len(*input.PreviousTxScript) == 0 {
 			return false
 		}
 	}
 
 	return true
-}
-
-// SetExtended sets the extended flag for the transaction.
-func (tx *Tx) SetExtended(extended bool) {
-	tx.extended = extended
 }
 
 // ToExtendedTx converts the Tx to an ExtendedTx if it is already extended.
