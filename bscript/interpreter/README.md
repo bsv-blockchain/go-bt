@@ -25,7 +25,7 @@ $ go get -u github.com/bsv-blockchain/go-bt/bscript/interpreter
 
 ## Examples
 
-* [Standard Pay-to-pubkey-hash Script](http://github.com/bsv-blockchain/go-bt/bscript/interpreter#example-PayToAddrScript)  
+* [Standard Pay-to-pubkey-hash Script](http://github.com/bsv-blockchain/go-bt/bscript/interpreter#example-PayToAddrScript)
   Demonstrates creating a script which pays to a bitcoin address.  It also
   prints the created script hex and uses the DisasmString function to display
   the disassembled script.
