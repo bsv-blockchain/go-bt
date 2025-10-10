@@ -19,10 +19,10 @@
         <a href="https://github.com/bsv-blockchain/go-bt/actions">
           <img src="https://img.shields.io/github/actions/workflow/status/bsv-blockchain/go-bt/fortress.yml?branch=master&logo=github&style=flat" alt="Build Status">
         </a><br/>
-		<a href="https://github.com/bsv-blockchain/go-bt/actions">
+		    <a href="https://github.com/bsv-blockchain/go-bt/actions">
           <img src="https://github.com/bsv-blockchain/go-bt/actions/workflows/codeql-analysis.yml/badge.svg?style=flat" alt="CodeQL">
         </a><br/>
-		<a href="https://sonarcloud.io/project/overview?id=bsv-blockchain_go-bt">
+		    <a href="https://sonarcloud.io/project/overview?id=bsv-blockchain_go-bt">
           <img src="https://sonarcloud.io/api/project_badges/measure?project=bsv-blockchain_go-bt&metric=alert_status&style-flat" alt="SonarCloud">
         </a>
       </td>
@@ -30,13 +30,13 @@
         <a href="https://goreportcard.com/report/github.com/bsv-blockchain/go-bt/v2/">
           <img src="https://goreportcard.com/badge/github.com/bsv-blockchain/go-bt/v2" alt="Go Report Card">
         </a><br/>
-		<a href="https://codecov.io/gh/bsv-blockchain/go-bt/tree/master">
+		  <a href="https://codecov.io/gh/bsv-blockchain/go-bt/tree/master">
           <img src="https://codecov.io/gh/bsv-blockchain/go-bt/branch/master/graph/badge.svg?style=flat" alt="Code Coverage">
         </a><br/>
-		<a href="https://scorecard.dev/viewer/?uri=github.com/bsv-blockchain/go-bt">
+		  <a href="https://scorecard.dev/viewer/?uri=github.com/bsv-blockchain/go-bt">
           <img src="https://api.scorecard.dev/projects/github.com/bsv-blockchain/go-bt/badge?logo=springsecurity&logoColor=white" alt="OpenSSF Scorecard">
         </a><br/>
-		<a href=".github/SECURITY.md">
+		  <a href=".github/SECURITY.md">
           <img src="https://img.shields.io/badge/security-policy-blue?style=flat&logo=springsecurity&logoColor=white" alt="Security policy">
         </a>
       </td>
@@ -53,7 +53,7 @@
         <a href="https://magefile.org/">
           <img src="https://img.shields.io/badge/mage-powered-brightgreen?style=flat&logo=probot&logoColor=white" alt="Mage Powered">
         </a><br/>
-		<a href=".github/dependabot.yml">
+		    <a href=".github/dependabot.yml">
           <img src="https://img.shields.io/badge/dependencies-automatic-blue?logo=dependabot&style=flat" alt="Dependabot">
         </a>
       </td>
@@ -61,9 +61,9 @@
         <a href="https://github.com/bsv-blockchain/go-bt/graphs/contributors">
           <img src="https://img.shields.io/github/contributors/bsv-blockchain/go-bt?style=flat&logo=contentful&logoColor=white" alt="Contributors">
         </a><br/>
-		<a href="https://github.com/bsv-blockchain/go-bt/commits/master">
-		  <img src="https://img.shields.io/github/last-commit/bsv-blockchain/go-bt?style=flat&logo=clockify&logoColor=white" alt="Last commit">
-		</a><br/>
+		    <a href="https://github.com/bsv-blockchain/go-bt/commits/master">
+		      <img src="https://img.shields.io/github/last-commit/bsv-blockchain/go-bt?style=flat&logo=clockify&logoColor=white" alt="Last commit">
+		    </a><br/>
         <a href="https://github.com/sponsors/bsv-blockchain">
           <img src="https://img.shields.io/badge/sponsor-BSV-181717.svg?logo=github&style=flat" alt="Sponsor">
         </a><br/>
