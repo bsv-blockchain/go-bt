@@ -19,7 +19,7 @@ func WithTx(tx *bt.Tx, inputIdx int, prevOutput *bt.Output) ExecutionOptionFunc 
 }
 
 // WithScripts configure the execution to run again a set of *bscript.Script.
-func WithScripts(lockingScript *bscript.Script, unlockingScript *bscript.Script) ExecutionOptionFunc {
+func WithScripts(lockingScript, unlockingScript *bscript.Script) ExecutionOptionFunc {
 	return func(p *execOpts) {
 		p.lockingScript = lockingScript
 		p.unlockingScript = unlockingScript
