@@ -12,6 +12,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Static errors for err113 linter compliance
+var (
+	ErrInputNotExist    = errors.New("input expected at index doesn't exist")
+	ErrUnlockerNotFound = errors.New("UTXO unlocker at index not found")
+)
+
 // TODO: are 2 dummies useful or to be removed?
 
 // AcceptOrdinalSaleListing2Dummies accepts a partially signed Bitcoin
@@ -76,13 +82,13 @@ func AcceptOrdinalSaleListing2Dummies(ctx context.Context, vla *ValidateListingA
 		}
 
 		if tx.Inputs[j] == nil {
-			return nil, fmt.Errorf("input expected at index %d doesn't exist", j)
+			return nil, fmt.Errorf("%w %d", ErrInputNotExist, j)
 		}
 		if !bytes.Equal(u.TxIDHash.CloneBytes(), tx.Inputs[j].PreviousTxID()) {
 			return nil, bt.ErrUTXOInputMismatch
 		}
 		if *u.Unlocker == nil {
-			return nil, fmt.Errorf("UTXO unlocker at index %d not found", i)
+			return nil, fmt.Errorf("%w %d", ErrUnlockerNotFound, i)
 		}
 		err = tx.FillInput(ctx, *u.Unlocker, bt.UnlockerParams{InputIdx: uint32(j)})
 		if err != nil {
@@ -188,13 +194,13 @@ func MakeBidToBuy1SatOrdinal2Dummies(ctx context.Context, mba *MakeBid2DArgs) (*
 		}
 
 		if tx.Inputs[j] == nil {
-			return nil, fmt.Errorf("input expected at index %d doesn't exist", j)
+			return nil, fmt.Errorf("%w %d", ErrInputNotExist, j)
 		}
 		if !bytes.Equal(u.TxIDHash.CloneBytes(), tx.Inputs[j].PreviousTxID()) {
 			return nil, bt.ErrUTXOInputMismatch
 		}
 		if *u.Unlocker == nil {
-			return nil, fmt.Errorf("UTXO unlocker at index %d not found", i)
+			return nil, fmt.Errorf("%w %d", ErrUnlockerNotFound, i)
 		}
 		err = tx.FillInput(ctx, *u.Unlocker, bt.UnlockerParams{
 			InputIdx:     uint32(j),

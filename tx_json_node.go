@@ -2,7 +2,6 @@ package bt
 
 import (
 	"encoding/json"
-	"errors"
 
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 )
@@ -59,7 +58,7 @@ type nodeOutputJSON struct {
 // MarshalJSON will marshal a transaction that has been marshaled with this library.
 func (w *nodeTxWrapper) MarshalJSON() ([]byte, error) {
 	if w == nil || w.Tx == nil {
-		return nil, errors.New("tx is nil so cannot be marshaled")
+		return nil, ErrTxNil
 	}
 	tx := w.Tx
 	oo := make([]*nodeOutputJSON, 0, len(tx.Outputs))

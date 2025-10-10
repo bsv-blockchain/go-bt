@@ -29,6 +29,13 @@ const MaxHashStringSize = HashSize * 2
 // string that has too many characters.
 var ErrHashStrSize = fmt.Errorf("max hash string length is %v bytes", MaxHashStringSize)
 
+// Static errors for err113 linter compliance
+var (
+	ErrInvalidHashLength      = errors.New("invalid hash length")
+	ErrInvalidUnmarshalLength = errors.New("invalid length for chainhash.Hash")
+	ErrUnsupportedType        = errors.New("unsupported type for hash")
+)
+
 // Hash is used in several of the bitcoin messages and common structures.  It
 // typically represents the double sha256 of data.
 type Hash [HashSize]byte
@@ -59,8 +66,7 @@ func (h *Hash) CloneBytes() []byte {
 func (h *Hash) SetBytes(newHash []byte) error {
 	nhLen := len(newHash)
 	if nhLen != HashSize {
-		return fmt.Errorf("invalid hash length of %v, want %v", nhLen,
-			HashSize)
+		return fmt.Errorf("%w: got %v, want %v", ErrInvalidHashLength, nhLen, HashSize)
 	}
 	copy(h[:], newHash)
 
@@ -177,7 +183,7 @@ func (h *Hash) Marshal() ([]byte, error) {
 // Unmarshal converts a protobuf []byte to chainhash.Hash.
 func (h *Hash) Unmarshal(data []byte) error {
 	if len(data) != 32 {
-		return errors.New("invalid length for chainhash.Hash")
+		return ErrInvalidUnmarshalLength
 	}
 	copy(h[:], data)
 	return nil
@@ -226,7 +232,7 @@ func (h *Hash) Scan(value interface{}) error {
 
 		return nil
 	default:
-		return fmt.Errorf("unsupported type for hash: %T", value)
+		return fmt.Errorf("%w: %T", ErrUnsupportedType, value)
 	}
 }
 

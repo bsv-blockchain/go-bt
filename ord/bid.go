@@ -120,13 +120,13 @@ func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*bt.Tx, err
 		}
 
 		if tx.Inputs[j] == nil {
-			return nil, fmt.Errorf("input expected at index %d doesn't exist", j)
+			return nil, fmt.Errorf("%w %d", ErrInputNotExist, j)
 		}
 		if !bytes.Equal(u.TxIDHash.CloneBytes(), tx.Inputs[j].PreviousTxID()) {
 			return nil, bt.ErrUTXOInputMismatch
 		}
 		if *u.Unlocker == nil {
-			return nil, fmt.Errorf("UTXO unlocker at index %d not found", i)
+			return nil, fmt.Errorf("%w %d", ErrUnlockerNotFound, i)
 		}
 		err = tx.FillInput(ctx, *u.Unlocker, bt.UnlockerParams{
 			InputIdx:     uint32(j),

@@ -28,6 +28,7 @@ func (tx *Tx) TotalInputSatoshis() (total uint64) {
 	for _, in := range tx.Inputs {
 		total += in.PreviousTxSatoshis
 	}
+
 	return
 }
 
@@ -207,7 +208,7 @@ func (tx *Tx) InsertInputUnlockingScript(index uint32, s *bscript.Script) error 
 		return nil
 	}
 
-	return fmt.Errorf("no input at index %d", index)
+	return fmt.Errorf("%w at index %d", ErrInputNoExist, index)
 }
 
 // FillInput is used to unlock the transaction at a specific input index.

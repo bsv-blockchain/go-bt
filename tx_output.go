@@ -41,6 +41,7 @@ func (tx *Tx) TotalOutputSatoshis() (total uint64) {
 	for _, o := range tx.Outputs {
 		total += o.Satoshis
 	}
+
 	return
 }
 

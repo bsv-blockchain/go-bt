@@ -13,6 +13,11 @@ import (
 
 var externalSignerFn func(message, privateKey []byte) ([]byte, error)
 
+// Static errors for err113 linter compliance
+var (
+	ErrOnlyP2PKHSupported = errors.New("currently only p2pkh supported")
+)
+
 // InjectExternalSignerFn allows the injection of an external signing function.
 func InjectExternalSignerFn(fn func(message, privateKey []byte) ([]byte, error)) {
 	externalSignerFn = fn
@@ -92,5 +97,5 @@ func (l *Simple) UnlockingScript(_ context.Context, tx *bt.Tx, params bt.Unlocke
 		return uscript, nil
 	}
 
-	return nil, errors.New("currently only p2pkh supported")
+	return nil, ErrOnlyP2PKHSupported
 }

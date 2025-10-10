@@ -130,5 +130,6 @@ func Base58EncodeMissingChecksum(input []byte) string {
 func checksum(input []byte) (ckSum [4]byte) {
 	h := crypto.Sha256d(input)
 	copy(ckSum[:], h[:4])
+
 	return
 }
