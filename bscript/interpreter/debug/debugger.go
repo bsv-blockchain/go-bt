@@ -21,21 +21,21 @@ type debugOpts struct {
 // DefaultDebugger exposes attachment points via the way of functions, which
 // are to be appended to via a series of function calls.
 type DefaultDebugger interface {
-	AttachBeforeExecute(ThreadStateFunc)
-	AttachAfterExecute(ThreadStateFunc)
-	AttachBeforeStep(ThreadStateFunc)
-	AttachAfterStep(ThreadStateFunc)
-	AttachBeforeExecuteOpcode(ThreadStateFunc)
-	AttachAfterExecuteOpcode(ThreadStateFunc)
-	AttachBeforeScriptChange(ThreadStateFunc)
-	AttachAfterScriptChange(ThreadStateFunc)
-	AttachAfterSuccess(ThreadStateFunc)
-	AttachAfterError(ExecutionErrorFunc)
+	AttachBeforeExecute(fn ThreadStateFunc)
+	AttachAfterExecute(fn ThreadStateFunc)
+	AttachBeforeStep(fn ThreadStateFunc)
+	AttachAfterStep(fn ThreadStateFunc)
+	AttachBeforeExecuteOpcode(fn ThreadStateFunc)
+	AttachAfterExecuteOpcode(fn ThreadStateFunc)
+	AttachBeforeScriptChange(fn ThreadStateFunc)
+	AttachAfterScriptChange(fn ThreadStateFunc)
+	AttachAfterSuccess(fn ThreadStateFunc)
+	AttachAfterError(fn ExecutionErrorFunc)
 
-	AttachBeforeStackPush(StackFunc)
-	AttachAfterStackPush(StackFunc)
-	AttachBeforeStackPop(ThreadStateFunc)
-	AttachAfterStackPop(StackFunc)
+	AttachBeforeStackPush(fn StackFunc)
+	AttachAfterStackPush(fn StackFunc)
+	AttachBeforeStackPop(fn ThreadStateFunc)
+	AttachAfterStackPop(fn StackFunc)
 
 	interpreter.Debugger
 }

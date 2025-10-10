@@ -15,6 +15,20 @@ import (
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/errs"
 )
 
+// Test sentinel errors for err113 linter compliance.
+var (
+	errNotEqual                = errors.New("not equal")
+	errUnexpectedValue         = errors.New("unexpected value")
+	errInvalidResult           = errors.New("invalid result")
+	errZeroNotEqualOnPopInt    = errors.New("0 != 0 on popInt")
+	errNegZeroNotEqualOnPopInt = errors.New("-0 != 0 on popInt")
+	errOneNotEqualOnPopInt     = errors.New("1 != 1 on popInt")
+	errNegOneNotEqualOnPopInt  = errors.New("-1 != -1 on popInt")
+	errNeg513NotEqualOnPopInt  = errors.New("-513 != -513 on popInt")
+	errWrongError              = errors.New("wrong error")
+	errUnexpectedTestErrorType = errors.New("unexpected test error type")
+)
+
 // tstCheckScriptError ensures the type of the two passed errors are of the
 // same type (either both nil or both of type Error) and their error codes
 // match when not nil.
@@ -22,7 +36,7 @@ func tstCheckScriptError(gotErr, wantErr error) error {
 	// Ensure the error code is of the expected type and the error
 	// code matches the value specified in the test instance.
 	if reflect.TypeOf(gotErr) != reflect.TypeOf(wantErr) {
-		return fmt.Errorf("wrong error - got %T (%[1]v), want %T", gotErr, wantErr) //nolint:errorlint // test code
+		return fmt.Errorf("%w - got %T (%[2]v), want %T", errWrongError, gotErr, wantErr) //nolint:errorlint // test code
 	}
 	if gotErr == nil {
 		return nil
@@ -31,7 +45,7 @@ func tstCheckScriptError(gotErr, wantErr error) error {
 	// Ensure the want error type is a script error.
 	werr := &errs.Error{}
 	if ok := errors.As(wantErr, werr); !ok {
-		return fmt.Errorf("unexpected test error type %T", wantErr)
+		return fmt.Errorf("%w: %T", errUnexpectedTestErrorType, wantErr)
 	}
 
 	// Ensure the error codes match.  It's safe to use a raw type assert
@@ -104,7 +118,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if !bytes.Equal(val, []byte{5}) {
-					return errors.New("not equal")
+					return errNotEqual
 				}
 				return err
 			},
@@ -151,7 +165,7 @@ func TestStack(t *testing.T) {
 				}
 
 				if val {
-					return errors.New("unexpected value")
+					return errUnexpectedValue
 				}
 				return nil
 			},
@@ -168,7 +182,7 @@ func TestStack(t *testing.T) {
 				}
 
 				if !val {
-					return errors.New("unexpected value")
+					return errUnexpectedValue
 				}
 				return nil
 			},
@@ -194,7 +208,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != 0 {
-					return errors.New("0 != 0 on popInt")
+					return errZeroNotEqualOnPopInt
 				}
 				return nil
 			},
@@ -210,7 +224,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != 0 {
-					return errors.New("-0 != 0 on popInt")
+					return errNegZeroNotEqualOnPopInt
 				}
 				return nil
 			},
@@ -226,7 +240,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != 1 {
-					return errors.New("1 != 1 on popInt")
+					return errOneNotEqualOnPopInt
 				}
 				return nil
 			},
@@ -242,7 +256,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != 1 {
-					return errors.New("1 != 1 on popInt")
+					return errOneNotEqualOnPopInt
 				}
 				return nil
 			},
@@ -258,7 +272,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != -1 {
-					return errors.New("-1 != -1 on popInt")
+					return errNegOneNotEqualOnPopInt
 				}
 				return nil
 			},
@@ -274,7 +288,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != -1 {
-					return errors.New("-1 != -1 on popInt")
+					return errNegOneNotEqualOnPopInt
 				}
 				return nil
 			},
@@ -291,7 +305,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != -513 {
-					return errors.New("-513 != -513 on popInt")
+					return errNeg513NotEqualOnPopInt
 				}
 				return nil
 			},
@@ -308,7 +322,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != -1 {
-					return errors.New("-1 != -1 on popInt")
+					return errNegOneNotEqualOnPopInt
 				}
 				return nil
 			},
@@ -453,7 +467,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if !val {
-					return errors.New("unexpected value")
+					return errUnexpectedValue
 				}
 
 				return nil
@@ -471,7 +485,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if val {
-					return errors.New("unexpected value")
+					return errUnexpectedValue
 				}
 
 				return nil
@@ -489,7 +503,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if !val {
-					return errors.New("unexpected value")
+					return errUnexpectedValue
 				}
 
 				return nil
@@ -507,7 +521,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if val {
-					return errors.New("unexpected value")
+					return errUnexpectedValue
 				}
 
 				return nil
@@ -806,7 +820,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if !val {
-					return errors.New("invalid result")
+					return errInvalidResult
 				}
 				return nil
 			},
@@ -824,7 +838,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if val {
-					return errors.New("invalid result")
+					return errInvalidResult
 				}
 				return nil
 			},
@@ -842,7 +856,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if val.Int() != 1 {
-					return errors.New("invalid result")
+					return errInvalidResult
 				}
 				return nil
 			},
@@ -860,7 +874,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if val.Int() != 0 {
-					return errors.New("invalid result")
+					return errInvalidResult
 				}
 				return nil
 			},
@@ -879,7 +893,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if val.Int() != 1 {
-					return errors.New("invalid result")
+					return errInvalidResult
 				}
 				return nil
 			},

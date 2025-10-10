@@ -38,21 +38,21 @@ package interpreter
 //	  AfterError
 //	end if
 type Debugger interface {
-	AfterError(*State, error)
-	AfterExecute(*State)
-	AfterExecuteOpcode(*State)
-	AfterScriptChange(*State)
-	AfterStep(*State)
-	AfterSuccess(*State)
-	BeforeExecute(*State)
-	BeforeExecuteOpcode(*State)
-	BeforeScriptChange(*State)
-	BeforeStep(*State)
+	AfterError(state *State, err error)
+	AfterExecute(state *State)
+	AfterExecuteOpcode(state *State)
+	AfterScriptChange(state *State)
+	AfterStep(state *State)
+	AfterSuccess(state *State)
+	BeforeExecute(state *State)
+	BeforeExecuteOpcode(state *State)
+	BeforeScriptChange(state *State)
+	BeforeStep(state *State)
 
-	AfterStackPop(*State, []byte)
-	AfterStackPush(*State, []byte)
-	BeforeStackPop(*State)
-	BeforeStackPush(*State, []byte)
+	AfterStackPop(state *State, data []byte)
+	AfterStackPush(state *State, data []byte)
+	BeforeStackPop(state *State)
+	BeforeStackPush(state *State, data []byte)
 }
 
 type nopDebugger struct{}

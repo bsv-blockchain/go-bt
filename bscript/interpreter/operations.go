@@ -679,7 +679,7 @@ func opcodeCheckLockTimeVerify(_ *ParsedOpcode, t *thread) error {
 	// another input being unlocked, the opcode execution will still fail when the
 	// input being used by the opcode is locked.
 	if t.tx.Inputs[t.inputIdx].SequenceNumber == bt.MaxTxInSequenceNum {
-		return errs.NewError(errs.ErrUnsatisfiedLockTime, "transaction input is finalised")
+		return errs.NewError(errs.ErrUnsatisfiedLockTime, "transaction input is finalized")
 	}
 
 	return nil

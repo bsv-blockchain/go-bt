@@ -26,7 +26,7 @@ import (
 var opcodeByName = make(map[string]byte)
 
 func init() { //nolint:gochecknoinits // this is in a test, still should be refactored
-	// Initialise the opcode name to value map using the contents of the
+	// Initialize the opcode name to value map using the contents of the
 	// opcode array.  Also add entries for "OP_FALSE", "OP_TRUE", and
 	// "OP_NOP2" since they are aliases for "OP_0", "OP_1",
 	// and "OP_CHECKLOCKTIMEVERIFY" respectively.
@@ -39,6 +39,15 @@ func init() { //nolint:gochecknoinits // this is in a test, still should be refa
 	opcodeByName["OP_CHECKSEQUENCEVERIFY"] = bscript.OpCHECKSEQUENCEVERIFY
 	opcodeByName["OP_RESERVED"] = bscript.OpRESERVED
 }
+
+// Test-specific errors
+var (
+	errBadToken           = errors.New("bad token")
+	errInvalidTestLength  = errors.New("invalid test length")
+	errNotHexNumber       = errors.New("not a hex number")
+	errInvalidFlag        = errors.New("invalid flag")
+	errUnrecognizedResult = errors.New("unrecognized expected result in test data")
+)
 
 // parseShortForm parses a string as used in the Bitcoin Core reference tests
 // into the script it came from.
@@ -121,7 +130,7 @@ func parseShortForm(script string) (*bscript.Script, error) {
 		} else if code, ok := shortFormOps[tok]; ok {
 			scr = append(scr, code)
 		} else {
-			return nil, fmt.Errorf("bad token %q", tok)
+			return nil, fmt.Errorf("%w: %q", errBadToken, tok)
 		}
 
 	}
@@ -136,7 +145,7 @@ func scriptTestName(test []interface{}) (string, error) {
 	// flags, and expected error.  Finally, it may optionally contain a comment.
 	if len(test) < 4 || 6 < len(test) {
 		log.Printf("%#v\n", test)
-		return "", fmt.Errorf("invalid test length %d", len(test))
+		return "", fmt.Errorf("%w: %d", errInvalidTestLength, len(test))
 	}
 
 	// Use the comment for the test name if one is specified, otherwise,
@@ -155,7 +164,7 @@ func scriptTestName(test []interface{}) (string, error) {
 // parse hex string into a []byte.
 func parseHex(tok string) ([]byte, error) {
 	if !strings.HasPrefix(tok, "0x") {
-		return nil, errors.New("not a hex number")
+		return nil, errNotHexNumber
 	}
 	return hex.DecodeString(tok[2:])
 }
@@ -207,7 +216,7 @@ func parseScriptFlags(flagStr string) (scriptflag.Flag, error) {
 		case "SIGHASH_FORKID":
 			flags |= scriptflag.EnableSighashForkID
 		default:
-			return flags, fmt.Errorf("invalid flag: %s", flag)
+			return flags, fmt.Errorf("%w: %s", errInvalidFlag, flag)
 		}
 	}
 	return flags, nil
@@ -305,8 +314,7 @@ func parseExpectedResult(expected string) ([]errs.ErrorCode, error) {
 		return []errs.ErrorCode{errs.ErrIllegalForkID}, nil
 	}
 
-	return nil, fmt.Errorf("unrecognized expected result in test data: %v",
-		expected)
+	return nil, fmt.Errorf("%w: %v", errUnrecognizedResult, expected)
 }
 
 // createSpendTx generates a basic spending transaction given the passed

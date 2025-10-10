@@ -16,6 +16,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Test sentinel errors for err113 linter compliance.
+var (
+	errNoLockingScript         = errors.New("no locking script provided")
+	errNoUnlockingScript       = errors.New("no unlocking script provided")
+	errTxAndPrevOutRequired    = errors.New("tx and previous output must be supplied for checksig")
+	errLockingScriptMismatch   = errors.New("locking script does not match the previous outputs locking script")
+	errUnlockingScriptMismatch = errors.New("unlocking script does not match the unlocking script of the requested input")
+	errTxInputIndexOutOfRange  = errors.New("transaction input index 5 is negative or >= 1")
+)
+
 // TestBadPC sets the pc to a deliberately bad result then confirms that Step()
 // and Disasm fail correctly.
 func TestBadPC(t *testing.T) {
@@ -256,7 +266,7 @@ func TestValidateParams(t *testing.T) {
 					return tx
 				}(),
 			},
-			expErr: errors.New("no locking script provided"),
+			expErr: errNoLockingScript,
 		},
 		"no unlocking script provided errors": {
 			params: execOpts{
@@ -272,7 +282,7 @@ func TestValidateParams(t *testing.T) {
 					return &bt.Output{LockingScript: script, Satoshis: 0}
 				}(),
 			},
-			expErr: errors.New("no unlocking script provided"),
+			expErr: errNoUnlockingScript,
 		},
 		"invalid locking/unlocking script with checksig": {
 			params: execOpts{
@@ -287,7 +297,7 @@ func TestValidateParams(t *testing.T) {
 					return script
 				}(),
 			},
-			expErr: errors.New("tx and previous output must be supplied for checksig"),
+			expErr: errTxAndPrevOutRequired,
 		},
 		"provided locking script that differs from previous txout's errors": {
 			params: execOpts{
@@ -320,7 +330,7 @@ func TestValidateParams(t *testing.T) {
 					return &bt.Output{LockingScript: script, Satoshis: 0}
 				}(),
 			},
-			expErr: errors.New("locking script does not match the previous outputs locking script"),
+			expErr: errLockingScriptMismatch,
 		},
 		"provided unlocking script that differs from tx input's errors": {
 			params: execOpts{
@@ -353,7 +363,7 @@ func TestValidateParams(t *testing.T) {
 					return &bt.Output{LockingScript: script, Satoshis: 0}
 				}(),
 			},
-			expErr: errors.New("unlocking script does not match the unlocking script of the requested input"),
+			expErr: errUnlockingScriptMismatch,
 		},
 		"invalid input index errors": {
 			params: execOpts{
@@ -377,7 +387,7 @@ func TestValidateParams(t *testing.T) {
 				}(),
 				inputIdx: 5,
 			},
-			expErr: errors.New("transaction input index 5 is negative or >= 1"),
+			expErr: errTxInputIndexOutOfRange,
 		},
 	}
 

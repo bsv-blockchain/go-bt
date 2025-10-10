@@ -10,8 +10,8 @@ import (
 
 // OpcodeParser parses *bscript.Script into a ParsedScript, and unparsing back
 type OpcodeParser interface {
-	Parse(*bscript.Script) (ParsedScript, error)
-	Unparse(ParsedScript) (*bscript.Script, error)
+	Parse(script *bscript.Script) (ParsedScript, error)
+	Unparse(pscr ParsedScript) (*bscript.Script, error)
 }
 
 // ParsedScript is a slice of ParsedOp

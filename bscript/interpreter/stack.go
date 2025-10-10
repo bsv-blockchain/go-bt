@@ -392,7 +392,7 @@ func (s *stack) afterStackPop(bb []byte) {
 type boolStack interface {
 	PushBool(b bool)
 	PopBool() (bool, error)
-	PeekBool(int32) (bool, error)
+	PeekBool(idx int32) (bool, error)
 	Depth() int32
 }
 
