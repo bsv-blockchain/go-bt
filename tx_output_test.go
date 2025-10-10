@@ -3,7 +3,6 @@ package bt_test
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	bip32 "github.com/bsv-blockchain/go-sdk/compat/bip32"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -199,10 +199,10 @@ func TestTx_PayTo(t *testing.T) {
 			err: nil,
 		}, "empty p2pkh script should return error": {
 			script: &bscript.Script{},
-			err:    errors.New("'empty' is not a valid P2PKH script: invalid script type"),
+			err:    errors.Wrapf(bt.ErrInvalidScriptType, "'%s' is not a valid P2PKH script", "empty"),
 		}, "non p2pkh script should return error": {
 			script: bscript.NewFromBytes([]byte("test")),
-			err:    errors.New("'nonstandard' is not a valid P2PKH script: invalid script type"),
+			err:    errors.Wrapf(bt.ErrInvalidScriptType, "'%s' is not a valid P2PKH script", "nonstandard"),
 		},
 	}
 	for name, test := range tests {

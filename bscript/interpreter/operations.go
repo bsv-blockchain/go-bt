@@ -984,7 +984,7 @@ func opcodeSplit(_ *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	if n.Int32() > int32(len(c)) {
+	if n.Int32() > int32(len(c)) { //nolint:gosec // G115 - array length bounded by script limits
 		return errs.NewError(errs.ErrNumberTooBig, "n is larger than length of array")
 	}
 	if n.LessThanInt(0) {

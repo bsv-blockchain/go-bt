@@ -2,7 +2,7 @@ package bt
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -601,7 +601,7 @@ func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("unknown fee type ''"),
+			err: fmt.Errorf("%w '%s'", ErrUnknownFeeType, ""),
 		}, "random key should error": {
 			quote: &FeeQuote{
 				fees: map[FeeType]*Fee{
@@ -618,7 +618,7 @@ func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("unknown fee type 'randomKey'"),
+			err: fmt.Errorf("%w '%s'", ErrUnknownFeeType, "randomKey"),
 		},
 	}
 	for name, test := range tests {

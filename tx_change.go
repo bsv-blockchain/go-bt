@@ -36,7 +36,7 @@ func (tx *Tx) Change(s *bscript.Script, f *FeeQuote) error {
 // ChangeToExistingOutput will calculate fees and add them to an output at the index specified (0 based).
 // If an invalid index is supplied and error is returned.
 func (tx *Tx) ChangeToExistingOutput(index uint, f *FeeQuote) error {
-	if int(index) > tx.OutputCount()-1 {
+	if int(index) > tx.OutputCount()-1 { //nolint:gosec // G115 - bounds check for output index
 		return ErrOutputNoExist
 	}
 	available, hasChange, err := tx.change(f, nil)

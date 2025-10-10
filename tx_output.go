@@ -22,7 +22,7 @@ func newOutputFromBytes(bytes []byte) (*Output, int, error) {
 	l, size := NewVarIntFromBytes(bytes[offset:])
 	offset += size
 
-	totalLength := offset + int(l)
+	totalLength := offset + int(l) //nolint:gosec // G115 - script length constrained by tx format
 
 	if len(bytes) < totalLength {
 		return nil, 0, fmt.Errorf("%w < 8 + script", ErrInputTooShort)
@@ -42,7 +42,7 @@ func (tx *Tx) TotalOutputSatoshis() (total uint64) {
 		total += o.Satoshis
 	}
 
-	return
+	return total
 }
 
 // AddP2PKHOutputFromPubKeyHashStr makes an output to a PKH with a value.

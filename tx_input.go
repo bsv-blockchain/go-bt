@@ -29,7 +29,7 @@ func (tx *Tx) TotalInputSatoshis() (total uint64) {
 		total += in.PreviousTxSatoshis
 	}
 
-	return
+	return total
 }
 
 func (tx *Tx) addInput(input *Input) {

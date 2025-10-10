@@ -78,4 +78,5 @@ var (
 	ErrInvalidSellOffer      = errors.New("invalid sell offer (partially signed tx)")
 	ErrEmptyScripts          = errors.New("at least one of needed scripts is empty")
 	ErrInsufficientFees      = errors.New("fee paid not enough with new locking script")
+	ErrUnlockerNotFound      = errors.New("UTXO unlocker not found")
 )

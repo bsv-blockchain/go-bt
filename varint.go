@@ -52,12 +52,12 @@ func (v VarInt) Bytes() []byte {
 	}
 	if v < 0x10000 {
 		b[0] = 0xfd
-		binary.LittleEndian.PutUint16(b[1:3], uint16(v))
+		binary.LittleEndian.PutUint16(b[1:3], uint16(v)) //nolint:gosec // G115 - range check ensures v < 0x10000
 		return b[:3]
 	}
 	if v < 0x100000000 {
 		b[0] = 0xfe
-		binary.LittleEndian.PutUint32(b[1:5], uint32(v))
+		binary.LittleEndian.PutUint32(b[1:5], uint32(v)) //nolint:gosec // G115 - range check ensures v < 0x100000000
 		return b[:5]
 	}
 	b[0] = 0xff

@@ -170,13 +170,13 @@ func AcceptOrdinalSaleListing(ctx context.Context, vla *ValidateListingArgs, aso
 		}
 
 		if tx.Inputs[j] == nil {
-			return nil, fmt.Errorf("input expected at index %d doesn't exist", j)
+			return nil, fmt.Errorf("%w at index %d", bt.ErrInputNoExist, j)
 		}
 		if !bytes.Equal(u.TxIDHash.CloneBytes(), tx.Inputs[j].PreviousTxID()) {
 			return nil, bt.ErrUTXOInputMismatch
 		}
 		if *u.Unlocker == nil {
-			return nil, fmt.Errorf("UTXO unlocker at index %d not found", i)
+			return nil, fmt.Errorf("%w at index %d", bt.ErrUnlockerNotFound, i)
 		}
 		err = tx.FillInput(ctx, *u.Unlocker, bt.UnlockerParams{InputIdx: uint32(j)})
 		if err != nil {

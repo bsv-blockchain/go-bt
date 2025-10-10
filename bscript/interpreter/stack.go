@@ -57,7 +57,7 @@ func newStack(cfg config, verifyMinimalData bool) stack {
 
 // Depth returns the number of items on the stack.
 func (s *stack) Depth() int32 {
-	return int32(len(s.stk))
+	return int32(len(s.stk)) //nolint:gosec // G115 - stack depth bounded by script limits
 }
 
 // PushByteArray adds the given back array to the top of the stack.
@@ -127,7 +127,7 @@ func (s *stack) PopBool() (bool, error) {
 
 // PeekByteArray returns the Nth item on the stack without removing it.
 func (s *stack) PeekByteArray(idx int32) ([]byte, error) {
-	sz := int32(len(s.stk))
+	sz := int32(len(s.stk)) //nolint:gosec // G115 - stack depth bounded by script limits
 	if idx < 0 || idx >= sz {
 		return nil, errs.NewError(errs.ErrInvalidStackOperation, "index %d is invalid for stack size %d", idx, sz)
 	}

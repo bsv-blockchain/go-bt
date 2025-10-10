@@ -12,6 +12,8 @@ import (
 	bip32 "github.com/bsv-blockchain/go-sdk/compat/bip32"
 )
 
+var ErrLockingScriptNotFound = errors.New("locking script not found")
+
 // account for creating destination scripts and stores these scripts with their derivations.
 type account struct {
 	// masterPrivKey of which all locking scripts and private keys are generated from.
@@ -67,7 +69,7 @@ func (a *account) Unlocker(_ context.Context, lockingScript *bscript.Script) (bt
 	// Retrieve the path for the given locking script.
 	path, ok := a.scriptToPathMap[lockingScript.String()]
 	if !ok {
-		panic(errors.New("oh no"))
+		panic(ErrLockingScriptNotFound)
 	}
 
 	// Derive a private key from the stored derivation path. This private key will be pair to

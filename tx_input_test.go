@@ -18,6 +18,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var errCustomTest = errors.New("custom error")
+
 func TestAddInputFromTx(t *testing.T) {
 	pubkey1, _ := hex.DecodeString("0280f642908697e8068c2e921bd998d6c2b90553064656f91b9cb9e98f443aac30")
 	pubkey2, _ := hex.DecodeString("02434dc3db4281c0895d7a126bb266e7648caca7d0e2e487bc41f954722d4ee397")
@@ -372,10 +374,10 @@ func TestTx_Fund(t *testing.T) {
 			}(),
 			utxoGetterFuncOverrider: func([]*bt.UTXO) bt.UTXOGetterFunc {
 				return func(context.Context, uint64) ([]*bt.UTXO, error) {
-					return nil, errors.New("custom error")
+					return nil, errCustomTest
 				}
 			},
-			expErr: errors.New("custom error"),
+			expErr: errCustomTest,
 		},
 		"tx with large amount of satoshis is covered, with multiple iterations": {
 			tx: func() *bt.Tx {
