@@ -52,7 +52,7 @@ func (h Hash) String() string {
 // CloneBytes returns a copy of the bytes which represent the hash as a byte
 // slice.
 //
-// NOTE: It is generally less expensive to just slice the hash directly thereby reusing
+// Important: It is generally less expensive to just slice the hash directly thereby reusing
 // the same bytes rather than calling this method.
 func (h *Hash) CloneBytes() []byte {
 	newHash := make([]byte, HashSize)

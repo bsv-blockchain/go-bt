@@ -167,6 +167,7 @@ func (t *thread) executeOpcode(pop ParsedOpcode) error {
 		return errs.NewError(errs.ErrReservedOpcode, "attempt to execute reserved opcode %s", pop.Name())
 	}
 
+	//nolint:godox // legitimate documentation comment
 	// Note that this includes OP_RESERVED which counts as a push operation.
 	if pop.op.val > bscript.Op16 {
 		t.numOps++
@@ -431,7 +432,7 @@ func (t *thread) Step() (bool, error) {
 	// The number of elements in the combination of the data and alt stacks
 	// must not exceed the maximum number of stack elements allowed.
 	combinedStackSize := t.dstack.Depth() + t.astack.Depth()
-	if combinedStackSize > int32(t.cfg.MaxStackSize()) {
+	if combinedStackSize > int32(t.cfg.MaxStackSize()) { //nolint:gosec // G115 - MaxStackSize bounded by config
 		return false, errs.NewError(errs.ErrStackOverflow,
 			"combined stack size %d > max allowed %d", combinedStackSize, t.cfg.MaxStackSize())
 	}
@@ -749,7 +750,7 @@ func getStack(stack *stack) [][]byte {
 	array := make([][]byte, stack.Depth())
 	for i := range array {
 		// PeekByteArray can't fail due to overflow, already checked
-		array[len(array)-i-1], _ = stack.PeekByteArray(int32(i))
+		array[len(array)-i-1], _ = stack.PeekByteArray(int32(i)) //nolint:gosec // G115 - i is bounded by stack depth
 	}
 	return array
 }

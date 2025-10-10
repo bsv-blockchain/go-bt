@@ -55,7 +55,7 @@ func (tx *Tx) AddP2PKHInputsFromTx(pvsTx *Tx, matchPK []byte) error {
 			}
 			if err = tx.FromUTXOs(&UTXO{
 				TxIDHash:      prevTxIDHash,
-				Vout:          uint32(i),
+				Vout:          uint32(i), //nolint:gosec // G115 - i is bounded by output count
 				Satoshis:      utxo.Satoshis,
 				LockingScript: utxo.LockingScript,
 			}); err != nil {
@@ -111,7 +111,7 @@ func (tx *Tx) FromUTXOs(utxos ...*UTXO) error {
 // as an input via tx.From(...), until it is estimated that inputs cover the outputs + fees.
 //
 // After completion, the receiver is ready for `Change(...)` to be called, and then be signed.
-// Note, this function works under the assumption that receiver *bt.Tx already has all the outputs
+// Important: this function works under the assumption that receiver *bt.Tx already has all the outputs
 // which need covered.
 //
 // If insufficient utxos are provided from the UTXOGetterFunc, a bt.ErrInsufficientFunds is returned.
@@ -247,7 +247,7 @@ func (tx *Tx) FillAllInputs(ctx context.Context, ug UnlockerGetter) error {
 		}
 
 		if err = tx.FillInput(ctx, u, UnlockerParams{
-			InputIdx:     uint32(i),
+			InputIdx:     uint32(i),         //nolint:gosec // loop index is bounded by transaction inputs
 			SigHashFlags: sighash.AllForkID, // use SIGHASHALLFORFORKID to sign automatically
 		}); err != nil {
 			return err

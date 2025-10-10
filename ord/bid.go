@@ -31,7 +31,7 @@ type MakeBidArgs struct {
 // people can make different bids and the seller will need to choose
 // only one to go through and broadcast to the node network.
 //
-// Note: this function is meant for ordinals in 1 satoshi outputs instead
+// Info: this function is meant for ordinals in 1 satoshi outputs instead
 // of ordinal ranges in 1 output (>1 satoshi outputs).
 func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*bt.Tx, error) {
 	if len(mba.BidderUTXOs) < 2 {

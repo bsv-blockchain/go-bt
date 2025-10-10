@@ -14,7 +14,7 @@ import (
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
 	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
 	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
-	"golang.org/x/crypto/ripemd160" //nolint:staticcheck // OP_RIPEMD160 support requires this
+	"golang.org/x/crypto/ripemd160" //nolint:staticcheck,gosec // OP_RIPEMD160 support requires this
 )
 
 // Conditional execution constants.
@@ -441,6 +441,8 @@ func popIfBool(t *thread) (bool, error) {
 //
 // Data stack transformation: [... bool] -> [...]
 // Conditional stack transformation: [...] -> [... OpCondValue]
+//
+//nolint:godox // legitimate documentation comment
 func opcodeIf(op *ParsedOpcode, t *thread) error {
 	condVal := opCondFalse
 	if t.shouldExec(*op) {
@@ -479,6 +481,8 @@ func opcodeIf(op *ParsedOpcode, t *thread) error {
 //
 // Data stack transformation: [... bool] -> [...]
 // Conditional stack transformation: [...] -> [... OpCondValue]
+//
+//nolint:godox // legitimate documentation comment
 func opcodeNotIf(op *ParsedOpcode, t *thread) error {
 	condVal := opCondFalse
 	if t.shouldExec(*op) {
@@ -675,6 +679,7 @@ func opcodeCheckLockTimeVerify(_ *ParsedOpcode, t *thread) error {
 	// value).  This is sufficient to prove correctness without having to
 	// check every input.
 	//
+	//nolint:godox // legitimate documentation comment
 	// NOTE: This implies that even if the transaction is not finalized due to
 	// another input being unlocked, the opcode execution will still fail when the
 	// input being used by the opcode is locked.
@@ -1293,6 +1298,8 @@ func opcodeAbs(_ *ParsedOpcode, t *thread) error {
 // Stack transformation (x2==0): [... x1 0] -> [... x1 1]
 // Stack transformation (x2!=0): [... x1 1] -> [... x1 0]
 // Stack transformation (x2!=0): [... x1 17] -> [... x1 0]
+//
+//nolint:godox // legitimate documentation comment
 func opcodeNot(_ *ParsedOpcode, t *thread) error {
 	m, err := t.dstack.PopInt()
 	if err != nil {
@@ -1942,6 +1949,7 @@ func opcodeCheckSig(_ *ParsedOpcode, t *thread) error {
 	// signature and pubkey conform to the strict encoding requirements
 	// depending on the flags.
 	//
+	//nolint:godox // legitimate documentation comment
 	// NOTE: When the strict encoding flags are set, any errors in the
 	// signature or public encoding here result in an immediate script error
 	// (and thus no result bool is pushed to the data stack).  This differs
@@ -1983,7 +1991,7 @@ func opcodeCheckSig(_ *ParsedOpcode, t *thread) error {
 	txCopy := t.tx.ShallowClone()
 	txCopy.Inputs[t.inputIdx].PreviousTxScript = up
 
-	hashBytes, err = txCopy.CalcInputSignatureHash(uint32(t.inputIdx), shf)
+	hashBytes, err = txCopy.CalcInputSignatureHash(uint32(t.inputIdx), shf) //nolint:gosec // inputIdx is validated as a valid input index
 	if err != nil {
 		t.dstack.PushBool(false)
 		return err
@@ -2246,7 +2254,7 @@ func opcodeCheckMultiSig(_ *ParsedOpcode, t *thread) error {
 		txCopy := t.tx.ShallowClone()
 		txCopy.Inputs[t.inputIdx].PreviousTxScript = up
 
-		signatureHash, err := txCopy.CalcInputSignatureHash(uint32(t.inputIdx), shf)
+		signatureHash, err := txCopy.CalcInputSignatureHash(uint32(t.inputIdx), shf) //nolint:gosec // inputIdx is validated as a valid input index
 		if err != nil {
 			t.dstack.PushBool(false)
 			return nil //nolint:nilerr // only need a false push in this case

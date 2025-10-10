@@ -93,7 +93,7 @@ func (tx *Tx) UnmarshalJSON(b []byte) error {
 }
 
 // copyFrom deep-copies the contents of src into tx, avoiding slice aliasing.
-// NOTE: Ensure the calling file's import list includes: import "slices" (Go 1.21+)
+// Important: Ensure the calling file's import list includes: import "slices" (Go 1.21+)
 func (tx *Tx) copyFrom(src *Tx) {
 	if src == nil {
 		return

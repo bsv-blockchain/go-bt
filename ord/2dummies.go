@@ -119,7 +119,7 @@ type MakeBid2DArgs struct {
 // people can make different bids, and the seller will need to choose
 // only one to go through and broadcast to the node network.
 //
-// Note: this function is meant for ordinals in 1 satoshi outputs instead
+// Info: this function is meant for ordinals in 1 satoshi outputs instead
 // of ordinal ranges in 1 output (>1 satoshi outputs).
 func MakeBidToBuy1SatOrdinal2Dummies(ctx context.Context, mba *MakeBid2DArgs) (*bt.Tx, error) {
 	if len(mba.BidderUTXOs) < 3 {
@@ -217,7 +217,7 @@ func MakeBidToBuy1SatOrdinal2Dummies(ctx context.Context, mba *MakeBid2DArgs) (*
 // ValidateBid2DArgs are the arguments needed to
 // validate a specific bid to buy an ordinal.
 //
-// Note: index 2 should be the listed ordinal input.
+// Info: index 2 should be the listed ordinal input.
 type ValidateBid2DArgs struct {
 	PreviousUTXOs []*bt.UTXO // index 2 should be the listed ordinal input
 	BidAmount     uint64

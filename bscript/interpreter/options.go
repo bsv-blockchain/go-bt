@@ -72,6 +72,8 @@ func WithDebugger(debugger Debugger) ExecutionOptionFunc {
 //
 // The safest recommended *interpreter.State records for a given script can be
 // are those which can be captured during `debugger.BeforeStep` and `debugger.AfterStep`.
+//
+//nolint:godox // legitimate documentation comment
 func WithState(state *State) ExecutionOptionFunc {
 	return func(p *execOpts) {
 		p.state = state

@@ -106,7 +106,7 @@ func makeScriptNumber(bb []byte, scriptNumLen int, requireMinimal, afterGenesis 
 	//    }
 	v := new(big.Int)
 	for i, b := range bb {
-		v.Or(v, new(big.Int).Lsh(new(big.Int).SetBytes([]byte{b}), uint(8*i)))
+		v.Or(v, new(big.Int).Lsh(new(big.Int).SetBytes([]byte{b}), uint(8*i))) //nolint:gosec // G115 - i is bounded by scriptNumLen check above
 	}
 
 	// When the most significant byte of the input bytes has the sign bit
@@ -123,7 +123,7 @@ func makeScriptNumber(bb []byte, scriptNumLen int, requireMinimal, afterGenesis 
 		// above, so uint8 is enough to cover the max possible shift
 		// value of 24.
 		shift := big.NewInt(int64(0x80))
-		shift.Not(shift.Lsh(shift, uint(8*(len(bb)-1))))
+		shift.Not(shift.Lsh(shift, uint(8*(len(bb)-1)))) //nolint:gosec // G115 - length bounded by scriptNumLen check above
 		v.And(v, shift).Neg(v)
 	}
 	return &scriptNumber{

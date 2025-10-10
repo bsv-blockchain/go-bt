@@ -76,7 +76,7 @@ func (tx *Tx) change(f *FeeQuote, output *changeOutput) (uint64, bool, error) {
 	if err != nil {
 		return 0, false, err
 	}
-	varIntUpper := VarInt(tx.OutputCount()).UpperLimitInc()
+	varIntUpper := VarInt(tx.OutputCount()).UpperLimitInc() //nolint:gosec // G115 - output count bounded by transaction size
 	if varIntUpper == -1 {
 		return 0, false, nil
 	}
@@ -86,9 +86,9 @@ func (tx *Tx) change(f *FeeQuote, output *changeOutput) (uint64, bool, error) {
 		changeP2pkhByteLen = uint64(8 + 1 + 25)
 	}
 
-	sFees := (size.TotalStdBytes + changeP2pkhByteLen) * uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes)
-	dFees := size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes)
-	txFees := sFees + dFees + uint64(changeOutputFee)
+	sFees := (size.TotalStdBytes + changeP2pkhByteLen) * uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes) //nolint:gosec // fee values are bounded and safe
+	dFees := size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes)                     //nolint:gosec // fee values are bounded and safe
+	txFees := sFees + dFees + uint64(changeOutputFee)                                                                       //nolint:gosec // changeOutputFee is bounded and safe
 
 	// not enough to add change, no change to add
 	if available <= txFees || available-txFees <= DustLimit {
