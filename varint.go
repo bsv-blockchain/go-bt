@@ -47,20 +47,20 @@ func (v VarInt) Length() int {
 func (v VarInt) Bytes() []byte {
 	b := make([]byte, 9)
 	if v < 0xfd {
-		b[0] = byte(v)
+		b[0] = byte(v) //nolint:gosec // G602 - b is allocated with length 9
 		return b[:1]
 	}
 	if v < 0x10000 {
-		b[0] = 0xfd
+		b[0] = 0xfd                                      //nolint:gosec // G602 - b is allocated with length 9
 		binary.LittleEndian.PutUint16(b[1:3], uint16(v)) //nolint:gosec // G115 - range check ensures v < 0x10000
 		return b[:3]
 	}
 	if v < 0x100000000 {
-		b[0] = 0xfe
+		b[0] = 0xfe                                      //nolint:gosec // G602 - b is allocated with length 9
 		binary.LittleEndian.PutUint32(b[1:5], uint32(v)) //nolint:gosec // G115 - range check ensures v < 0x100000000
 		return b[:5]
 	}
-	b[0] = 0xff
+	b[0] = 0xff //nolint:gosec // G602 - b is allocated with length 9
 	binary.LittleEndian.PutUint64(b[1:9], uint64(v))
 	return b
 }
@@ -98,7 +98,7 @@ func (v *VarInt) ReadFrom(r io.Reader) (int64, error) {
 		return 3, nil
 
 	default:
-		*v = VarInt(binary.LittleEndian.Uint16([]byte{b[0], 0x00}))
+		*v = VarInt(binary.LittleEndian.Uint16([]byte{b[0], 0x00})) //nolint:gosec // G602 - b is allocated with length 1 and checked above
 		return 1, nil
 	}
 }
