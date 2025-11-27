@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
+	"github.com/stretchr/testify/require"
 
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	"github.com/stretchr/testify/require"
 )
 
 // newTxWithInput creates a transaction with a single input.

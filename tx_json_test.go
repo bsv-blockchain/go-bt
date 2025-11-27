@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
 // TestTx_JSON tests the JSON marshaling and unmarshaling of transactions.

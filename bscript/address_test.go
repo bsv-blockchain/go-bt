@@ -4,10 +4,11 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bsv-blockchain/go-bt/v2/bscript"
 )
 
 const testPublicKeyHash = "00ac6144c4db7b5790f343cf0477a65fb8a02eb7"

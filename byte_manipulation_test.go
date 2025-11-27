@@ -4,10 +4,11 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/bsv-blockchain/go-bt/v2"
 	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bsv-blockchain/go-bt/v2"
 )
 
 // TestLittleEndianBytes tests the LittleEndianBytes function.

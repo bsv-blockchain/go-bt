@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bsv-blockchain/go-bt/v2/bscript"
 )
 
 const testScript = "fake script"

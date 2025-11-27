@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

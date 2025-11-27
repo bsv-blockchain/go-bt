@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"slices"
 
+	"github.com/pkg/errors"
+
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
-	"github.com/pkg/errors"
 )
 
 type txJSON struct {

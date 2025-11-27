@@ -4,9 +4,10 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter"
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/debug"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestDebugger_BeforeExecute(t *testing.T) {

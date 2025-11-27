@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"testing"
 
-	transaction "github.com/bsv-blockchain/go-sdk/transaction/chaincfg"
-
-	"github.com/bsv-blockchain/go-bt/v2"
-	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	bip32 "github.com/bsv-blockchain/go-sdk/compat/bip32"
+	transaction "github.com/bsv-blockchain/go-sdk/transaction/chaincfg"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bsv-blockchain/go-bt/v2"
+	"github.com/bsv-blockchain/go-bt/v2/bscript"
 )
 
 func TestNewP2PKHOutputFromPubKeyHashStr(t *testing.T) {

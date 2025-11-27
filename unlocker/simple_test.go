@@ -4,13 +4,14 @@ import (
 	"context"
 	"testing"
 
+	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestLocalUnlocker_UnlockAllInputs(t *testing.T) {

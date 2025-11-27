@@ -3,12 +3,13 @@ package interpreter
 import (
 	"math/big"
 
+	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/errs"
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/scriptflag"
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
-	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
 )
 
 // halfOrder is used to tame ECDSA malleability (see BIP0062).

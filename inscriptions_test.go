@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	primitives "github.com/bsv-blockchain/go-sdk/primitives/ec"
+	"github.com/stretchr/testify/require"
 
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
-	"github.com/stretchr/testify/require"
 )
 
 func TestInscribe(t *testing.T) {

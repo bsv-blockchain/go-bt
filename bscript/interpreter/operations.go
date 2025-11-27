@@ -7,14 +7,15 @@ import (
 	"hash"
 	"math/big"
 
+	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
+	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
+	"golang.org/x/crypto/ripemd160" //nolint:staticcheck,gosec // OP_RIPEMD160 support requires this
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/errs"
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/scriptflag"
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
-	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
-	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
-	"golang.org/x/crypto/ripemd160" //nolint:staticcheck,gosec // OP_RIPEMD160 support requires this
 )
 
 // Conditional execution constants.

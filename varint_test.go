@@ -5,8 +5,9 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bsv-blockchain/go-bt/v2"
 )
 
 // convertIntToBytes converts a uint64 integer to a byte slice

@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter"
-	"golang.org/x/sync/errgroup"
 )
 
 func ExampleEngine_Execute() {

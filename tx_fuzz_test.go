@@ -3,8 +3,9 @@ package bt_test
 import (
 	"testing"
 
-	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bsv-blockchain/go-bt/v2"
 )
 
 // FuzzReverseBytes ensures that reversing arbitrary byte slices is symmetric.

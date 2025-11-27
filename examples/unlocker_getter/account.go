@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 
+	bip32 "github.com/bsv-blockchain/go-sdk/compat/bip32"
 	transaction "github.com/bsv-blockchain/go-sdk/transaction/chaincfg"
 
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/unlocker"
-	bip32 "github.com/bsv-blockchain/go-sdk/compat/bip32"
 )
 
 var ErrLockingScriptNotFound = errors.New("locking script not found")

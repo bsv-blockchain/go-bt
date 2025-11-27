@@ -9,10 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	transaction "github.com/bsv-blockchain/go-sdk/transaction/chaincfg"
-
 	bip32 "github.com/bsv-blockchain/go-sdk/compat/bip32"
 	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
+	transaction "github.com/bsv-blockchain/go-sdk/transaction/chaincfg"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

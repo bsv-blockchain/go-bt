@@ -5,10 +5,11 @@ import (
 	"context"
 	"errors"
 
+	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
+
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/sighash"
-	bec "github.com/bsv-blockchain/go-sdk/primitives/ec"
 )
 
 var externalSignerFn func(message, privateKey []byte) ([]byte, error)

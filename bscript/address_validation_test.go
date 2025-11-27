@@ -3,9 +3,10 @@ package bscript_test
 import (
 	"testing"
 
-	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bsv-blockchain/go-bt/v2/bscript"
 )
 
 func TestValidateAddress(t *testing.T) {

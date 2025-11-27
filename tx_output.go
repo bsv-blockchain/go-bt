@@ -6,10 +6,10 @@ import (
 	"fmt"
 
 	bip32 "github.com/bsv-blockchain/go-sdk/compat/bip32"
-
-	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
 	"github.com/pkg/errors"
+
+	"github.com/bsv-blockchain/go-bt/v2/bscript"
 )
 
 // newOutputFromBytes returns a transaction Output from the bytes provided
