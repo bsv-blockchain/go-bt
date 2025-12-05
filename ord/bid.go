@@ -129,7 +129,7 @@ func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*bt.Tx, err
 			return nil, fmt.Errorf("%w %d", ErrUnlockerNotFound, i)
 		}
 		err = tx.FillInput(ctx, *u.Unlocker, bt.UnlockerParams{
-			InputIdx:     uint32(j), //nolint:gosec // G115 - j derived from input array index
+			InputIdx:     uint32(j),
 			SigHashFlags: sighash.SingleForkID,
 		})
 		if err != nil {

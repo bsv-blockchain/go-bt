@@ -217,13 +217,13 @@ func (p *DefaultOpcodeParser) Parse(s *bscript.Script) (ParsedScript, error) {
 			}
 
 			offset += -parsedOp.op.length
-			if int(l) > len(script[offset:]) || int(l) < 0 { //nolint:gosec // G115 - l is validated against script length
+			if int(l) > len(script[offset:]) || int(l) < 0 {
 				return nil, errs.NewError(errs.ErrMalformedPush, "opcode %s pushes %d bytes, script has %d remaining",
 					parsedOp.Name(), l, len(script[offset:]))
 			}
 
-			parsedOp.Data = script[offset : offset+int(l)] //nolint:gosec // G115 - l is validated above
-			i += 1 - parsedOp.op.length + int(l)           //nolint:gosec // G115 - l is validated above
+			parsedOp.Data = script[offset : offset+int(l)]
+			i += 1 - parsedOp.op.length + int(l)
 		}
 
 		parsedOps = append(parsedOps, parsedOp)
