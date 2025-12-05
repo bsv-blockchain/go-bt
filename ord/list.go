@@ -178,7 +178,7 @@ func AcceptOrdinalSaleListing(ctx context.Context, vla *ValidateListingArgs, aso
 		if *u.Unlocker == nil {
 			return nil, fmt.Errorf("%w at index %d", bt.ErrUnlockerNotFound, i)
 		}
-		err = tx.FillInput(ctx, *u.Unlocker, bt.UnlockerParams{InputIdx: uint32(j)}) //nolint:gosec // G115 - input index
+		err = tx.FillInput(ctx, *u.Unlocker, bt.UnlockerParams{InputIdx: uint32(j)})
 		if err != nil {
 			return nil, err
 		}

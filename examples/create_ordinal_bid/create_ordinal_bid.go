@@ -58,7 +58,7 @@ func main() {
 	}
 
 	mba := &ord.MakeBidArgs{
-		BidAmount:   uint64(bidAmount), //nolint:gosec // bidAmount is user input, validated elsewhere
+		BidAmount:   uint64(bidAmount),
 		OrdinalTxID: "e17d7856c375640427943395d2341b6ed75f73afc8b22bb3681987278978a584",
 		OrdinalVOut: 81,
 		BidderUTXOs: us,

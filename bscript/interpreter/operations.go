@@ -990,7 +990,7 @@ func opcodeSplit(_ *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	if n.Int32() > int32(len(c)) { //nolint:gosec // G115 - array length bounded by script limits
+	if n.Int32() > int32(len(c)) {
 		return errs.NewError(errs.ErrNumberTooBig, "n is larger than length of array")
 	}
 	if n.LessThanInt(0) {
@@ -1992,7 +1992,7 @@ func opcodeCheckSig(_ *ParsedOpcode, t *thread) error {
 	txCopy := t.tx.ShallowClone()
 	txCopy.Inputs[t.inputIdx].PreviousTxScript = up
 
-	hashBytes, err = txCopy.CalcInputSignatureHash(uint32(t.inputIdx), shf) //nolint:gosec // inputIdx is validated as a valid input index
+	hashBytes, err = txCopy.CalcInputSignatureHash(uint32(t.inputIdx), shf)
 	if err != nil {
 		t.dstack.PushBool(false)
 		return err
@@ -2255,7 +2255,7 @@ func opcodeCheckMultiSig(_ *ParsedOpcode, t *thread) error {
 		txCopy := t.tx.ShallowClone()
 		txCopy.Inputs[t.inputIdx].PreviousTxScript = up
 
-		signatureHash, err := txCopy.CalcInputSignatureHash(uint32(t.inputIdx), shf) //nolint:gosec // inputIdx is validated as a valid input index
+		signatureHash, err := txCopy.CalcInputSignatureHash(uint32(t.inputIdx), shf)
 		if err != nil {
 			t.dstack.PushBool(false)
 			return nil //nolint:nilerr // only need a false push in this case

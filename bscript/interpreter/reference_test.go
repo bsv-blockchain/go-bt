@@ -329,7 +329,7 @@ func createSpendingTx(sigScript, pkScript *bscript.Script, outputValue int64) *b
 			SequenceNumber:     0xffffffff,
 		}},
 		Outputs: []*bt.Output{{
-			Satoshis:      uint64(outputValue), //nolint:gosec // test data value is safe
+			Satoshis:      uint64(outputValue),
 			LockingScript: pkScript,
 		}},
 	}
@@ -347,7 +347,7 @@ func createSpendingTx(sigScript, pkScript *bscript.Script, outputValue int64) *b
 			SequenceNumber:     0xffffffff,
 		}},
 		Outputs: []*bt.Output{{
-			Satoshis:      uint64(outputValue), //nolint:gosec // test data value is safe
+			Satoshis:      uint64(outputValue),
 			LockingScript: bscript.NewFromBytes([]byte{}),
 		}},
 	}
@@ -459,7 +459,7 @@ func TestScripts(t *testing.T) {
 		tx := createSpendingTx(scriptSig, scriptPubKey, inputAmt)
 
 		err = NewEngine().Execute(
-			WithTx(tx, 0, &bt.Output{LockingScript: scriptPubKey, Satoshis: uint64(inputAmt)}), //nolint:gosec // test data value is safe
+			WithTx(tx, 0, &bt.Output{LockingScript: scriptPubKey, Satoshis: uint64(inputAmt)}),
 			WithFlags(flags),
 		)
 
@@ -501,7 +501,7 @@ func TestScripts(t *testing.T) {
 // then to a 32-bit unsigned integer which results in the expected behavior on
 // all platforms.
 func testVecF64ToUint32(f float64) uint32 {
-	return uint32(int32(f)) //nolint:gosec // intentional conversion for cross-platform compatibility
+	return uint32(int32(f))
 }
 
 type txIOKey struct {
