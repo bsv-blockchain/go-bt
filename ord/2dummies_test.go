@@ -78,7 +78,7 @@ func TestBidToBuyPSBT2DNoErrors(t *testing.T) {
 	}
 
 	pstx, CreateBidError := ord.MakeBidToBuy1SatOrdinal2Dummies(context.Background(), &ord.MakeBid2DArgs{
-		BidAmount:   uint64(bidAmount),
+		BidAmount:   uint64(bidAmount), //nolint:gosec // test bid amount
 		OrdinalTxID: ordUTXO.TxIDStr(),
 		OrdinalVOut: ordUTXO.Vout,
 		BidderUTXOs: us,
@@ -103,7 +103,7 @@ func TestBidToBuyPSBT2DNoErrors(t *testing.T) {
 
 	t.Run("validate PSBT bid to buy ordinal", func(t *testing.T) {
 		vba := &ord.ValidateBid2DArgs{
-			BidAmount:  uint64(bidAmount),
+			BidAmount:  uint64(bidAmount), //nolint:gosec // test bid amount
 			ExpectedFQ: bt.NewFeeQuote(),
 			// insert ordinal utxo at index 2
 			PreviousUTXOs: append(us[:2], append([]*bt.UTXO{ordUTXO}, us[2:]...)...),
@@ -113,7 +113,7 @@ func TestBidToBuyPSBT2DNoErrors(t *testing.T) {
 
 	t.Run("no errors when accepting bid", func(t *testing.T) {
 		_, err := ord.AcceptBidToBuy1SatOrdinal2Dummies(context.Background(), &ord.ValidateBid2DArgs{
-			BidAmount:     uint64(bidAmount),
+			BidAmount:     uint64(bidAmount), //nolint:gosec // test bid amount
 			ExpectedFQ:    bt.NewFeeQuote(),
 			PreviousUTXOs: append(us[:2], append([]*bt.UTXO{ordUTXO}, us[2:]...)...),
 		},

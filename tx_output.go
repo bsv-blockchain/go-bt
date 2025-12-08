@@ -22,7 +22,7 @@ func newOutputFromBytes(bytes []byte) (*Output, int, error) {
 	l, size := NewVarIntFromBytes(bytes[offset:])
 	offset += size
 
-	totalLength := offset + int(l)
+	totalLength := offset + int(l) //nolint:gosec // varint length bounded by protocol
 
 	if len(bytes) < totalLength {
 		return nil, 0, fmt.Errorf("%w < 8 + script", ErrInputTooShort)
