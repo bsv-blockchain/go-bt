@@ -49,13 +49,13 @@ func PushDataPrefix(data []byte) ([]byte, error) {
 	} else if l <= 0xFFFF {
 		b = append(b, OpPUSHDATA2)
 		lenBuf := make([]byte, 2)
-		binary.LittleEndian.PutUint16(lenBuf, uint16(len(data)))
+		binary.LittleEndian.PutUint16(lenBuf, uint16(len(data))) //nolint:gosec // len(data) range already validated
 		b = append(b, lenBuf...)
 
 	} else if l <= 0xFFFFFFFF { // bt.DefaultSequenceNumber
 		b = append(b, OpPUSHDATA4)
 		lenBuf := make([]byte, 4)
-		binary.LittleEndian.PutUint32(lenBuf, uint32(len(data)))
+		binary.LittleEndian.PutUint32(lenBuf, uint32(len(data))) //nolint:gosec // len(data) range already validated
 		b = append(b, lenBuf...)
 
 	} else {

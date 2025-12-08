@@ -114,13 +114,13 @@ func (tx *Tx) InscribeSpecificOrdinal(ia *bscript.InscriptionArgs, inputIdx uint
 //
 // For more info check the Ordinals Theory Handbook (https://docs.ordinals.com/faq.html).
 func rangeAbove(is []*Input, inputIdx uint32, satIdx uint64) (uint64, error) {
-	if uint32(len(is)) < inputIdx {
+	if uint32(len(is)) < inputIdx { //nolint:gosec // len(is) bounded by tx inputs
 		return 0, ErrOutputNoExist
 	}
 
 	var acc uint64
 	for i, in := range is {
-		if uint32(i) >= inputIdx {
+		if uint32(i) >= inputIdx { //nolint:gosec // loop index bounded by slice length
 			break
 		}
 		if in.PreviousTxSatoshis == 0 {

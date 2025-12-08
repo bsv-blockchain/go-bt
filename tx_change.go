@@ -36,7 +36,7 @@ func (tx *Tx) Change(s *bscript.Script, f *FeeQuote) error {
 // ChangeToExistingOutput will calculate fees and add them to an output at the index specified (0 based).
 // If an invalid index is supplied and error is returned.
 func (tx *Tx) ChangeToExistingOutput(index uint, f *FeeQuote) error {
-	if int(index) > tx.OutputCount()-1 {
+	if int(index) > tx.OutputCount()-1 { //nolint:gosec // index validated against output count
 		return ErrOutputNoExist
 	}
 	available, hasChange, err := tx.change(f, nil)
@@ -76,7 +76,7 @@ func (tx *Tx) change(f *FeeQuote, output *changeOutput) (uint64, bool, error) {
 	if err != nil {
 		return 0, false, err
 	}
-	varIntUpper := VarInt(tx.OutputCount()).UpperLimitInc()
+	varIntUpper := VarInt(tx.OutputCount()).UpperLimitInc() //nolint:gosec // output count bounded by protocol
 	if varIntUpper == -1 {
 		return 0, false, nil
 	}
@@ -86,9 +86,9 @@ func (tx *Tx) change(f *FeeQuote, output *changeOutput) (uint64, bool, error) {
 		changeP2pkhByteLen = uint64(8 + 1 + 25)
 	}
 
-	sFees := (size.TotalStdBytes + changeP2pkhByteLen) * uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes)
-	dFees := size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes)
-	txFees := sFees + dFees + uint64(changeOutputFee)
+	sFees := (size.TotalStdBytes + changeP2pkhByteLen) * uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes) //nolint:gosec // fee calculation
+	dFees := size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes)                     //nolint:gosec // fee calculation
+	txFees := sFees + dFees + uint64(changeOutputFee)                                                                       //nolint:gosec // fee calculation
 
 	// not enough to add change, no change to add
 	if available <= txFees || available-txFees <= DustLimit {
