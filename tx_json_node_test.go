@@ -547,7 +547,7 @@ func TestTxsJSON_Node_MarshallJSON(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			// decouple extended info from tx
-			testTxs := make(bt.Txs, 0)
+			testTxs := make(bt.Txs, 0, len(test.tx))
 			for _, tx := range test.tx {
 				testTx, err := bt.NewTxFromBytes(tx.Bytes())
 				require.NoError(t, err)

@@ -95,7 +95,7 @@ func (o *Output) Bytes(inBytes ...[]byte) []byte {
 		b := make([]byte, 8)
 		binary.LittleEndian.PutUint64(b, o.Satoshis)
 
-		h = make([]byte, 0)
+		h = make([]byte, 0, len(b)+9+len(*o.LockingScript))
 		h = append(h, b...)
 	}
 
@@ -108,7 +108,7 @@ func (o *Output) Bytes(inBytes ...[]byte) []byte {
 // BytesForSigHash returns the proper serialization
 // of an output to be hashed and signed (sighash).
 func (o *Output) BytesForSigHash() []byte {
-	buf := make([]byte, 0)
+	buf := make([]byte, 0, 8+9+len(*o.LockingScript))
 
 	satoshis := make([]byte, 8)
 	binary.LittleEndian.PutUint64(satoshis, o.Satoshis)

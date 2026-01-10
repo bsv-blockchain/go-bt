@@ -56,7 +56,7 @@ func TestDecodeParts(t *testing.T) {
 
 	t.Run("decode using OP_PUSHDATA1", func(t *testing.T) {
 		data := "testing"
-		b := make([]byte, 0)
+		b := make([]byte, 0, 2+len(data))
 		b = append(b, bscript.OpPUSHDATA1)
 		b = append(b, byte(len(data)))
 		b = append(b, []byte(data)...)
@@ -67,7 +67,7 @@ func TestDecodeParts(t *testing.T) {
 	})
 
 	t.Run("invalid decode using OP_PUSHDATA1 - missing data payload", func(t *testing.T) {
-		b := make([]byte, 0)
+		b := make([]byte, 0, 1)
 		b = append(b, bscript.OpPUSHDATA1)
 
 		decoded, err := bscript.DecodeParts(b)
@@ -77,7 +77,7 @@ func TestDecodeParts(t *testing.T) {
 
 	t.Run("invalid decode using OP_PUSHDATA2 - payload too small", func(t *testing.T) {
 		data := "testing the code OP_PUSHDATA2"
-		b := make([]byte, 0)
+		b := make([]byte, 0, 2+len(data))
 		b = append(b, bscript.OpPUSHDATA2)
 		b = append(b, byte(len(data)))
 		b = append(b, []byte(data)...)
@@ -88,7 +88,7 @@ func TestDecodeParts(t *testing.T) {
 	})
 
 	t.Run("invalid decode using OP_PUSHDATA2 - missing data payload", func(t *testing.T) {
-		b := make([]byte, 0)
+		b := make([]byte, 0, 1)
 		b = append(b, bscript.OpPUSHDATA2)
 
 		decoded, err := bscript.DecodeParts(b)
@@ -97,12 +97,11 @@ func TestDecodeParts(t *testing.T) {
 	})
 
 	t.Run("invalid decode using OP_PUSHDATA2 - overflow", func(t *testing.T) {
-		b := make([]byte, 0)
+		bigScript := make([]byte, 0xffff)
+		b := make([]byte, 0, 3+len(bigScript))
 		b = append(b, bscript.OpPUSHDATA2)
 		b = append(b, 0xff)
 		b = append(b, 0xff)
-
-		bigScript := make([]byte, 0xffff)
 
 		b = append(b, bigScript...)
 
@@ -122,7 +121,7 @@ func TestDecodeParts(t *testing.T) {
 
 	t.Run("invalid decode using OP_PUSHDATA4 - payload too small", func(t *testing.T) {
 		data := "testing the code OP_PUSHDATA4"
-		b := make([]byte, 0)
+		b := make([]byte, 0, 2+len(data))
 		b = append(b, bscript.OpPUSHDATA4)
 		b = append(b, byte(len(data)))
 		b = append(b, []byte(data)...)
@@ -133,7 +132,7 @@ func TestDecodeParts(t *testing.T) {
 	})
 
 	t.Run("invalid decode using OP_PUSHDATA4 - missing data payload", func(t *testing.T) {
-		b := make([]byte, 0)
+		b := make([]byte, 0, 1)
 		b = append(b, bscript.OpPUSHDATA4)
 
 		decoded, err := bscript.DecodeParts(b)
