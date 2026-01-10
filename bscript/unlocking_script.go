@@ -7,7 +7,7 @@ import "github.com/bsv-blockchain/go-bt/v2/sighash"
 // a SIGHASH flag.
 func NewP2PKHUnlockingScript(pubKey, sig []byte, sigHashFlag sighash.Flag) (*Script, error) {
 	// append SIGHASH to DER sig
-	sigBuf := make([]byte, 0)
+	sigBuf := make([]byte, 0, len(sig)+1)
 	sigBuf = append(sigBuf, sig...)
 	sigBuf = append(sigBuf, uint8(sigHashFlag))
 

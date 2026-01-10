@@ -89,14 +89,10 @@ func NewP2PKHFromPubKeyBytes(pubKeyBytes []byte) (*Script, error) {
 // NewP2PKHFromPubKeyHash takes a public key hex string (in
 // compressed format) and creates a P2PKH script from it.
 func NewP2PKHFromPubKeyHash(pubKeyHash []byte) (*Script, error) {
-	b := []byte{
-		OpDUP,
-		OpHASH160,
-		OpDATA20,
-	}
+	b := make([]byte, 0, 3+len(pubKeyHash)+2)
+	b = append(b, OpDUP, OpHASH160, OpDATA20)
 	b = append(b, pubKeyHash...)
-	b = append(b, OpEQUALVERIFY)
-	b = append(b, OpCHECKSIG)
+	b = append(b, OpEQUALVERIFY, OpCHECKSIG)
 
 	s := Script(b)
 	return &s, nil
@@ -202,7 +198,7 @@ func (s *Script) AppendPushDataArray(d [][]byte) error {
 // AppendPushDataStrings takes an array of strings and appends their
 // UTF-8 encoding to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataStrings(pushDataStrings []string) error {
-	dataBytes := make([][]byte, 0)
+	dataBytes := make([][]byte, 0, len(pushDataStrings))
 	for _, str := range pushDataStrings {
 		strBytes := []byte(str)
 		dataBytes = append(dataBytes, strBytes)
