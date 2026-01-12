@@ -8,7 +8,7 @@ require (
 	github.com/bsv-blockchain/go-sdk v1.2.14
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.46.0
+	golang.org/x/crypto v0.47.0
 	golang.org/x/sync v0.19.0
 	google.golang.org/protobuf v1.36.11
 )
