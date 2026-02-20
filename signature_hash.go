@@ -90,9 +90,9 @@ func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([
 	if (sigHashFlag&31) != sighash.Single && (sigHashFlag&31) != sighash.None {
 		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
 		hashOutputs = tx.OutputsHash(-1)
-	} else if (sigHashFlag&31) == sighash.Single && inputNumber < uint32(tx.OutputCount()) { //nolint:gosec // output count bounded by protocol
+	} else if (sigHashFlag&31) == sighash.Single && inputNumber < uint32(tx.OutputCount()) {
 		// This will *not* be executed in the usual BSV case (where sigHashType = SighashAllForkID)
-		hashOutputs = tx.OutputsHash(int32(inputNumber)) //nolint:gosec // inputNumber range validated above
+		hashOutputs = tx.OutputsHash(int32(inputNumber))
 	}
 
 	buf := make([]byte, 0, 256)

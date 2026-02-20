@@ -88,7 +88,7 @@ func main() {
 	tx := bt.NewTx()
 	// Add the three UTXOs from the baseTx for funding.
 	for i := 0; i < 3; i++ {
-		if err = tx.From(baseTx.TxID(), uint32(i), baseTx.Outputs[i].LockingScript.String(), 400); err != nil { //nolint:gosec // loop index bounded by slice length
+		if err = tx.From(baseTx.TxID(), uint32(i), baseTx.Outputs[i].LockingScript.String(), 400); err != nil {
 			panic(err)
 		}
 	}

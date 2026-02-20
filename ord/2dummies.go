@@ -91,7 +91,7 @@ func AcceptOrdinalSaleListing2Dummies(ctx context.Context, vla *ValidateListingA
 		if *u.Unlocker == nil {
 			return nil, fmt.Errorf("%w %d", ErrUnlockerNotFound, i)
 		}
-		err = tx.FillInput(ctx, *u.Unlocker, bt.UnlockerParams{InputIdx: uint32(j)}) //nolint:gosec // loop index bounded by slice length
+		err = tx.FillInput(ctx, *u.Unlocker, bt.UnlockerParams{InputIdx: uint32(j)})
 		if err != nil {
 			return nil, err
 		}
@@ -204,7 +204,7 @@ func MakeBidToBuy1SatOrdinal2Dummies(ctx context.Context, mba *MakeBid2DArgs) (*
 			return nil, fmt.Errorf("%w %d", ErrUnlockerNotFound, i)
 		}
 		err = tx.FillInput(ctx, *u.Unlocker, bt.UnlockerParams{
-			InputIdx:     uint32(j), //nolint:gosec // loop index bounded by slice length
+			InputIdx:     uint32(j),
 			SigHashFlags: sighash.SingleForkID,
 		})
 		if err != nil {

@@ -247,7 +247,7 @@ func (s *Script) ToASM() (string, error) {
 		asm.WriteRune(' ')
 		if len(p) == 1 {
 			if data && p[0] != 0x6a {
-				asm.WriteString(fmt.Sprintf("%d", p[0]))
+				fmt.Fprintf(&asm, "%d", p[0])
 			} else {
 				asm.WriteString(opCodeValues[p[0]])
 			}
@@ -258,7 +258,7 @@ func (s *Script) ToASM() (string, error) {
 				for i := 0; i < 4-len(p); i++ {
 					b = append(b, 0)
 				}
-				asm.WriteString(fmt.Sprintf("%d", binary.LittleEndian.Uint32(b)))
+				fmt.Fprintf(&asm, "%d", binary.LittleEndian.Uint32(b))
 			} else {
 				asm.WriteString(hex.EncodeToString(p))
 			}
