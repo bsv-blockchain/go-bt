@@ -63,7 +63,7 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 	}
 
 	pstx, CreateBidError := ord.MakeBidToBuy1SatOrdinal(context.Background(), &ord.MakeBidArgs{
-		BidAmount:   uint64(bidAmount), //nolint:gosec // test bid amount
+		BidAmount:   uint64(bidAmount),
 		OrdinalTxID: ordUTXO.TxIDStr(),
 		OrdinalVOut: ordUTXO.Vout,
 		BidderUTXOs: us,
@@ -88,7 +88,7 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 
 	t.Run("validate PSBT bid to buy ordinal", func(t *testing.T) {
 		vba := &ord.ValidateBidArgs{
-			BidAmount:   uint64(bidAmount), //nolint:gosec // test bid amount
+			BidAmount:   uint64(bidAmount),
 			ExpectedFQ:  bt.NewFeeQuote(),
 			OrdinalUTXO: ordUTXO,
 		}
@@ -105,7 +105,7 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 		ordUnlocker, _ := ordUnlockerGetter.Unlocker(context.Background(), ordPrefixScript)
 
 		tx, err := ord.AcceptBidToBuy1SatOrdinal(context.Background(), &ord.ValidateBidArgs{
-			BidAmount:   uint64(bidAmount), //nolint:gosec // test bid amount
+			BidAmount:   uint64(bidAmount),
 			ExpectedFQ:  bt.NewFeeQuote(),
 			OrdinalUTXO: ordUTXO,
 		},

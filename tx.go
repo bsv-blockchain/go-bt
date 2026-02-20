@@ -599,9 +599,9 @@ func (tx *Tx) SizeWithTypes() *TxSize {
 		}
 	}
 	return &TxSize{
-		TotalBytes:     uint64(totBytes),           //nolint:gosec // tx size limited by protocol
-		TotalStdBytes:  uint64(totBytes - dataLen), //nolint:gosec // tx size limited by protocol
-		TotalDataBytes: uint64(dataLen),            //nolint:gosec // tx size limited by protocol
+		TotalBytes:     uint64(totBytes),
+		TotalStdBytes:  uint64(totBytes - dataLen),
+		TotalDataBytes: uint64(dataLen),
 	}
 }
 
@@ -728,8 +728,8 @@ func (tx *Tx) feesPaid(size *TxSize, fees *FeeQuote) (*TxFees, error) {
 	}
 
 	txFees := &TxFees{
-		StdFeePaid:  size.TotalStdBytes * uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes),    //nolint:gosec // fee calculation
-		DataFeePaid: size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes), //nolint:gosec // fee calculation
+		StdFeePaid:  size.TotalStdBytes * uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes),
+		DataFeePaid: size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes),
 	}
 	txFees.TotalFeePaid = txFees.StdFeePaid + txFees.DataFeePaid
 	return txFees, nil

@@ -433,7 +433,7 @@ func (t *thread) Step() (bool, error) {
 	// The number of elements in the combination of the data and alt stacks
 	// must not exceed the maximum number of stack elements allowed.
 	combinedStackSize := t.dstack.Depth() + t.astack.Depth()
-	if combinedStackSize > int32(t.cfg.MaxStackSize()) { //nolint:gosec // max stack size from config
+	if combinedStackSize > int32(t.cfg.MaxStackSize()) {
 		return false, errs.NewError(errs.ErrStackOverflow,
 			"combined stack size %d > max allowed %d", combinedStackSize, t.cfg.MaxStackSize())
 	}
@@ -751,7 +751,7 @@ func getStack(stack *stack) [][]byte {
 	array := make([][]byte, stack.Depth())
 	for i := range array {
 		// PeekByteArray can't fail due to overflow, already checked
-		array[len(array)-i-1], _ = stack.PeekByteArray(int32(i)) //nolint:gosec // loop index bounded by array length
+		array[len(array)-i-1], _ = stack.PeekByteArray(int32(i))
 	}
 	return array
 }

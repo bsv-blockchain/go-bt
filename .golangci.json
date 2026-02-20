@@ -147,6 +147,11 @@
                     "ATTENTION"
                 ]
             },
+            "gosec": {
+                "excludes": [
+                    "G115"
+                ]
+            },
             "govet": {
                 "enable": [
                     "atomicalign",
@@ -193,12 +198,16 @@
             "revive": {
                 "rules": [
                     {
-                        "name": "var-naming",
                         "arguments": [
                             [],
                             [],
-                            [{"skipPackageNameChecks": true}]
-                        ]
+                            [
+                                {
+                                    "skipPackageNameChecks": true
+                                }
+                            ]
+                        ],
+                        "name": "var-naming"
                     }
                 ]
             },

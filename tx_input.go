@@ -55,7 +55,7 @@ func (tx *Tx) AddP2PKHInputsFromTx(pvsTx *Tx, matchPK []byte) error {
 			}
 			if err = tx.FromUTXOs(&UTXO{
 				TxIDHash:      prevTxIDHash,
-				Vout:          uint32(i), //nolint:gosec // loop index bounded by slice length
+				Vout:          uint32(i),
 				Satoshis:      utxo.Satoshis,
 				LockingScript: utxo.LockingScript,
 			}); err != nil {
@@ -247,7 +247,7 @@ func (tx *Tx) FillAllInputs(ctx context.Context, ug UnlockerGetter) error {
 		}
 
 		if err = tx.FillInput(ctx, u, UnlockerParams{
-			InputIdx:     uint32(i),         //nolint:gosec // loop index bounded by slice length
+			InputIdx:     uint32(i),
 			SigHashFlags: sighash.AllForkID, // use SIGHASHALLFORFORKID to sign automatically
 		}); err != nil {
 			return err
