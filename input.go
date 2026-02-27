@@ -184,6 +184,125 @@ sequence:     %x
 	)
 }
 
+// WriteTo writes the serialized Input directly to w without allocating
+// an intermediate byte slice. It writes the standard (non-extended) format.
+func (i *Input) WriteTo(w io.Writer) (int64, error) {
+	var total int64
+	var buf [4]byte
+
+	// previousTxIDHash (32 bytes)
+	if i.previousTxIDHash != nil {
+		n, err := w.Write(i.previousTxIDHash[:])
+		total += int64(n)
+		if err != nil {
+			return total, err
+		}
+	}
+
+	// PreviousTxOutIndex (4 bytes LE)
+	buf[0] = byte(i.PreviousTxOutIndex)
+	buf[1] = byte(i.PreviousTxOutIndex >> 8)
+	buf[2] = byte(i.PreviousTxOutIndex >> 16)
+	buf[3] = byte(i.PreviousTxOutIndex >> 24)
+	n, err := w.Write(buf[:])
+	total += int64(n)
+	if err != nil {
+		return total, err
+	}
+
+	// UnlockingScript length (varint) + script bytes
+	var n64 int64
+	if i.UnlockingScript == nil {
+		n64, err = VarInt(0).WriteTo(w)
+		total += n64
+		if err != nil {
+			return total, err
+		}
+	} else {
+		n64, err = VarInt(uint64(len(*i.UnlockingScript))).WriteTo(w)
+		total += n64
+		if err != nil {
+			return total, err
+		}
+		n, err = w.Write(*i.UnlockingScript)
+		total += int64(n)
+		if err != nil {
+			return total, err
+		}
+	}
+
+	// SequenceNumber (4 bytes LE)
+	buf[0] = byte(i.SequenceNumber)
+	buf[1] = byte(i.SequenceNumber >> 8)
+	buf[2] = byte(i.SequenceNumber >> 16)
+	buf[3] = byte(i.SequenceNumber >> 24)
+	n, err = w.Write(buf[:])
+	total += int64(n)
+	return total, err
+}
+
+// WriteExtendedTo writes the serialized Input in extended format directly to w.
+// Extended format appends PreviousTxSatoshis and PreviousTxScript after the
+// standard input fields.
+func (i *Input) WriteExtendedTo(w io.Writer) (int64, error) {
+	total, err := i.WriteTo(w)
+	if err != nil {
+		return total, err
+	}
+
+	// PreviousTxSatoshis (8 bytes LE)
+	var buf [8]byte
+	buf[0] = byte(i.PreviousTxSatoshis)
+	buf[1] = byte(i.PreviousTxSatoshis >> 8)
+	buf[2] = byte(i.PreviousTxSatoshis >> 16)
+	buf[3] = byte(i.PreviousTxSatoshis >> 24)
+	buf[4] = byte(i.PreviousTxSatoshis >> 32)
+	buf[5] = byte(i.PreviousTxSatoshis >> 40)
+	buf[6] = byte(i.PreviousTxSatoshis >> 48)
+	buf[7] = byte(i.PreviousTxSatoshis >> 56)
+	n, err := w.Write(buf[:])
+	total += int64(n)
+	if err != nil {
+		return total, err
+	}
+
+	// PreviousTxScript length (varint) + script bytes
+	var n64 int64
+	if i.PreviousTxScript != nil {
+		n64, err = VarInt(uint64(len(*i.PreviousTxScript))).WriteTo(w)
+		total += n64
+		if err != nil {
+			return total, err
+		}
+		n, err = w.Write(*i.PreviousTxScript)
+		total += int64(n)
+		if err != nil {
+			return total, err
+		}
+	} else {
+		n64, err = VarInt(0).WriteTo(w)
+		total += n64
+		if err != nil {
+			return total, err
+		}
+	}
+
+	return total, nil
+}
+
+// Size returns the serialized size of the Input in bytes without allocating.
+func (i *Input) Size() int {
+	// previousTxIDHash(32) + PreviousTxOutIndex(4) + SequenceNumber(4) = 40
+	size := 40
+	if i.UnlockingScript == nil {
+		size += 1 // VarInt(0) = 1 byte
+	} else {
+		l := len(*i.UnlockingScript)
+		size += VarInt(uint64(l)).Length() + l
+	}
+	return size
+}
+
 // Bytes encodes the Input into a hex byte array.
 func (i *Input) Bytes(clearLockingScript bool, intoBytes ...[]byte) []byte {
 	var h []byte
