@@ -65,6 +65,30 @@ func (v VarInt) Bytes() []byte {
 	return b
 }
 
+// WriteTo writes the VarInt to w without allocating.
+func (v VarInt) WriteTo(w io.Writer) (int64, error) {
+	var buf [9]byte
+	var n int
+	if v < 0xfd {
+		buf[0] = byte(v)
+		n = 1
+	} else if v < 0x10000 {
+		buf[0] = 0xfd
+		binary.LittleEndian.PutUint16(buf[1:3], uint16(v))
+		n = 3
+	} else if v < 0x100000000 {
+		buf[0] = 0xfe
+		binary.LittleEndian.PutUint32(buf[1:5], uint32(v))
+		n = 5
+	} else {
+		buf[0] = 0xff
+		binary.LittleEndian.PutUint64(buf[1:9], uint64(v))
+		n = 9
+	}
+	written, err := w.Write(buf[:n])
+	return int64(written), err
+}
+
 // ReadFrom reads the next varint from the io.Reader and assigned it to itself.
 func (v *VarInt) ReadFrom(r io.Reader) (int64, error) {
 	b := make([]byte, 1)

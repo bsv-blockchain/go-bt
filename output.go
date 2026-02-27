@@ -74,6 +74,45 @@ script:    %s
 `, o.Satoshis, len(*o.LockingScript), o.LockingScript)
 }
 
+// WriteTo writes the serialized Output directly to w without allocating
+// an intermediate byte slice.
+func (o *Output) WriteTo(w io.Writer) (int64, error) {
+	var total int64
+
+	// Satoshis (8 bytes LE)
+	var buf [8]byte
+	buf[0] = byte(o.Satoshis)
+	buf[1] = byte(o.Satoshis >> 8)
+	buf[2] = byte(o.Satoshis >> 16)
+	buf[3] = byte(o.Satoshis >> 24)
+	buf[4] = byte(o.Satoshis >> 32)
+	buf[5] = byte(o.Satoshis >> 40)
+	buf[6] = byte(o.Satoshis >> 48)
+	buf[7] = byte(o.Satoshis >> 56)
+	n, err := w.Write(buf[:])
+	total += int64(n)
+	if err != nil {
+		return total, err
+	}
+
+	// LockingScript length (varint) + script bytes
+	n64, err := VarInt(uint64(len(*o.LockingScript))).WriteTo(w)
+	total += n64
+	if err != nil {
+		return total, err
+	}
+	n, err = w.Write(*o.LockingScript)
+	total += int64(n)
+	return total, err
+}
+
+// Size returns the serialized size of the Output in bytes without allocating.
+func (o *Output) Size() int {
+	// Satoshis(8)
+	l := len(*o.LockingScript)
+	return 8 + VarInt(uint64(l)).Length() + l
+}
+
 // Bytes encodes the Output into a byte array.
 func (o *Output) Bytes(inBytes ...[]byte) []byte {
 	var h []byte

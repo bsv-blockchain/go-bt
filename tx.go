@@ -581,9 +581,164 @@ type TxSize struct {
 	TotalDataBytes uint64
 }
 
-// Size will return the size of tx in bytes.
+// WriteTo writes the serialized transaction directly to w in standard format
+// without allocating an intermediate byte slice.
+func (tx *Tx) WriteTo(w io.Writer) (int64, error) {
+	var total int64
+	var buf [4]byte
+
+	// Version (4 bytes LE)
+	buf[0] = byte(tx.Version)
+	buf[1] = byte(tx.Version >> 8)
+	buf[2] = byte(tx.Version >> 16)
+	buf[3] = byte(tx.Version >> 24)
+	n, err := w.Write(buf[:])
+	total += int64(n)
+	if err != nil {
+		return total, err
+	}
+
+	// Input count (varint)
+	n64, err := VarInt(uint64(len(tx.Inputs))).WriteTo(w)
+	total += n64
+	if err != nil {
+		return total, err
+	}
+
+	// Inputs
+	for _, in := range tx.Inputs {
+		n64, err = in.WriteTo(w)
+		total += n64
+		if err != nil {
+			return total, err
+		}
+	}
+
+	// Output count (varint)
+	n64, err = VarInt(uint64(len(tx.Outputs))).WriteTo(w)
+	total += n64
+	if err != nil {
+		return total, err
+	}
+
+	// Outputs
+	for _, out := range tx.Outputs {
+		n64, err = out.WriteTo(w)
+		total += n64
+		if err != nil {
+			return total, err
+		}
+	}
+
+	// LockTime (4 bytes LE)
+	buf[0] = byte(tx.LockTime)
+	buf[1] = byte(tx.LockTime >> 8)
+	buf[2] = byte(tx.LockTime >> 16)
+	buf[3] = byte(tx.LockTime >> 24)
+	n, err = w.Write(buf[:])
+	total += int64(n)
+	return total, err
+}
+
+// WriteExtendedTo writes the serialized transaction directly to w in extended
+// format (with PreviousTxSatoshis and PreviousTxScript) without allocating
+// an intermediate byte slice.
+func (tx *Tx) WriteExtendedTo(w io.Writer) (int64, error) {
+	var total int64
+	var buf [4]byte
+
+	// Version (4 bytes LE)
+	buf[0] = byte(tx.Version)
+	buf[1] = byte(tx.Version >> 8)
+	buf[2] = byte(tx.Version >> 16)
+	buf[3] = byte(tx.Version >> 24)
+	n, err := w.Write(buf[:])
+	total += int64(n)
+	if err != nil {
+		return total, err
+	}
+
+	// Extended marker (6 bytes)
+	n, err = w.Write([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0xEF})
+	total += int64(n)
+	if err != nil {
+		return total, err
+	}
+
+	// Input count (varint)
+	n64, err := VarInt(uint64(len(tx.Inputs))).WriteTo(w)
+	total += n64
+	if err != nil {
+		return total, err
+	}
+
+	// Inputs (extended format)
+	for _, in := range tx.Inputs {
+		n64, err = in.WriteExtendedTo(w)
+		total += n64
+		if err != nil {
+			return total, err
+		}
+	}
+
+	// Output count (varint)
+	n64, err = VarInt(uint64(len(tx.Outputs))).WriteTo(w)
+	total += n64
+	if err != nil {
+		return total, err
+	}
+
+	// Outputs
+	for _, out := range tx.Outputs {
+		n64, err = out.WriteTo(w)
+		total += n64
+		if err != nil {
+			return total, err
+		}
+	}
+
+	// LockTime (4 bytes LE)
+	buf[0] = byte(tx.LockTime)
+	buf[1] = byte(tx.LockTime >> 8)
+	buf[2] = byte(tx.LockTime >> 16)
+	buf[3] = byte(tx.LockTime >> 24)
+	n, err = w.Write(buf[:])
+	total += int64(n)
+	return total, err
+}
+
+// SerializeTo writes the transaction to w using extended format if the
+// transaction is extended, otherwise standard format. No intermediate
+// byte slice is allocated.
+func (tx *Tx) SerializeTo(w io.Writer) (int64, error) {
+	if tx.IsExtended() {
+		return tx.WriteExtendedTo(w)
+	}
+	return tx.WriteTo(w)
+}
+
+// Size will return the size of tx in bytes without
+// serializing the transaction. This is a zero-allocation
+// calculation based on the structure fields.
 func (tx *Tx) Size() int {
-	return len(tx.Bytes())
+	// version(4) + locktime(4)
+	size := 8
+
+	// varint for input count
+	size += VarInt(uint64(len(tx.Inputs))).Length()
+
+	for _, in := range tx.Inputs {
+		size += in.Size()
+	}
+
+	// varint for output count
+	size += VarInt(uint64(len(tx.Outputs))).Length()
+
+	for _, out := range tx.Outputs {
+		size += out.Size()
+	}
+
+	return size
 }
 
 // SizeWithTypes will return the size of tx in bytes
