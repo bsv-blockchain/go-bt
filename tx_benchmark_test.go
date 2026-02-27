@@ -58,7 +58,7 @@ func BenchmarkSize(b *testing.B) {
 // TestSize_MatchesBytes verifies the arithmetic Size() matches len(Bytes()) for various tx shapes.
 func TestSize_MatchesBytes(t *testing.T) {
 	tests := []struct {
-		name  string
+		name    string
 		buildTx func(t *testing.T) *bt.Tx
 	}{
 		{
@@ -216,7 +216,7 @@ func BenchmarkWriteTo(b *testing.B) {
 
 	b.Run("WriteTo", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			tx.WriteTo(io.Discard)
+			_, _ = tx.WriteTo(io.Discard)
 		}
 	})
 

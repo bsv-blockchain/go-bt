@@ -211,14 +211,15 @@ func (i *Input) WriteTo(w io.Writer) (int64, error) {
 	}
 
 	// UnlockingScript length (varint) + script bytes
+	var n64 int64
 	if i.UnlockingScript == nil {
-		n64, err := VarInt(0).WriteTo(w)
+		n64, err = VarInt(0).WriteTo(w)
 		total += n64
 		if err != nil {
 			return total, err
 		}
 	} else {
-		n64, err := VarInt(uint64(len(*i.UnlockingScript))).WriteTo(w)
+		n64, err = VarInt(uint64(len(*i.UnlockingScript))).WriteTo(w)
 		total += n64
 		if err != nil {
 			return total, err
@@ -266,8 +267,9 @@ func (i *Input) WriteExtendedTo(w io.Writer) (int64, error) {
 	}
 
 	// PreviousTxScript length (varint) + script bytes
+	var n64 int64
 	if i.PreviousTxScript != nil {
-		n64, err := VarInt(uint64(len(*i.PreviousTxScript))).WriteTo(w)
+		n64, err = VarInt(uint64(len(*i.PreviousTxScript))).WriteTo(w)
 		total += n64
 		if err != nil {
 			return total, err
@@ -278,7 +280,7 @@ func (i *Input) WriteExtendedTo(w io.Writer) (int64, error) {
 			return total, err
 		}
 	} else {
-		n64, err := VarInt(0).WriteTo(w)
+		n64, err = VarInt(0).WriteTo(w)
 		total += n64
 		if err != nil {
 			return total, err
