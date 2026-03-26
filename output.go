@@ -113,6 +113,22 @@ func (o *Output) Size() int {
 	return 8 + VarInt(uint64(l)).Length() + l
 }
 
+// appendTo appends the serialized output to h without allocating.
+func (o *Output) appendTo(h []byte) []byte {
+	h = append(h,
+		byte(o.Satoshis),
+		byte(o.Satoshis>>8),
+		byte(o.Satoshis>>16),
+		byte(o.Satoshis>>24),
+		byte(o.Satoshis>>32),
+		byte(o.Satoshis>>40),
+		byte(o.Satoshis>>48),
+		byte(o.Satoshis>>56),
+	)
+	h = VarInt(uint64(len(*o.LockingScript))).AppendTo(h)
+	return append(h, *o.LockingScript...)
+}
+
 // Bytes encodes the Output into a byte array.
 func (o *Output) Bytes(inBytes ...[]byte) []byte {
 	var h []byte
@@ -147,16 +163,8 @@ func (o *Output) Bytes(inBytes ...[]byte) []byte {
 // BytesForSigHash returns the proper serialization
 // of an output to be hashed and signed (sighash).
 func (o *Output) BytesForSigHash() []byte {
-	buf := make([]byte, 0, 8+9+len(*o.LockingScript))
-
-	satoshis := make([]byte, 8)
-	binary.LittleEndian.PutUint64(satoshis, o.Satoshis)
-	buf = append(buf, satoshis...)
-
-	buf = append(buf, VarInt(uint64(len(*o.LockingScript))).Bytes()...)
-	buf = append(buf, *o.LockingScript...)
-
-	return buf
+	buf := make([]byte, 0, o.Size())
+	return o.appendTo(buf)
 }
 
 // NodeJSON returns a wrapped *bt.Output for marshaling/unmarshalling into a node output format.

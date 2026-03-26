@@ -65,6 +65,22 @@ func (v VarInt) Bytes() []byte {
 	return b
 }
 
+// AppendTo appends the VarInt encoding to dst and returns the extended slice.
+// It never allocates when dst has sufficient capacity.
+func (v VarInt) AppendTo(dst []byte) []byte {
+	if v < 0xfd {
+		return append(dst, byte(v))
+	}
+	if v < 0x10000 {
+		return append(dst, 0xfd, byte(v), byte(v>>8))
+	}
+	if v < 0x100000000 {
+		return append(dst, 0xfe, byte(v), byte(v>>8), byte(v>>16), byte(v>>24))
+	}
+	return append(dst, 0xff, byte(v), byte(v>>8), byte(v>>16), byte(v>>24),
+		byte(v>>32), byte(v>>40), byte(v>>48), byte(v>>56))
+}
+
 // WriteTo writes the VarInt to w without allocating.
 func (v VarInt) WriteTo(w io.Writer) (int64, error) {
 	var buf [9]byte

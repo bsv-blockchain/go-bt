@@ -129,3 +129,48 @@ func TestVarInt_Size(t *testing.T) {
 		})
 	}
 }
+
+func TestVarInt_AppendTo(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input uint64
+	}{
+		{"zero", 0},
+		{"one byte max", 252},
+		{"three byte min", 253},
+		{"three byte max", 65535},
+		{"five byte min", 65536},
+		{"five byte max", 4294967295},
+		{"nine byte min", 4294967296},
+		{"nine byte max", 18446744073709551615},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := bt.VarInt(tt.input)
+			expected := v.Bytes()
+
+			// AppendTo on nil should produce same bytes
+			got := v.AppendTo(nil)
+			assert.Equal(t, expected, got)
+
+			// AppendTo on existing prefix should preserve prefix
+			prefix := []byte{0xDE, 0xAD}
+			got = v.AppendTo(prefix)
+			assert.Equal(t, prefix, got[:2])
+			assert.Equal(t, expected, got[2:])
+		})
+	}
+}
+
+func TestVarInt_AppendTo_ZeroAllocs(t *testing.T) {
+	v := bt.VarInt(1000)
+	buf := make([]byte, 0, 16)
+
+	allocs := testing.AllocsPerRun(100, func() {
+		buf = v.AppendTo(buf[:0])
+	})
+	assert.Equal(t, float64(0), allocs, "AppendTo should not allocate when buffer has capacity")
+}
