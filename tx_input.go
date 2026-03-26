@@ -3,7 +3,6 @@ package bt
 import (
 	"bytes"
 	"context"
-	"encoding/binary"
 	"fmt"
 
 	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
@@ -177,11 +176,12 @@ func (tx *Tx) InputCount() int {
 func (tx *Tx) PreviousOutHash() []byte {
 	buf := make([]byte, 0, len(tx.Inputs)*36)
 
-	oi := make([]byte, 4)
 	for _, in := range tx.Inputs {
 		buf = append(buf, in.previousTxIDHash[:]...)
-		binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
-		buf = append(buf, oi...)
+		buf = append(buf,
+			byte(in.PreviousTxOutIndex), byte(in.PreviousTxOutIndex>>8),
+			byte(in.PreviousTxOutIndex>>16), byte(in.PreviousTxOutIndex>>24),
+		)
 	}
 
 	return crypto.Sha256d(buf)
@@ -191,10 +191,11 @@ func (tx *Tx) PreviousOutHash() []byte {
 func (tx *Tx) SequenceHash() []byte {
 	buf := make([]byte, 0, len(tx.Inputs)*4)
 
-	oi := make([]byte, 4)
 	for _, in := range tx.Inputs {
-		binary.LittleEndian.PutUint32(oi, in.SequenceNumber)
-		buf = append(buf, oi...)
+		buf = append(buf,
+			byte(in.SequenceNumber), byte(in.SequenceNumber>>8),
+			byte(in.SequenceNumber>>16), byte(in.SequenceNumber>>24),
+		)
 	}
 
 	return crypto.Sha256d(buf)

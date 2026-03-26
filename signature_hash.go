@@ -2,7 +2,6 @@ package bt
 
 import (
 	"bytes"
-	"encoding/binary"
 
 	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
 
@@ -14,6 +13,29 @@ import (
 var defaultHex = []byte{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 type sigHashFunc func(inputIdx uint32, shf sighash.Flag) ([]byte, error)
+
+// SigHashCache holds pre-computed intermediate hash values used during
+// signature hashing. When signing multiple inputs of the same transaction,
+// these hashes are identical across inputs (for the common SighashAll case)
+// and can be computed once instead of O(N) times.
+//
+// Create with tx.NewSigHashCache() and pass to CalcInputPreimageWithCache.
+type SigHashCache struct {
+	PrevOutHash  []byte
+	SequenceHash []byte
+	OutputsHash  []byte
+}
+
+// NewSigHashCache pre-computes the intermediate hashes for the modern
+// (post-fork) sighash algorithm. The returned cache can be passed to
+// CalcInputPreimageWithCache for each input, avoiding O(N²) work.
+func (tx *Tx) NewSigHashCache() *SigHashCache {
+	return &SigHashCache{
+		PrevOutHash:  tx.PreviousOutHash(),
+		SequenceHash: tx.SequenceHash(),
+		OutputsHash:  tx.OutputsHash(-1),
+	}
+}
 
 // sigStrat will decide which tx serialization to use.
 // The legacy serialization will be used for txs pre-fork
@@ -59,86 +81,145 @@ func (tx *Tx) CalcInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Fla
 //
 // see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
 func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
-	if tx.InputIdx(int(inputNumber)) == nil {
+	in := tx.InputIdx(int(inputNumber))
+	if in == nil {
 		return nil, ErrInputNoExist
 	}
-	in := tx.InputIdx(int(inputNumber))
-
-	if len(in.PreviousTxID()) == 0 {
+	if in.previousTxIDHash == nil {
 		return nil, ErrEmptyPreviousTxID
 	}
 	if in.PreviousTxScript == nil {
 		return nil, ErrEmptyPreviousTxScript
 	}
 
-	hashPreviousOuts := make([]byte, 32)
-	hashSequence := make([]byte, 32)
-	hashOutputs := make([]byte, 32)
+	var hashPreviousOuts, hashSequence, hashOutputs []byte
 
 	if sigHashFlag&sighash.AnyOneCanPay == 0 {
-		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
 		hashPreviousOuts = tx.PreviousOutHash()
 	}
-
 	if sigHashFlag&sighash.AnyOneCanPay == 0 &&
 		(sigHashFlag&31) != sighash.Single &&
 		(sigHashFlag&31) != sighash.None {
-		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
 		hashSequence = tx.SequenceHash()
 	}
-
 	if (sigHashFlag&31) != sighash.Single && (sigHashFlag&31) != sighash.None {
-		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
 		hashOutputs = tx.OutputsHash(-1)
 	} else if (sigHashFlag&31) == sighash.Single && inputNumber < uint32(tx.OutputCount()) {
-		// This will *not* be executed in the usual BSV case (where sigHashType = SighashAllForkID)
 		hashOutputs = tx.OutputsHash(int32(inputNumber))
 	}
 
-	buf := make([]byte, 0, 256)
+	return tx.calcInputPreimage(in, sigHashFlag, hashPreviousOuts, hashSequence, hashOutputs)
+}
+
+// CalcInputPreimageWithCache is like CalcInputPreimage but uses pre-computed
+// hashes from a SigHashCache. Use this when signing multiple inputs to avoid
+// redundant O(N) hash computations per input.
+func (tx *Tx) CalcInputPreimageWithCache(inputNumber uint32, sigHashFlag sighash.Flag, cache *SigHashCache) ([]byte, error) {
+	in := tx.InputIdx(int(inputNumber))
+	if in == nil {
+		return nil, ErrInputNoExist
+	}
+	if in.previousTxIDHash == nil {
+		return nil, ErrEmptyPreviousTxID
+	}
+	if in.PreviousTxScript == nil {
+		return nil, ErrEmptyPreviousTxScript
+	}
+
+	var hashPreviousOuts, hashSequence, hashOutputs []byte
+
+	if sigHashFlag&sighash.AnyOneCanPay == 0 {
+		hashPreviousOuts = cache.PrevOutHash
+	}
+	if sigHashFlag&sighash.AnyOneCanPay == 0 &&
+		(sigHashFlag&31) != sighash.Single &&
+		(sigHashFlag&31) != sighash.None {
+		hashSequence = cache.SequenceHash
+	}
+	if (sigHashFlag&31) != sighash.Single && (sigHashFlag&31) != sighash.None {
+		hashOutputs = cache.OutputsHash
+	} else if (sigHashFlag&31) == sighash.Single && inputNumber < uint32(tx.OutputCount()) {
+		hashOutputs = tx.OutputsHash(int32(inputNumber))
+	}
+
+	return tx.calcInputPreimage(in, sigHashFlag, hashPreviousOuts, hashSequence, hashOutputs)
+}
+
+// calcInputPreimage is the internal implementation shared by CalcInputPreimage
+// and CalcInputPreimageWithCache. All temp allocations are eliminated by using
+// inline byte appends.
+func (tx *Tx) calcInputPreimage(in *Input, sigHashFlag sighash.Flag,
+	hashPreviousOuts, hashSequence, hashOutputs []byte,
+) ([]byte, error) {
+	scriptLen := len(*in.PreviousTxScript)
+	// 4 (version) + 32+32 (hashPrevOuts+hashSeq) + 32+4 (outpoint) +
+	// varint(scriptLen) + scriptLen + 8 (value) + 4 (nSeq) + 32 (hashOutputs) +
+	// 4 (locktime) + 4 (sighashtype) = 156 + varint + scriptLen
+	bufSize := 156 + VarInt(uint64(scriptLen)).Length() + scriptLen
+	buf := make([]byte, 0, bufSize)
 
 	// Version
-	v := make([]byte, 4)
-	binary.LittleEndian.PutUint32(v, tx.Version)
-	buf = append(buf, v...)
+	buf = append(buf,
+		byte(tx.Version), byte(tx.Version>>8),
+		byte(tx.Version>>16), byte(tx.Version>>24),
+	)
 
 	// Input previousOuts/nSequence (none/all, depending on flags)
-	buf = append(buf, hashPreviousOuts...)
-	buf = append(buf, hashSequence...)
+	if hashPreviousOuts != nil {
+		buf = append(buf, hashPreviousOuts...)
+	} else {
+		buf = append(buf, make([]byte, 32)...)
+	}
+	if hashSequence != nil {
+		buf = append(buf, hashSequence...)
+	} else {
+		buf = append(buf, make([]byte, 32)...)
+	}
 
-	//  outpoint (32-byte hash + 4-byte little endian)
-	buf = append(buf, in.PreviousTxID()...)
-	oi := make([]byte, 4)
-	binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
-	buf = append(buf, oi...)
+	// outpoint (32-byte hash + 4-byte little endian)
+	buf = append(buf, in.previousTxIDHash[:]...)
+	buf = append(buf,
+		byte(in.PreviousTxOutIndex), byte(in.PreviousTxOutIndex>>8),
+		byte(in.PreviousTxOutIndex>>16), byte(in.PreviousTxOutIndex>>24),
+	)
 
-	// scriptCode of the input (serialized as scripts inside CTxOuts)
-	buf = append(buf, VarInt(uint64(len(*in.PreviousTxScript))).Bytes()...)
+	// scriptCode of the input
+	buf = VarInt(uint64(scriptLen)).AppendTo(buf)
 	buf = append(buf, *in.PreviousTxScript...)
 
 	// value of the output spent by this input (8-byte little endian)
-	sat := make([]byte, 8)
-	binary.LittleEndian.PutUint64(sat, in.PreviousTxSatoshis)
-	buf = append(buf, sat...)
+	buf = append(buf,
+		byte(in.PreviousTxSatoshis), byte(in.PreviousTxSatoshis>>8),
+		byte(in.PreviousTxSatoshis>>16), byte(in.PreviousTxSatoshis>>24),
+		byte(in.PreviousTxSatoshis>>32), byte(in.PreviousTxSatoshis>>40),
+		byte(in.PreviousTxSatoshis>>48), byte(in.PreviousTxSatoshis>>56),
+	)
 
-	// nSequence of the input (4-byte little endian)
-	seq := make([]byte, 4)
-	binary.LittleEndian.PutUint32(seq, in.SequenceNumber)
-	buf = append(buf, seq...)
+	// nSequence of the input
+	buf = append(buf,
+		byte(in.SequenceNumber), byte(in.SequenceNumber>>8),
+		byte(in.SequenceNumber>>16), byte(in.SequenceNumber>>24),
+	)
 
 	// Outputs (none/one/all, depending on flags)
-	buf = append(buf, hashOutputs...)
+	if hashOutputs != nil {
+		buf = append(buf, hashOutputs...)
+	} else {
+		buf = append(buf, make([]byte, 32)...)
+	}
 
 	// LockTime
-	lt := make([]byte, 4)
-	binary.LittleEndian.PutUint32(lt, tx.LockTime)
-	buf = append(buf, lt...)
+	buf = append(buf,
+		byte(tx.LockTime), byte(tx.LockTime>>8),
+		byte(tx.LockTime>>16), byte(tx.LockTime>>24),
+	)
 
 	// sighashType
-	// writer.writeUInt32LE(sighashType >>> 0)
-	st := make([]byte, 4)
-	binary.LittleEndian.PutUint32(st, uint32(sigHashFlag)>>0)
-	buf = append(buf, st...)
+	shf := uint32(sigHashFlag)
+	buf = append(buf,
+		byte(shf), byte(shf>>8),
+		byte(shf>>16), byte(shf>>24),
+	)
 
 	return buf, nil
 }
@@ -148,12 +229,11 @@ func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([
 //
 // see https://wiki.bitcoinsv.io/index.php/Legacy_Sighash_Algorithm
 func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]byte, error) {
-	if tx.InputIdx(int(inputNumber)) == nil {
+	in := tx.InputIdx(int(inputNumber))
+	if in == nil {
 		return nil, ErrInputNoExist
 	}
-	in := tx.InputIdx(int(inputNumber))
-
-	if len(in.PreviousTxID()) == 0 {
+	if in.previousTxIDHash == nil {
 		return nil, ErrEmptyPreviousTxID
 	}
 	if in.PreviousTxScript == nil {
@@ -184,7 +264,7 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 		return defaultHex, nil
 	}
 
-	txCopy := tx.Clone()
+	txCopy := tx.ShallowClone()
 
 	for i := range txCopy.Inputs {
 		if i == int(inputNumber) {
@@ -220,61 +300,81 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 		txCopy.Inputs = txCopy.Inputs[inputNumber : inputNumber+1]
 	}
 
-	buf := make([]byte, 0)
+	// Estimate buffer size: version(4) + varint + N*(32+4+varint+script+4) + varint + outputs + locktime(4) + sighash(4)
+	buf := make([]byte, 0, txCopy.Size()+8)
 
 	// Version
-	v := make([]byte, 4)
-	binary.LittleEndian.PutUint32(v, tx.Version)
-	buf = append(buf, v...)
+	buf = append(buf,
+		byte(tx.Version), byte(tx.Version>>8),
+		byte(tx.Version>>16), byte(tx.Version>>24),
+	)
 
-	buf = append(buf, VarInt(uint64(len(txCopy.Inputs))).Bytes()...)
+	buf = VarInt(uint64(len(txCopy.Inputs))).AppendTo(buf)
 	for _, in := range txCopy.Inputs {
-		buf = append(buf, in.PreviousTxID()...)
+		if in.previousTxIDHash != nil {
+			buf = append(buf, in.previousTxIDHash[:]...)
+		}
 
-		oi := make([]byte, 4)
-		binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
-		buf = append(buf, oi...)
+		buf = append(buf,
+			byte(in.PreviousTxOutIndex), byte(in.PreviousTxOutIndex>>8),
+			byte(in.PreviousTxOutIndex>>16), byte(in.PreviousTxOutIndex>>24),
+		)
 
-		buf = append(buf, VarInt(uint64(len(*in.PreviousTxScript))).Bytes()...)
+		buf = VarInt(uint64(len(*in.PreviousTxScript))).AppendTo(buf)
 		buf = append(buf, *in.PreviousTxScript...)
 
-		sq := make([]byte, 4)
-		binary.LittleEndian.PutUint32(sq, in.SequenceNumber)
-		buf = append(buf, sq...)
+		buf = append(buf,
+			byte(in.SequenceNumber), byte(in.SequenceNumber>>8),
+			byte(in.SequenceNumber>>16), byte(in.SequenceNumber>>24),
+		)
 	}
 
-	buf = append(buf, VarInt(uint64(len(txCopy.Outputs))).Bytes()...)
+	buf = VarInt(uint64(len(txCopy.Outputs))).AppendTo(buf)
 	for _, out := range txCopy.Outputs {
-		st := make([]byte, 8)
-		binary.LittleEndian.PutUint64(st, out.Satoshis)
-		buf = append(buf, st...)
+		buf = append(buf,
+			byte(out.Satoshis), byte(out.Satoshis>>8),
+			byte(out.Satoshis>>16), byte(out.Satoshis>>24),
+			byte(out.Satoshis>>32), byte(out.Satoshis>>40),
+			byte(out.Satoshis>>48), byte(out.Satoshis>>56),
+		)
 
-		buf = append(buf, VarInt(uint64(len(*out.LockingScript))).Bytes()...)
+		buf = VarInt(uint64(len(*out.LockingScript))).AppendTo(buf)
 		buf = append(buf, *out.LockingScript...)
 	}
 
 	// LockTime
-	lt := make([]byte, 4)
-	binary.LittleEndian.PutUint32(lt, tx.LockTime)
-	buf = append(buf, lt...)
+	buf = append(buf,
+		byte(tx.LockTime), byte(tx.LockTime>>8),
+		byte(tx.LockTime>>16), byte(tx.LockTime>>24),
+	)
 
-	sh := make([]byte, 4)
-	binary.LittleEndian.PutUint32(sh, uint32(shf)>>0)
-	return append(buf, sh...), nil
+	// sighash flag
+	s := uint32(shf)
+	buf = append(buf,
+		byte(s), byte(s>>8),
+		byte(s>>16), byte(s>>24),
+	)
+
+	return buf, nil
 }
 
 // OutputsHash returns a bytes slice of the requested output, used for generating
 // the txs signature hash. If n is -1, it will create the byte slice from all outputs.
 func (tx *Tx) OutputsHash(n int32) []byte {
-	buf := make([]byte, 0)
-
 	if n == -1 {
+		// Pre-compute total size for all outputs
+		size := 0
 		for _, out := range tx.Outputs {
-			buf = append(buf, out.BytesForSigHash()...)
+			size += out.Size()
 		}
-	} else {
-		buf = append(buf, tx.Outputs[n].BytesForSigHash()...)
+		buf := make([]byte, 0, size)
+		for _, out := range tx.Outputs {
+			buf = out.appendTo(buf)
+		}
+		return crypto.Sha256d(buf)
 	}
 
+	buf := make([]byte, 0, tx.Outputs[n].Size())
+	buf = tx.Outputs[n].appendTo(buf)
 	return crypto.Sha256d(buf)
 }

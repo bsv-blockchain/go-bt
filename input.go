@@ -344,6 +344,63 @@ func (i *Input) Bytes(clearLockingScript bool, intoBytes ...[]byte) []byte {
 	}...)
 }
 
+// appendTo appends the serialized input to h without allocating.
+// Uses direct slice of previousTxIDHash instead of CloneBytes.
+func (i *Input) appendTo(h []byte, clearLockingScript bool) []byte {
+	if i.previousTxIDHash != nil {
+		h = append(h, i.previousTxIDHash[:]...)
+	}
+
+	h = append(h,
+		byte(i.PreviousTxOutIndex),
+		byte(i.PreviousTxOutIndex>>8),
+		byte(i.PreviousTxOutIndex>>16),
+		byte(i.PreviousTxOutIndex>>24),
+	)
+
+	if clearLockingScript {
+		h = append(h, 0x00)
+	} else if i.UnlockingScript == nil {
+		h = append(h, 0x00)
+	} else {
+		h = VarInt(uint64(len(*i.UnlockingScript))).AppendTo(h)
+		h = append(h, *i.UnlockingScript...)
+	}
+
+	return append(h,
+		byte(i.SequenceNumber),
+		byte(i.SequenceNumber>>8),
+		byte(i.SequenceNumber>>16),
+		byte(i.SequenceNumber>>24),
+	)
+}
+
+// appendExtendedTo appends the extended-format serialized input to h without allocating.
+func (i *Input) appendExtendedTo(h []byte, clearLockingScript bool) []byte {
+	h = i.appendTo(h, clearLockingScript)
+
+	h = append(h,
+		byte(i.PreviousTxSatoshis),
+		byte(i.PreviousTxSatoshis>>8),
+		byte(i.PreviousTxSatoshis>>16),
+		byte(i.PreviousTxSatoshis>>24),
+		byte(i.PreviousTxSatoshis>>32),
+		byte(i.PreviousTxSatoshis>>40),
+		byte(i.PreviousTxSatoshis>>48),
+		byte(i.PreviousTxSatoshis>>56),
+	)
+
+	if i.PreviousTxScript != nil {
+		l := uint64(len(*i.PreviousTxScript))
+		h = VarInt(l).AppendTo(h)
+		h = append(h, *i.PreviousTxScript...)
+	} else {
+		h = append(h, 0x00)
+	}
+
+	return h
+}
+
 // ExtendedBytes encodes the Input into a hex byte array, including the EF transaction format information.
 func (i *Input) ExtendedBytes(clearLockingScript bool, intoBytes ...[]byte) []byte {
 	h := i.Bytes(clearLockingScript, intoBytes...)

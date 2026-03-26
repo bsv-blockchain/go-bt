@@ -376,6 +376,13 @@ func (tx *Tx) Bytes() []byte {
 	return tx.toBytesHelper(0, nil, false)
 }
 
+// AppendBytes appends the serialized transaction to dst and returns the
+// extended slice. When dst has sufficient capacity (e.g. pre-allocated via
+// tx.Size()), this method performs zero heap allocations.
+func (tx *Tx) AppendBytes(dst []byte) []byte {
+	return tx.appendBytesHelper(dst, 0, nil, false)
+}
+
 // ExtendedBytes outputs the transaction into a byte array in extended format
 // (with PreviousTxSatoshis and PreviousTXScript included)
 func (tx *Tx) ExtendedBytes() []byte {
@@ -527,46 +534,54 @@ func (tt *Txs) NodeJSON() interface{} {
 }
 
 // toBytesHelper encodes the transaction into a byte array.
+// It pre-computes the exact size to allocate once, then delegates
+// to appendBytesHelper for zero-alloc serialization.
 func (tx *Tx) toBytesHelper(index int, lockingScript []byte, extended bool) []byte {
-	h := make([]byte, 0, 1024)
-	// this is faster than using LittleEndianBytes, since we do not malloc a new byte slice
-	h = append(h, []byte{
+	h := make([]byte, 0, tx.Size())
+	return tx.appendBytesHelper(h, index, lockingScript, extended)
+}
+
+// appendBytesHelper appends the serialized transaction to h without allocating
+// (provided h has sufficient capacity). This is the core serialization method
+// shared by both Bytes() and AppendBytes().
+func (tx *Tx) appendBytesHelper(h []byte, index int, lockingScript []byte, extended bool) []byte {
+	h = append(h,
 		byte(tx.Version),
-		byte(tx.Version >> 8),
-		byte(tx.Version >> 16),
-		byte(tx.Version >> 24),
-	}...)
+		byte(tx.Version>>8),
+		byte(tx.Version>>16),
+		byte(tx.Version>>24),
+	)
 
 	if extended {
-		h = append(h, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0xEF}...)
+		h = append(h, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEF)
 	}
 
-	h = append(h, VarInt(uint64(len(tx.Inputs))).Bytes()...)
+	h = VarInt(uint64(len(tx.Inputs))).AppendTo(h)
 
 	for i, in := range tx.Inputs {
 		if i == index && lockingScript != nil {
-			h = append(h, VarInt(uint64(len(lockingScript))).Bytes()...)
+			h = VarInt(uint64(len(lockingScript))).AppendTo(h)
 			h = append(h, lockingScript...)
 		} else {
 			if extended {
-				h = in.ExtendedBytes(lockingScript != nil, h)
+				h = in.appendExtendedTo(h, lockingScript != nil)
 			} else {
-				h = in.Bytes(lockingScript != nil, h)
+				h = in.appendTo(h, lockingScript != nil)
 			}
 		}
 	}
 
-	h = append(h, VarInt(uint64(len(tx.Outputs))).Bytes()...)
+	h = VarInt(uint64(len(tx.Outputs))).AppendTo(h)
 	for _, out := range tx.Outputs {
-		h = out.Bytes(h)
+		h = out.appendTo(h)
 	}
 
-	return append(h, []byte{
+	return append(h,
 		byte(tx.LockTime),
-		byte(tx.LockTime >> 8),
-		byte(tx.LockTime >> 16),
-		byte(tx.LockTime >> 24),
-	}...)
+		byte(tx.LockTime>>8),
+		byte(tx.LockTime>>16),
+		byte(tx.LockTime>>24),
+	)
 }
 
 // TxSize contains the size breakdown of a transaction
