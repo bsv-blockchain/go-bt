@@ -149,8 +149,8 @@ func (tx *Tx) CalcInputPreimageWithCache(inputNumber uint32, sigHashFlag sighash
 // and CalcInputPreimageWithCache. All temp allocations are eliminated by using
 // inline byte appends.
 func (tx *Tx) calcInputPreimage(in *Input, sigHashFlag sighash.Flag,
-	hashPreviousOuts, hashSequence, hashOutputs []byte) ([]byte, error) {
-
+	hashPreviousOuts, hashSequence, hashOutputs []byte,
+) ([]byte, error) {
 	scriptLen := len(*in.PreviousTxScript)
 	// 4 (version) + 32+32 (hashPrevOuts+hashSeq) + 32+4 (outpoint) +
 	// varint(scriptLen) + scriptLen + 8 (value) + 4 (nSeq) + 32 (hashOutputs) +

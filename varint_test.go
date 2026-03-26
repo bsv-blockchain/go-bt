@@ -172,5 +172,5 @@ func TestVarInt_AppendTo_ZeroAllocs(t *testing.T) {
 	allocs := testing.AllocsPerRun(100, func() {
 		buf = v.AppendTo(buf[:0])
 	})
-	assert.Equal(t, float64(0), allocs, "AppendTo should not allocate when buffer has capacity")
+	assert.InDelta(t, 0, allocs, 0, "AppendTo should not allocate when buffer has capacity")
 }

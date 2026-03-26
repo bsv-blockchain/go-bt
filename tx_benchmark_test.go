@@ -191,7 +191,7 @@ func TestAppendBytes_ZeroAllocs(t *testing.T) {
 	allocs := testing.AllocsPerRun(100, func() {
 		buf = tx.AppendBytes(buf[:0])
 	})
-	require.Equal(t, float64(0), allocs, "AppendBytes with pre-sized buffer should be zero-alloc")
+	require.InDelta(t, 0, allocs, 0, "AppendBytes with pre-sized buffer should be zero-alloc")
 }
 
 // TestBytes_ExactAlloc verifies that Bytes() allocates exactly the right size (no wasted capacity).
