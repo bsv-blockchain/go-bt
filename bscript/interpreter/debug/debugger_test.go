@@ -10,6 +10,32 @@ import (
 	"github.com/bsv-blockchain/go-bt/v2/bscript/interpreter/debug"
 )
 
+const (
+	testSimpleScript  = "simple script"
+	testComplexScript = "complex script"
+	testErrorScript   = "error script"
+
+	scriptHexComplex = "76a97ca8a687"
+
+	opOP0         = "OP_0"
+	opOP2         = "OP_2"
+	opOP3         = "OP_3"
+	opOP4         = "OP_4"
+	opOP6         = "OP_6"
+	opOP7         = "OP_7"
+	opADD         = "OP_ADD"
+	opDUP         = "OP_DUP"
+	opEQUAL       = "OP_EQUAL"
+	opEQUALVERIFY = "OP_EQUALVERIFY"
+	opHASH160     = "OP_HASH160"
+	opMUL         = "OP_MUL"
+	opRIPEMD160   = "OP_RIPEMD160"
+	opSHA256      = "OP_SHA256"
+	opSWAP        = "OP_SWAP"
+
+	hashB472 = "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"
+)
+
 func TestDebugger_BeforeExecute(t *testing.T) {
 	t.Parallel()
 
@@ -19,23 +45,23 @@ func TestDebugger_BeforeExecute(t *testing.T) {
 		expStack           []string
 		expOpcode          string
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 			expStack:           []string{},
-			expOpcode:          "OP_4",
+			expOpcode:          opOP4,
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 			expStack:           []string{},
-			expOpcode:          "OP_0",
+			expOpcode:          opOP0,
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 			expStack:           []string{},
-			expOpcode:          "OP_4",
+			expOpcode:          opOP4,
 		},
 	}
 
@@ -67,7 +93,7 @@ func TestDebugger_BeforeStep(t *testing.T) {
 		expStackHistory    [][]string
 		expOpcodes         []string
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 			expStackHistory: [][]string{
@@ -83,26 +109,26 @@ func TestDebugger_BeforeStep(t *testing.T) {
 				{"04", "04"},
 			},
 			expOpcodes: []string{
-				"OP_4", "OP_6",
-				"OP_2", "OP_3", "OP_MUL", "OP_EQUALVERIFY",
-				"OP_2", "OP_2", "OP_ADD", "OP_EQUAL",
+				opOP4, opOP6,
+				opOP2, opOP3, opMUL, opEQUALVERIFY,
+				opOP2, opOP2, opADD, opEQUAL,
 			},
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 			expStackHistory: [][]string{
 				{},
 				{""},
 				{"", ""},
-				{"", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", ""},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
+				{"", hashB472},
+				{hashB472, ""},
+				{hashB472, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+				{hashB472, hashB472},
 			},
-			expOpcodes: []string{"OP_0", "OP_DUP", "OP_HASH160", "OP_SWAP", "OP_SHA256", "OP_RIPEMD160", "OP_EQUAL"},
+			expOpcodes: []string{opOP0, opDUP, opHASH160, opSWAP, opSHA256, opRIPEMD160, opEQUAL},
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 			expStackHistory: [][]string{
@@ -113,7 +139,7 @@ func TestDebugger_BeforeStep(t *testing.T) {
 				{"04", "07", "02", "03"},
 				{"04", "07", "06"},
 			},
-			expOpcodes: []string{"OP_4", "OP_7", "OP_2", "OP_3", "OP_MUL", "OP_EQUALVERIFY"},
+			expOpcodes: []string{opOP4, opOP7, opOP2, opOP3, opMUL, opEQUALVERIFY},
 		},
 	}
 
@@ -145,7 +171,7 @@ func TestDebugger_AfterStep(t *testing.T) {
 		expStackHistory    [][]string
 		expOpcodes         []string
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 			expStackHistory: [][]string{
@@ -161,26 +187,26 @@ func TestDebugger_AfterStep(t *testing.T) {
 				{"01"},
 			},
 			expOpcodes: []string{
-				"OP_6",
-				"OP_2", "OP_3", "OP_MUL", "OP_EQUALVERIFY",
-				"OP_2", "OP_2", "OP_ADD", "OP_EQUAL", "OP_EQUAL",
+				opOP6,
+				opOP2, opOP3, opMUL, opEQUALVERIFY,
+				opOP2, opOP2, opADD, opEQUAL, opEQUAL,
 			},
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 			expStackHistory: [][]string{
 				{""},
 				{"", ""},
-				{"", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", ""},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
+				{"", hashB472},
+				{hashB472, ""},
+				{hashB472, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+				{hashB472, hashB472},
 				{"01"},
 			},
-			expOpcodes: []string{"OP_DUP", "OP_HASH160", "OP_SWAP", "OP_SHA256", "OP_RIPEMD160", "OP_EQUAL", "OP_EQUAL"},
+			expOpcodes: []string{opDUP, opHASH160, opSWAP, opSHA256, opRIPEMD160, opEQUAL, opEQUAL},
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 			expStackHistory: [][]string{
@@ -190,7 +216,7 @@ func TestDebugger_AfterStep(t *testing.T) {
 				{"04", "07", "02", "03"},
 				{"04", "07", "06"},
 			},
-			expOpcodes: []string{"OP_7", "OP_2", "OP_3", "OP_MUL", "OP_EQUALVERIFY"},
+			expOpcodes: []string{opOP7, opOP2, opOP3, opMUL, opEQUALVERIFY},
 		},
 	}
 
@@ -222,7 +248,7 @@ func TestDebugger_BeforeExecuteOpcode(t *testing.T) {
 		expStackHistory    [][]string
 		expOpcodes         []string
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 			expStackHistory: [][]string{
@@ -238,26 +264,26 @@ func TestDebugger_BeforeExecuteOpcode(t *testing.T) {
 				{"04", "04"},
 			},
 			expOpcodes: []string{
-				"OP_4", "OP_6",
-				"OP_2", "OP_3", "OP_MUL", "OP_EQUALVERIFY",
-				"OP_2", "OP_2", "OP_ADD", "OP_EQUAL",
+				opOP4, opOP6,
+				opOP2, opOP3, opMUL, opEQUALVERIFY,
+				opOP2, opOP2, opADD, opEQUAL,
 			},
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 			expStackHistory: [][]string{
 				{},
 				{""},
 				{"", ""},
-				{"", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", ""},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
+				{"", hashB472},
+				{hashB472, ""},
+				{hashB472, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+				{hashB472, hashB472},
 			},
-			expOpcodes: []string{"OP_0", "OP_DUP", "OP_HASH160", "OP_SWAP", "OP_SHA256", "OP_RIPEMD160", "OP_EQUAL"},
+			expOpcodes: []string{opOP0, opDUP, opHASH160, opSWAP, opSHA256, opRIPEMD160, opEQUAL},
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 			expStackHistory: [][]string{
@@ -268,7 +294,7 @@ func TestDebugger_BeforeExecuteOpcode(t *testing.T) {
 				{"04", "07", "02", "03"},
 				{"04", "07", "06"},
 			},
-			expOpcodes: []string{"OP_4", "OP_7", "OP_2", "OP_3", "OP_MUL", "OP_EQUALVERIFY"},
+			expOpcodes: []string{opOP4, opOP7, opOP2, opOP3, opMUL, opEQUALVERIFY},
 		},
 	}
 
@@ -300,7 +326,7 @@ func TestDebugger_AfterExecuteOpcode(t *testing.T) {
 		expStackHistory    [][]string
 		expOpcodes         []string
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 			expStackHistory: [][]string{
@@ -316,26 +342,26 @@ func TestDebugger_AfterExecuteOpcode(t *testing.T) {
 				{"01"},
 			},
 			expOpcodes: []string{
-				"OP_4", "OP_6",
-				"OP_2", "OP_3", "OP_MUL", "OP_EQUALVERIFY",
-				"OP_2", "OP_2", "OP_ADD", "OP_EQUAL",
+				opOP4, opOP6,
+				opOP2, opOP3, opMUL, opEQUALVERIFY,
+				opOP2, opOP2, opADD, opEQUAL,
 			},
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 			expStackHistory: [][]string{
 				{""},
 				{"", ""},
-				{"", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", ""},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
+				{"", hashB472},
+				{hashB472, ""},
+				{hashB472, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+				{hashB472, hashB472},
 				{"01"},
 			},
-			expOpcodes: []string{"OP_0", "OP_DUP", "OP_HASH160", "OP_SWAP", "OP_SHA256", "OP_RIPEMD160", "OP_EQUAL"},
+			expOpcodes: []string{opOP0, opDUP, opHASH160, opSWAP, opSHA256, opRIPEMD160, opEQUAL},
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 			expStackHistory: [][]string{
@@ -345,7 +371,7 @@ func TestDebugger_AfterExecuteOpcode(t *testing.T) {
 				{"04", "07", "02", "03"},
 				{"04", "07", "06"},
 			},
-			expOpcodes: []string{"OP_4", "OP_7", "OP_2", "OP_3", "OP_MUL"},
+			expOpcodes: []string{opOP4, opOP7, opOP2, opOP3, opMUL},
 		},
 	}
 
@@ -378,33 +404,33 @@ func TestDebugger_BeforeScriptChange(t *testing.T) {
 		expOpcodes         []string
 		exptimesCalled     int
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 			expStackHistory: [][]string{
 				{"04", "06"},
 				{"01"},
 			},
-			expOpcodes:     []string{"OP_6", "OP_EQUAL"},
+			expOpcodes:     []string{opOP6, opEQUAL},
 			exptimesCalled: 2,
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 			expStackHistory: [][]string{
 				{""},
 				{"01"},
 			},
-			expOpcodes:     []string{"OP_0", "OP_EQUAL"},
+			expOpcodes:     []string{opOP0, opEQUAL},
 			exptimesCalled: 2,
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 			expStackHistory: [][]string{
 				{"04", "07"},
 			},
-			expOpcodes:     []string{"OP_7"},
+			expOpcodes:     []string{opOP7},
 			exptimesCalled: 1,
 		},
 	}
@@ -446,33 +472,33 @@ func TestDebugger_AfterScriptChange(t *testing.T) {
 		expOpcodes         []string
 		exptimesCalled     int
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 			expStackHistory: [][]string{
 				{"04", "06"},
 				{"01"},
 			},
-			expOpcodes:     []string{"OP_2", "OP_EQUAL"},
+			expOpcodes:     []string{opOP2, opEQUAL},
 			exptimesCalled: 2,
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 			expStackHistory: [][]string{
 				{""},
 				{"01"},
 			},
-			expOpcodes:     []string{"OP_DUP", "OP_EQUAL"},
+			expOpcodes:     []string{opDUP, opEQUAL},
 			exptimesCalled: 2,
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 			expStackHistory: [][]string{
 				{"04", "07"},
 			},
-			expOpcodes:     []string{"OP_2"},
+			expOpcodes:     []string{opOP2},
 			exptimesCalled: 1,
 		},
 	}
@@ -513,23 +539,23 @@ func TestDebugger_AfterExecution(t *testing.T) {
 		expStack           []string
 		expOpcode          string
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 			expStack:           []string{"01"},
-			expOpcode:          "OP_EQUAL",
+			expOpcode:          opEQUAL,
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 			expStack:           []string{"01"},
-			expOpcode:          "OP_EQUAL",
+			expOpcode:          opEQUAL,
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 			expStack:           []string{"04"},
-			expOpcode:          "OP_EQUALVERIFY",
+			expOpcode:          opEQUALVERIFY,
 		},
 	}
 
@@ -564,19 +590,19 @@ func TestDebugger_AfterError(t *testing.T) {
 		expOpcode          string
 		expCalled          bool
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 			expStack:           []string{"04"},
-			expOpcode:          "OP_EQUALVERIFY",
+			expOpcode:          opEQUALVERIFY,
 			expCalled:          true,
 		},
 	}
@@ -620,21 +646,21 @@ func TestDebugger_AfterSuccess(t *testing.T) {
 		expOpcode          string
 		expCalled          bool
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 			expStack:           []string{},
-			expOpcode:          "OP_EQUAL",
+			expOpcode:          opEQUAL,
 			expCalled:          true,
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 			expStack:           []string{},
-			expOpcode:          "OP_EQUAL",
+			expOpcode:          opEQUAL,
 			expCalled:          true,
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 		},
@@ -676,7 +702,7 @@ func TestDebugger_BeforeStackPush(t *testing.T) {
 		expOpcodes         []string
 		expPushData        []string
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 			expStackHistory: [][]string{
@@ -693,27 +719,27 @@ func TestDebugger_BeforeStackPush(t *testing.T) {
 			},
 			expPushData: []string{"04", "06", "02", "03", "06", "01", "02", "02", "04", "01"},
 			expOpcodes: []string{
-				"OP_4", "OP_6",
-				"OP_2", "OP_3", "OP_MUL", "OP_EQUALVERIFY",
-				"OP_2", "OP_2", "OP_ADD", "OP_EQUAL",
+				opOP4, opOP6,
+				opOP2, opOP3, opMUL, opEQUALVERIFY,
+				opOP2, opOP2, opADD, opEQUAL,
 			},
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 			expStackHistory: [][]string{
 				{},
 				{""},
 				{""},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
+				{hashB472},
+				{hashB472},
+				{hashB472},
 				{},
 			},
-			expPushData: []string{"", "", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "01"},
-			expOpcodes:  []string{"OP_0", "OP_DUP", "OP_HASH160", "OP_SWAP", "OP_SHA256", "OP_RIPEMD160", "OP_EQUAL"},
+			expPushData: []string{"", "", hashB472, "", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", hashB472, "01"},
+			expOpcodes:  []string{opOP0, opDUP, opHASH160, opSWAP, opSHA256, opRIPEMD160, opEQUAL},
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 			expStackHistory: [][]string{
@@ -725,7 +751,7 @@ func TestDebugger_BeforeStackPush(t *testing.T) {
 				{"04"},
 			},
 			expPushData: []string{"04", "07", "02", "03", "06", ""},
-			expOpcodes:  []string{"OP_4", "OP_7", "OP_2", "OP_3", "OP_MUL", "OP_EQUALVERIFY"},
+			expOpcodes:  []string{opOP4, opOP7, opOP2, opOP3, opMUL, opEQUALVERIFY},
 		},
 	}
 
@@ -760,7 +786,7 @@ func TestDebugger_AfterStackPush(t *testing.T) {
 		expOpcodes         []string
 		expPushData        []string
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 			expStackHistory: [][]string{
@@ -777,27 +803,27 @@ func TestDebugger_AfterStackPush(t *testing.T) {
 			},
 			expPushData: []string{"04", "06", "02", "03", "06", "01", "02", "02", "04", "01"},
 			expOpcodes: []string{
-				"OP_4", "OP_6",
-				"OP_2", "OP_3", "OP_MUL", "OP_EQUALVERIFY",
-				"OP_2", "OP_2", "OP_ADD", "OP_EQUAL",
+				opOP4, opOP6,
+				opOP2, opOP3, opMUL, opEQUALVERIFY,
+				opOP2, opOP2, opADD, opEQUAL,
 			},
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 			expStackHistory: [][]string{
 				{""},
 				{"", ""},
-				{"", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", ""},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
+				{"", hashB472},
+				{hashB472, ""},
+				{hashB472, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+				{hashB472, hashB472},
 				{"01"},
 			},
-			expPushData: []string{"", "", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "01"},
-			expOpcodes:  []string{"OP_0", "OP_DUP", "OP_HASH160", "OP_SWAP", "OP_SHA256", "OP_RIPEMD160", "OP_EQUAL"},
+			expPushData: []string{"", "", hashB472, "", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", hashB472, "01"},
+			expOpcodes:  []string{opOP0, opDUP, opHASH160, opSWAP, opSHA256, opRIPEMD160, opEQUAL},
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 			expStackHistory: [][]string{
@@ -809,7 +835,7 @@ func TestDebugger_AfterStackPush(t *testing.T) {
 				{"04", ""},
 			},
 			expPushData: []string{"04", "07", "02", "03", "06", ""},
-			expOpcodes:  []string{"OP_4", "OP_7", "OP_2", "OP_3", "OP_MUL", "OP_EQUALVERIFY"},
+			expOpcodes:  []string{opOP4, opOP7, opOP2, opOP3, opMUL, opEQUALVERIFY},
 		},
 	}
 
@@ -843,7 +869,7 @@ func TestDebugger_BeforeStackPop(t *testing.T) {
 		expStackHistory    [][]string
 		expOpcodes         []string
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 			expStackHistory: [][]string{
@@ -859,24 +885,24 @@ func TestDebugger_BeforeStackPop(t *testing.T) {
 				{"01"},
 			},
 			expOpcodes: []string{
-				"OP_MUL", "OP_MUL", "OP_EQUALVERIFY", "OP_EQUALVERIFY", "OP_EQUALVERIFY",
-				"OP_ADD", "OP_ADD", "OP_EQUAL", "OP_EQUAL", "OP_EQUAL",
+				opMUL, opMUL, opEQUALVERIFY, opEQUALVERIFY, opEQUALVERIFY,
+				opADD, opADD, opEQUAL, opEQUAL, opEQUAL,
 			},
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 			expStackHistory: [][]string{
 				{"", ""},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", ""},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
+				{hashB472, ""},
+				{hashB472, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+				{hashB472, hashB472},
+				{hashB472},
 				{"01"},
 			},
-			expOpcodes: []string{"OP_HASH160", "OP_SHA256", "OP_RIPEMD160", "OP_EQUAL", "OP_EQUAL", "OP_EQUAL"},
+			expOpcodes: []string{opHASH160, opSHA256, opRIPEMD160, opEQUAL, opEQUAL, opEQUAL},
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 			expStackHistory: [][]string{
@@ -886,7 +912,7 @@ func TestDebugger_BeforeStackPop(t *testing.T) {
 				{"04", "07"},
 				{"04", ""},
 			},
-			expOpcodes: []string{"OP_MUL", "OP_MUL", "OP_EQUALVERIFY", "OP_EQUALVERIFY", "OP_EQUALVERIFY"},
+			expOpcodes: []string{opMUL, opMUL, opEQUALVERIFY, opEQUALVERIFY, opEQUALVERIFY},
 		},
 	}
 
@@ -923,7 +949,7 @@ func TestDebugger_AfterStackPop(t *testing.T) {
 		expOpcodes         []string
 		expPopData         []string
 	}{
-		"simple script": {
+		testSimpleScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5456",
 			expStackHistory: [][]string{
@@ -939,26 +965,26 @@ func TestDebugger_AfterStackPop(t *testing.T) {
 				{},
 			},
 			expOpcodes: []string{
-				"OP_MUL", "OP_MUL", "OP_EQUALVERIFY", "OP_EQUALVERIFY", "OP_EQUALVERIFY",
-				"OP_ADD", "OP_ADD", "OP_EQUAL", "OP_EQUAL", "OP_EQUAL",
+				opMUL, opMUL, opEQUALVERIFY, opEQUALVERIFY, opEQUALVERIFY,
+				opADD, opADD, opEQUAL, opEQUAL, opEQUAL,
 			},
 			expPopData: []string{"03", "02", "06", "06", "01", "02", "02", "04", "04", "01"},
 		},
-		"complex script": {
-			lockingScriptHex:   "76a97ca8a687",
+		testComplexScript: {
+			lockingScriptHex:   scriptHexComplex,
 			unlockingScriptHex: "00",
 			expStackHistory: [][]string{
 				{""},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
-				{"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb"},
+				{hashB472},
+				{hashB472},
+				{hashB472},
 				{},
 				{},
 			},
-			expOpcodes: []string{"OP_HASH160", "OP_SHA256", "OP_RIPEMD160", "OP_EQUAL", "OP_EQUAL", "OP_EQUAL"},
-			expPopData: []string{"", "", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "01"},
+			expOpcodes: []string{opHASH160, opSHA256, opRIPEMD160, opEQUAL, opEQUAL, opEQUAL},
+			expPopData: []string{"", "", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", hashB472, hashB472, "01"},
 		},
-		"error script": {
+		testErrorScript: {
 			lockingScriptHex:   "5253958852529387",
 			unlockingScriptHex: "5457",
 			expStackHistory: [][]string{
@@ -968,7 +994,7 @@ func TestDebugger_AfterStackPop(t *testing.T) {
 				{"04"},
 				{"04"},
 			},
-			expOpcodes: []string{"OP_MUL", "OP_MUL", "OP_EQUALVERIFY", "OP_EQUALVERIFY", "OP_EQUALVERIFY"},
+			expOpcodes: []string{opMUL, opMUL, opEQUALVERIFY, opEQUALVERIFY, opEQUALVERIFY},
 			expPopData: []string{"03", "02", "06", "07", ""},
 		},
 	}
