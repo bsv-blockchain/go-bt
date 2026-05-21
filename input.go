@@ -51,90 +51,7 @@ func (i *Input) ReadFromExtended(r io.Reader) (int64, error) {
 
 // readFrom is a helper function that reads from the `io.Reader` into the `bt.Input`.
 func (i *Input) readFrom(r io.Reader, extended bool) (int64, error) {
-	*i = Input{}
-	var bytesRead int64
-
-	previousTxID := make([]byte, 32)
-	n, err := io.ReadFull(r, previousTxID)
-	bytesRead += int64(n)
-	if err != nil {
-		return bytesRead, errors.Wrapf(err, "previousTxID(32): got %d bytes", n)
-	}
-
-	prevIndex := make([]byte, 4)
-	n, err = io.ReadFull(r, prevIndex)
-	bytesRead += int64(n)
-	if err != nil {
-		return bytesRead, errors.Wrapf(err, "previousTxID(4): got %d bytes", n)
-	}
-
-	var l VarInt
-	n64, err := l.ReadFrom(r)
-	bytesRead += n64
-	if err != nil {
-		return bytesRead, err
-	}
-	if uint64(l) > uint64(MaxArenaAlloc) {
-		return bytesRead, errors.Errorf("unlockingScript length %d exceeds MaxArenaAlloc", l)
-	}
-
-	script := make([]byte, l)
-	n, err = io.ReadFull(r, script)
-	bytesRead += int64(n)
-	if err != nil {
-		return bytesRead, errors.Wrapf(err, "script(%d): got %d bytes", l, n)
-	}
-
-	sequence := make([]byte, 4)
-	n, err = io.ReadFull(r, sequence)
-	bytesRead += int64(n)
-	if err != nil {
-		return bytesRead, errors.Wrapf(err, "sequence(4): got %d bytes", n)
-	}
-
-	i.previousTxIDHash, err = chainhash.NewHash(previousTxID)
-	if err != nil {
-		return bytesRead, errors.Wrap(err, "could not read hash")
-	}
-	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(prevIndex)
-	i.UnlockingScript = bscript.NewFromBytes(script)
-	i.SequenceNumber = binary.LittleEndian.Uint32(sequence)
-
-	if extended {
-		prevSatoshis := make([]byte, 8)
-		var prevTxLockingScript bscript.Script
-
-		n, err = io.ReadFull(r, prevSatoshis)
-		bytesRead += int64(n)
-		if err != nil {
-			return bytesRead, errors.Wrapf(err, "prevSatoshis(8): got %d bytes", n)
-		}
-
-		// Read in the prevTxLockingScript
-		var scriptLen VarInt
-		n64b, err := scriptLen.ReadFrom(r)
-		bytesRead += n64b
-		if err != nil {
-			return bytesRead, err
-		}
-		if uint64(scriptLen) > uint64(MaxArenaAlloc) {
-			return bytesRead, errors.Errorf("prevTxScript length %d exceeds MaxArenaAlloc", scriptLen)
-		}
-
-		newScript := make([]byte, scriptLen)
-		nRead, err := io.ReadFull(r, newScript)
-		bytesRead += int64(nRead)
-		if err != nil {
-			return bytesRead, errors.Wrapf(err, "script(%d): got %d bytes", scriptLen.Length(), nRead)
-		}
-
-		prevTxLockingScript = *bscript.NewFromBytes(newScript)
-
-		i.PreviousTxSatoshis = binary.LittleEndian.Uint64(prevSatoshis)
-		i.PreviousTxScript = bscript.NewFromBytes(prevTxLockingScript)
-	}
-
-	return bytesRead, nil
+	return i.readFromWithArena(r, extended, nil)
 }
 
 // ReadFromWithArena reads from r into i (standard format) drawing the
@@ -183,9 +100,12 @@ func (i *Input) readFromWithArena(r io.Reader, extended bool, a *Arena) (int64, 
 	}
 
 	var script []byte
-	if l > 0 {
+	switch {
+	case a == nil:
+		script = make([]byte, l)
+	case l > 0:
 		script = a.Alloc(int(l))
-	} else {
+	default:
 		script = []byte{}
 	}
 	n, err = io.ReadFull(r, script)
@@ -229,9 +149,12 @@ func (i *Input) readFromWithArena(r io.Reader, extended bool, a *Arena) (int64, 
 		}
 
 		var newScript []byte
-		if scriptLen > 0 {
+		switch {
+		case a == nil:
+			newScript = make([]byte, scriptLen)
+		case scriptLen > 0:
 			newScript = a.Alloc(int(scriptLen))
-		} else {
+		default:
 			newScript = []byte{}
 		}
 		nRead, err := io.ReadFull(r, newScript)

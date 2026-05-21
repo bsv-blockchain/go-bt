@@ -31,37 +31,7 @@ type Output struct {
 
 // ReadFrom reads from the `io.Reader` into the `bt.Output`.
 func (o *Output) ReadFrom(r io.Reader) (int64, error) {
-	*o = Output{}
-	var bytesRead int64
-
-	satoshis := make([]byte, 8)
-	n, err := io.ReadFull(r, satoshis)
-	bytesRead += int64(n)
-	if err != nil {
-		return bytesRead, errors.Wrapf(err, "satoshis(8): got %d bytes", n)
-	}
-
-	var l VarInt
-	n64, err := l.ReadFrom(r)
-	bytesRead += n64
-	if err != nil {
-		return bytesRead, err
-	}
-
-	if uint64(l) > uint64(MaxArenaAlloc) {
-		return bytesRead, errors.Errorf("lockingScript length %d exceeds MaxArenaAlloc", l)
-	}
-	script := make([]byte, l)
-	n, err = io.ReadFull(r, script)
-	bytesRead += int64(n)
-	if err != nil {
-		return bytesRead, errors.Wrapf(err, "lockingScript(%d): got %d bytes", l, n)
-	}
-
-	o.Satoshis = binary.LittleEndian.Uint64(satoshis)
-	o.LockingScript = bscript.NewFromBytes(script)
-
-	return bytesRead, nil
+	return o.ReadFromWithArena(r, nil)
 }
 
 // ReadFromWithArena decodes an Output from r, drawing the locking-script
@@ -89,9 +59,12 @@ func (o *Output) ReadFromWithArena(r io.Reader, a *Arena) (int64, error) {
 	}
 
 	var script []byte
-	if l > 0 {
+	switch {
+	case a == nil:
+		script = make([]byte, l)
+	case l > 0:
 		script = a.Alloc(int(l))
-	} else {
+	default:
 		script = []byte{}
 	}
 	n, err = io.ReadFull(r, script)
