@@ -111,13 +111,16 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	return tx.ReadFromWithArena(r, nil)
 }
 
-// ReadFromWithArena decodes a Tx from r using a for per-script allocations in
-// Inputs and Outputs. The decoded Tx's Input.UnlockingScript,
-// Input.PreviousTxScript (extended format), and Output.LockingScript slices
-// remain valid only until arena.Reset is called.
+// ReadFromWithArena decodes a Tx from r. When a is non-nil, per-script byte
+// slices (input UnlockingScript / PreviousTxScript, output LockingScript)
+// are drawn from the arena; those slices remain valid only until the next
+// arena.Reset or ResetAndShrink call. When a is nil, scripts are heap-
+// allocated via make([]byte, n) and there is no arena lifetime restriction
+// — this nil-arena path is the implementation used by the standard
+// (non-arena) Tx.ReadFrom.
 //
 // Tx field semantics (Version, LockTime, Inputs/Outputs slice headers) are
-// identical to ReadFrom. Extended-format detection mirrors ReadFrom exactly.
+// identical to ReadFrom.
 func (tx *Tx) ReadFromWithArena(r io.Reader, a *Arena) (int64, error) {
 	*tx = Tx{}
 	var bytesRead int64
@@ -357,14 +360,16 @@ func (tx *Tx) TxIDChainHash() *chainhash.Hash {
 	return &hash
 }
 
-// HashTxIDInto computes the transaction's chainhash, reusing the caller's
-// scratch buffer for serialization. The returned scratch slice may share
-// backing memory with the input — callers should always rebind it
-// (`h, scratch = tx.HashTxIDInto(scratch)`).
+// HashTxIDInto computes the transaction's txid (double-SHA256 of the
+// standard serialisation), reusing the caller's scratch buffer for
+// serialisation. The returned scratch slice may share backing memory with
+// the input — callers should always rebind it
+// (h, scratch = tx.HashTxIDInto(scratch)).
 //
-// If the transaction's hash has already been cached (via SetTxHash or a
-// prior call to TxIDChainHash that populated it), the scratch buffer is
-// passed through unchanged and no allocation occurs.
+// If the transaction's hash has already been cached via SetTxHash, the
+// scratch buffer is passed through unchanged and no allocation occurs.
+// Note: TxIDChainHash itself does not populate the cache; only SetTxHash
+// does.
 //
 // Allocations beyond the caller-owned scratch are zero (assuming scratch
 // has sufficient capacity for tx.Size()).
@@ -433,7 +438,7 @@ func cloneScript(s *bscript.Script) *bscript.Script {
 		return nil
 	}
 	if len(*s) == 0 {
-		empty := bscript.Script{}
+		empty := bscript.Script([]byte{})
 		return &empty
 	}
 	buf := make([]byte, len(*s))

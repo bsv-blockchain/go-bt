@@ -86,7 +86,7 @@ func (i *Input) readFromWithArena(r io.Reader, extended bool, a *Arena) (int64, 
 	n, err = io.ReadFull(r, prevIndex[:])
 	bytesRead += int64(n)
 	if err != nil {
-		return bytesRead, errors.Wrapf(err, "previousTxID(4): got %d bytes", n)
+		return bytesRead, errors.Wrapf(err, "prevIndex(4): got %d bytes", n)
 	}
 
 	script, n64, err := readArenaScript(r, a, "unlockingScript")
