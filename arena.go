@@ -1,5 +1,11 @@
 package bt
 
+import (
+	"io"
+
+	"github.com/pkg/errors"
+)
+
 // MaxArenaAlloc is the maximum single allocation size accepted by Arena.Alloc
 // and by *.ReadFromWithArena script-length guards. Set to 1 GiB to admit
 // legitimate large BSV transactions (e.g. ~320 MB data carriers) while still
@@ -82,3 +88,46 @@ func (a *Arena) Cap() int { return cap(a.slab) }
 
 // Used returns the number of bytes currently allocated since the last Reset.
 func (a *Arena) Used() int { return a.pos }
+
+// readArenaScript reads a varint length prefix from r followed by that many
+// script bytes. When a is nil, the bytes go to make([]byte, n) — matching
+// the non-arena ReadFrom path. When a is non-nil, bytes come from
+// arena.Alloc for n > 0; n == 0 uses a non-nil []byte{} sentinel so wrapped
+// *bscript.Script values compare equal across both paths.
+//
+// Rejects lengths greater than MaxArenaAlloc with a wrapped error containing
+// "MaxArenaAlloc". The label is included in both the cap-exceeded and the
+// short-read error messages.
+//
+// Returns the script slice and the total bytes consumed from r (varint +
+// script payload).
+func readArenaScript(r io.Reader, a *Arena, label string) ([]byte, int64, error) {
+	var bytesRead int64
+
+	var l VarInt
+	n64, err := l.ReadFrom(r)
+	bytesRead += n64
+	if err != nil {
+		return nil, bytesRead, err
+	}
+	if uint64(l) > uint64(MaxArenaAlloc) {
+		return nil, bytesRead, errors.Errorf("%s length %d exceeds MaxArenaAlloc", label, l)
+	}
+
+	var script []byte
+	switch {
+	case a == nil:
+		script = make([]byte, l)
+	case l > 0:
+		script = a.Alloc(int(l))
+	default:
+		script = []byte{}
+	}
+	n, err := io.ReadFull(r, script)
+	bytesRead += int64(n)
+	if err != nil {
+		return nil, bytesRead, errors.Wrapf(err, "%s(%d): got %d bytes", label, l, n)
+	}
+
+	return script, bytesRead, nil
+}

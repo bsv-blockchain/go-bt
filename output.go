@@ -48,29 +48,10 @@ func (o *Output) ReadFromWithArena(r io.Reader, a *Arena) (int64, error) {
 		return bytesRead, errors.Wrapf(err, "satoshis(8): got %d bytes", n)
 	}
 
-	var l VarInt
-	n64, err := l.ReadFrom(r)
+	script, n64, err := readArenaScript(r, a, "lockingScript")
 	bytesRead += n64
 	if err != nil {
 		return bytesRead, err
-	}
-	if uint64(l) > uint64(MaxArenaAlloc) {
-		return bytesRead, errors.Errorf("lockingScript length %d exceeds MaxArenaAlloc", l)
-	}
-
-	var script []byte
-	switch {
-	case a == nil:
-		script = make([]byte, l)
-	case l > 0:
-		script = a.Alloc(int(l))
-	default:
-		script = []byte{}
-	}
-	n, err = io.ReadFull(r, script)
-	bytesRead += int64(n)
-	if err != nil {
-		return bytesRead, errors.Wrapf(err, "lockingScript(%d): got %d bytes", l, n)
 	}
 
 	o.Satoshis = binary.LittleEndian.Uint64(satoshis[:])
