@@ -84,88 +84,65 @@ func TestTx_HashTxIDInto_UsesCachedHash(t *testing.T) {
 	require.Nil(t, sc)
 }
 
-func TestTx_Clone_IsolatesFromArena(t *testing.T) {
-	// Build a tx with non-trivial unlocking and locking scripts so we
-	// can detect corruption.
+// TestTx_CloneVariants_IsolateFromArena verifies that all clone variants
+// produce a tx whose script bytes are independent of the original's arena
+// backing. After cloning, the source arena is reset and its slab overwritten
+// with sentinel bytes — the clone's script bytes must survive intact.
+func TestTx_CloneVariants_IsolateFromArena(t *testing.T) {
 	unlockingPayload := bytes.Repeat([]byte{0xAB}, 64)
 	lockingPayload := bytes.Repeat([]byte{0xCD}, 64)
 
-	src := bt.NewTx()
-	require.NoError(t, src.From(
-		"b7b0650a7c3a1bd4f7571b4c1e38f05171b565b8e28b2e337031ee31e9fa8eb6", 0,
-		hex.EncodeToString(lockingPayload), 100000,
-	))
-	// Set unlocking script directly so it is present in the wire serialisation.
-	src.Inputs[0].UnlockingScript = bscript.NewFromBytes(unlockingPayload)
-	src.AddOutput(&bt.Output{
-		Satoshis:      99000,
-		LockingScript: bscript.NewFromBytes(lockingPayload),
-	})
-	raw := src.Bytes()
+	build := func(t *testing.T) (*bt.Tx, *bt.Arena) {
+		t.Helper()
 
-	arena := bt.NewArena(0)
-	decoded := &bt.Tx{}
-	_, err := decoded.ReadFromWithArena(bytes.NewReader(raw), arena)
-	require.NoError(t, err)
+		src := bt.NewTx()
+		require.NoError(t, src.From(
+			"b7b0650a7c3a1bd4f7571b4c1e38f05171b565b8e28b2e337031ee31e9fa8eb6", 0,
+			hex.EncodeToString(lockingPayload), 100000,
+		))
+		src.Inputs[0].UnlockingScript = bscript.NewFromBytes(unlockingPayload)
+		src.AddOutput(&bt.Output{
+			Satoshis:      99000,
+			LockingScript: bscript.NewFromBytes(lockingPayload),
+		})
+		raw := src.Bytes()
 
-	clone := decoded.Clone()
-
-	// Capture pre-corruption snapshots of clone's scripts.
-	preUnlocking := append([]byte(nil), []byte(*clone.Inputs[0].UnlockingScript)...)
-	preLocking := append([]byte(nil), []byte(*clone.Outputs[0].LockingScript)...)
-
-	// Reset the arena and overwrite its backing with sentinel bytes.
-	usedBefore := arena.Used()
-	arena.Reset()
-	overwrite := arena.Alloc(usedBefore)
-	for i := range overwrite {
-		overwrite[i] = 0xEE
+		arena := bt.NewArena(0)
+		decoded := &bt.Tx{}
+		_, err := decoded.ReadFromWithArena(bytes.NewReader(raw), arena)
+		require.NoError(t, err)
+		return decoded, arena
 	}
 
-	// Clone's scripts MUST be unaffected by the arena overwrite.
-	require.Equal(t, preUnlocking, []byte(*clone.Inputs[0].UnlockingScript),
-		"Clone must deep-copy UnlockingScript")
-	require.Equal(t, preLocking, []byte(*clone.Outputs[0].LockingScript),
-		"Clone must deep-copy LockingScript")
-}
-
-func TestTx_ShallowClone_IsolatesFromArena(t *testing.T) {
-	unlockingPayload := bytes.Repeat([]byte{0xAB}, 64)
-	lockingPayload := bytes.Repeat([]byte{0xCD}, 64)
-
-	src := bt.NewTx()
-	require.NoError(t, src.From(
-		"b7b0650a7c3a1bd4f7571b4c1e38f05171b565b8e28b2e337031ee31e9fa8eb6", 0,
-		hex.EncodeToString(lockingPayload), 100000,
-	))
-	src.Inputs[0].UnlockingScript = bscript.NewFromBytes(unlockingPayload)
-	src.AddOutput(&bt.Output{
-		Satoshis:      99000,
-		LockingScript: bscript.NewFromBytes(lockingPayload),
-	})
-	raw := src.Bytes()
-
-	arena := bt.NewArena(0)
-	decoded := &bt.Tx{}
-	_, err := decoded.ReadFromWithArena(bytes.NewReader(raw), arena)
-	require.NoError(t, err)
-
-	clone := decoded.ShallowClone()
-
-	preUnlocking := append([]byte(nil), []byte(*clone.Inputs[0].UnlockingScript)...)
-	preLocking := append([]byte(nil), []byte(*clone.Outputs[0].LockingScript)...)
-
-	usedBefore := arena.Used()
-	arena.Reset()
-	overwrite := arena.Alloc(usedBefore)
-	for i := range overwrite {
-		overwrite[i] = 0xEE
+	tests := []struct {
+		name  string
+		clone func(*bt.Tx) *bt.Tx
+	}{
+		{name: "Clone", clone: func(tx *bt.Tx) *bt.Tx { return tx.Clone() }},
+		{name: "ShallowClone", clone: func(tx *bt.Tx) *bt.Tx { return tx.ShallowClone() }},
 	}
 
-	require.Equal(t, preUnlocking, []byte(*clone.Inputs[0].UnlockingScript),
-		"ShallowClone must deep-copy UnlockingScript")
-	require.Equal(t, preLocking, []byte(*clone.Outputs[0].LockingScript),
-		"ShallowClone must deep-copy LockingScript")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			decoded, arena := build(t)
+			clone := tt.clone(decoded)
+
+			preUnlocking := append([]byte(nil), []byte(*clone.Inputs[0].UnlockingScript)...)
+			preLocking := append([]byte(nil), []byte(*clone.Outputs[0].LockingScript)...)
+
+			usedBefore := arena.Used()
+			arena.Reset()
+			overwrite := arena.Alloc(usedBefore)
+			for i := range overwrite {
+				overwrite[i] = 0xEE
+			}
+
+			require.Equal(t, preUnlocking, []byte(*clone.Inputs[0].UnlockingScript),
+				"%s must deep-copy UnlockingScript", tt.name)
+			require.Equal(t, preLocking, []byte(*clone.Outputs[0].LockingScript),
+				"%s must deep-copy LockingScript", tt.name)
+		})
+	}
 }
 
 func TestTx_HashTxIDInto_ZeroAllocAfterWarmup(t *testing.T) {

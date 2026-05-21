@@ -114,7 +114,7 @@ func TestArena_Reset_ReusesBackingArray(t *testing.T) {
 func TestArena_Alloc_ZeroOnZeroValueArena(t *testing.T) {
 	var a bt.Arena
 	b := a.Alloc(0)
-	require.Len(t, b, 0)
+	require.Empty(t, b)
 	require.Equal(t, 0, cap(b))
 	require.Equal(t, 0, a.Used())
 	require.Equal(t, 0, a.Cap())
