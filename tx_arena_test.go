@@ -8,6 +8,7 @@ import (
 
 	"github.com/bsv-blockchain/go-bt/v2"
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
+	"github.com/bsv-blockchain/go-bt/v2/chainhash"
 )
 
 // TestTx_ReadFromWithArena_Equivalence checks that ReadFromWithArena produces a
@@ -56,4 +57,43 @@ func TestTx_ReadFromWithArena_320MBOutput(t *testing.T) {
 	_, err := got.ReadFromWithArena(bytes.NewReader(raw), arena)
 	require.NoError(t, err)
 	require.Len(t, *got.Outputs[0].LockingScript, scriptSize)
+}
+
+func TestTx_HashTxIDInto_Equivalence(t *testing.T) {
+	for _, tt := range txShapeTests(t) {
+		t.Run(tt.name, func(t *testing.T) {
+			expected := tt.tx.TxIDChainHash()
+
+			var scratch []byte
+			got, _ := tt.tx.HashTxIDInto(scratch)
+			require.Equal(t, *expected, got)
+		})
+	}
+}
+
+func TestTx_HashTxIDInto_UsesCachedHash(t *testing.T) {
+	tx := mustParseTx()
+	cached := *tx.TxIDChainHash() // compute reference
+	tx.SetTxHash(&cached)         // populate the cache
+
+	var scratch []byte
+	got, sc := tx.HashTxIDInto(scratch)
+	require.Equal(t, cached, got)
+	// When cache hits, scratch must be passed through unchanged.
+	require.Nil(t, sc)
+}
+
+func TestTx_HashTxIDInto_ZeroAllocAfterWarmup(t *testing.T) {
+	tx := mustParseTx()
+	scratch := make([]byte, 0, tx.Size())
+
+	allocs := testing.AllocsPerRun(100, func() {
+		tx.SetTxHash(nil) // bust cache so we actually serialise each iteration
+		var h chainhash.Hash
+		h, scratch = tx.HashTxIDInto(scratch)
+		_ = h
+	})
+	// HashTxIDInto + DoubleHashH should not allocate the serialisation buffer
+	// once scratch is sized. DoubleHashH on a byte slice is stack-only.
+	require.LessOrEqual(t, allocs, 0.0)
 }

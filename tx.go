@@ -461,6 +461,26 @@ func (tx *Tx) TxIDChainHash() *chainhash.Hash {
 	return &hash
 }
 
+// HashTxIDInto computes the transaction's chainhash, reusing the caller's
+// scratch buffer for serialisation. The returned scratch slice may share
+// backing memory with the input — callers should always rebind it
+// (`h, scratch = tx.HashTxIDInto(scratch)`).
+//
+// If the transaction's hash has already been cached (via SetTxHash or a
+// prior call to TxIDChainHash that populated it), the scratch buffer is
+// passed through unchanged and no allocation occurs.
+//
+// Allocations beyond the caller-owned scratch are zero (assuming scratch
+// has sufficient capacity for tx.Size()).
+func (tx *Tx) HashTxIDInto(scratch []byte) (chainhash.Hash, []byte) {
+	if h := tx.txHash.Load(); h != nil {
+		return *h, scratch
+	}
+	scratch = scratch[:0]
+	scratch = tx.AppendBytes(scratch)
+	return chainhash.DoubleHashH(scratch), scratch
+}
+
 // String encodes the transaction into a hex string.
 func (tx *Tx) String() string {
 	return hex.EncodeToString(tx.Bytes())
