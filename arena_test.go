@@ -111,6 +111,19 @@ func TestArena_Reset_ReusesBackingArray(t *testing.T) {
 	require.Same(t, addr1, addr2, "after Reset, next Alloc should reuse the same backing memory")
 }
 
+func TestArena_Alloc_ZeroOnZeroValueArena(t *testing.T) {
+	var a bt.Arena
+	b := a.Alloc(0)
+	require.Len(t, b, 0)
+	require.Equal(t, 0, cap(b))
+	require.Equal(t, 0, a.Used())
+	require.Equal(t, 0, a.Cap())
+
+	// Subsequent non-zero Alloc still works.
+	c := a.Alloc(8)
+	require.Len(t, c, 8)
+}
+
 // TestArena_Alloc_320MB confirms a legitimate large-output allocation works.
 // Skipped under -short because it allocates 320 MiB.
 func TestArena_Alloc_320MB(t *testing.T) {

@@ -425,6 +425,23 @@ func (tx *Tx) BytesWithClearedInputs(index int, lockingScript []byte) []byte {
 	return tx.toBytesHelper(index, lockingScript, false)
 }
 
+// cloneScript returns a heap-owned deep copy of s. Used by Clone, ShallowClone,
+// and CloneTx so the returned clone is independent of any shared backing
+// (in particular, arena-allocated script bytes from ReadFromWithArena).
+func cloneScript(s *bscript.Script) *bscript.Script {
+	if s == nil {
+		return nil
+	}
+	if len(*s) == 0 {
+		empty := bscript.Script{}
+		return &empty
+	}
+	buf := make([]byte, len(*s))
+	copy(buf, *s)
+	out := bscript.Script(buf)
+	return &out
+}
+
 // CloneTx returns a clone of the tx by bytes
 func (tx *Tx) CloneTx() *Tx {
 	// Ignore erring as byte slice passed in is created from valid tx
@@ -435,10 +452,7 @@ func (tx *Tx) CloneTx() *Tx {
 
 	for i, input := range tx.Inputs {
 		clone.Inputs[i].PreviousTxSatoshis = input.PreviousTxSatoshis
-		if input.PreviousTxScript != nil {
-			clone.Inputs[i].PreviousTxScript = &bscript.Script{}
-			*clone.Inputs[i].PreviousTxScript = *input.PreviousTxScript
-		}
+		clone.Inputs[i].PreviousTxScript = cloneScript(input.PreviousTxScript)
 	}
 
 	return clone
@@ -463,32 +477,28 @@ func (tx *Tx) Clone() *Tx {
 			PreviousTxOutIndex: input.PreviousTxOutIndex,
 			SequenceNumber:     input.SequenceNumber,
 		}
-		if input.UnlockingScript != nil {
-			clone.Inputs[i].UnlockingScript = bscript.NewFromBytes(*input.UnlockingScript)
-		}
-		if input.PreviousTxScript != nil {
-			clone.Inputs[i].PreviousTxScript = bscript.NewFromBytes(*input.PreviousTxScript)
-		}
+		clone.Inputs[i].UnlockingScript = cloneScript(input.UnlockingScript)
+		clone.Inputs[i].PreviousTxScript = cloneScript(input.PreviousTxScript)
 	}
 
 	for i, output := range tx.Outputs {
 		clone.Outputs[i] = &Output{
 			Satoshis: output.Satoshis,
 		}
-		if output.LockingScript != nil {
-			clone.Outputs[i].LockingScript = bscript.NewFromBytes(*output.LockingScript)
-		}
+		clone.Outputs[i].LockingScript = cloneScript(output.LockingScript)
 	}
 
 	return clone
 }
 
-// ShallowClone returns a clone of the tx, but only clones the elements of the tx
-// that are mutated in the signing process.
+// ShallowClone returns a clone of the tx. Version, LockTime, and per-input
+// fields used during signing are copied; script bytes are deep-copied so the
+// clone is safe against arena resets and in-place mutation of script bytes.
+//
+// Creating a new Tx from scratch is much faster than cloning from bytes
+// (~420ns/op vs. ~2200ns/op); this matters as we clone txs a couple of times
+// when verifying signatures.
 func (tx *Tx) ShallowClone() *Tx {
-	// Creating a new Tx from scratch is much faster than cloning from bytes
-	// ~ 420ns/op vs. 2200ns/op of the above function in benchmarking
-	// this matters as we clone txs a couple of times when verifying signatures
 	clone := &Tx{
 		Version:  tx.Version,
 		LockTime: tx.LockTime,
@@ -503,22 +513,15 @@ func (tx *Tx) ShallowClone() *Tx {
 			PreviousTxOutIndex: input.PreviousTxOutIndex,
 			SequenceNumber:     input.SequenceNumber,
 		}
-		if input.UnlockingScript != nil {
-			clone.Inputs[i].UnlockingScript = input.UnlockingScript
-		}
-		if input.PreviousTxScript != nil {
-			// previousTxScript needs to be cloned as it is mutated in the signing process
-			clone.Inputs[i].PreviousTxScript = bscript.NewFromBytes(*input.PreviousTxScript)
-		}
+		clone.Inputs[i].UnlockingScript = cloneScript(input.UnlockingScript)
+		clone.Inputs[i].PreviousTxScript = cloneScript(input.PreviousTxScript)
 	}
 
 	for i, output := range tx.Outputs {
 		clone.Outputs[i] = &Output{
 			Satoshis: output.Satoshis,
 		}
-		if output.LockingScript != nil {
-			clone.Outputs[i].LockingScript = output.LockingScript
-		}
+		clone.Outputs[i].LockingScript = cloneScript(output.LockingScript)
 	}
 
 	return clone

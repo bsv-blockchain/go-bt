@@ -10,6 +10,12 @@ import (
 // and by *.ReadFromWithArena script-length guards. Set to 1 GiB to admit
 // legitimate large BSV transactions (e.g. ~320 MB data carriers) while still
 // rejecting obviously-bogus varint lengths.
+//
+// Implementation note: Arena.Alloc computes `a.pos + n` as int. With
+// MaxArenaAlloc = 1<<30 and a 32-bit int, `pos + n` could overflow into
+// negative values and bypass the grow check. go-bt targets 64-bit Go (all
+// supported BSV node deployments are 64-bit); 32-bit platforms are not
+// supported.
 const MaxArenaAlloc = 1 << 30
 
 // Arena is a bump-pointer allocator used by *.ReadFromWithArena to amortize
@@ -65,9 +71,17 @@ func (a *Arena) Alloc(n int) []byte {
 	return out
 }
 
-// Reset rewinds the arena's cursor to 0. The slab is retained for reuse.
-// O(1). All slices previously returned by Alloc become invalid for future
-// reads — the backing memory will be overwritten by subsequent Alloc calls.
+// Reset rewinds the arena's cursor to 0. The current backing slab is retained
+// for reuse. O(1).
+//
+// Lifetime contract: any slice returned by Alloc that was allocated from the
+// CURRENT slab becomes invalid for future reads after Reset — the backing
+// memory will be overwritten by subsequent Alloc calls. Slices returned from
+// an OLDER slab (i.e. before the most recent grow event) remain readable for
+// as long as a caller holds a reference — the older slabs are not overwritten,
+// they are simply orphaned for GC. Repeated grow-then-reset cycles can
+// therefore retain pre-grow allocations longer than callers expect; use
+// ResetAndShrink to drop oversized slabs explicitly.
 func (a *Arena) Reset() {
 	a.pos = 0
 }
