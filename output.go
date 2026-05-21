@@ -61,6 +61,43 @@ func (o *Output) ReadFrom(r io.Reader) (int64, error) {
 	return bytesRead, nil
 }
 
+// ReadFromWithArena decodes an Output from r, drawing the locking-script
+// []byte from arena instead of allocating per-call. The returned LockingScript
+// remains valid only until the next arena.Reset / ResetAndShrink.
+func (o *Output) ReadFromWithArena(r io.Reader, a *Arena) (int64, error) {
+	*o = Output{}
+	var bytesRead int64
+
+	var satoshis [8]byte
+	n, err := io.ReadFull(r, satoshis[:])
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, errors.Wrapf(err, "satoshis(8): got %d bytes", n)
+	}
+
+	var l VarInt
+	n64, err := l.ReadFrom(r)
+	bytesRead += n64
+	if err != nil {
+		return bytesRead, err
+	}
+	if uint64(l) > uint64(MaxArenaAlloc) {
+		return bytesRead, errors.Errorf("lockingScript length %d exceeds MaxArenaAlloc", l)
+	}
+
+	script := a.Alloc(int(l))
+	n, err = io.ReadFull(r, script)
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, errors.Wrapf(err, "lockingScript(%d): got %d bytes", l, n)
+	}
+
+	o.Satoshis = binary.LittleEndian.Uint64(satoshis[:])
+	o.LockingScript = bscript.NewFromBytes(script)
+
+	return bytesRead, nil
+}
+
 // LockingScriptHexString returns the locking script
 // of an output encoded as a hex string.
 func (o *Output) LockingScriptHexString() string {
