@@ -51,10 +51,9 @@ func (a *Arena) Alloc(n int) []byte {
 		copy(next, a.slab[:a.pos])
 		a.slab = next
 	}
-	// Extend slab length to cover the new region. We address up to pos+n.
-	if len(a.slab) < a.pos+n {
-		a.slab = a.slab[:a.pos+n]
-	}
+	// len(a.slab) == cap(a.slab) is maintained by every write to a.slab
+	// (NewArena and the grow path both use make([]byte, n) which sets len==cap),
+	// so the 3-arg slice below is always within bounds.
 	out := a.slab[a.pos : a.pos+n : a.pos+n]
 	a.pos += n
 	return out
@@ -70,6 +69,7 @@ func (a *Arena) Reset() {
 // ResetAndShrink behaves like Reset but additionally drops the backing slab
 // if its capacity exceeds maxKeep. Use to bound the idle footprint of a
 // pooled arena when a recent decode required an unusually large allocation.
+// Passing maxKeep <= 0 retains the slab unchanged.
 func (a *Arena) ResetAndShrink(maxKeep int) {
 	a.pos = 0
 	if maxKeep > 0 && cap(a.slab) > maxKeep {

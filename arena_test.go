@@ -99,6 +99,18 @@ func TestArena_AllocPanicsOnExcessive(t *testing.T) {
 	})
 }
 
+func TestArena_Reset_ReusesBackingArray(t *testing.T) {
+	a := bt.NewArena(64)
+	b1 := a.Alloc(32)
+	addr1 := &b1[0]
+
+	a.Reset()
+	b2 := a.Alloc(32)
+	addr2 := &b2[0]
+
+	require.Same(t, addr1, addr2, "after Reset, next Alloc should reuse the same backing memory")
+}
+
 // TestArena_Alloc_320MB confirms a legitimate large-output allocation works.
 // Skipped under -short because it allocates 320 MiB.
 func TestArena_Alloc_320MB(t *testing.T) {
