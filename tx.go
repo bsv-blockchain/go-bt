@@ -361,15 +361,14 @@ func (tx *Tx) TxIDChainHash() *chainhash.Hash {
 }
 
 // HashTxIDInto computes the transaction's txid (double-SHA256 of the
-// standard serialisation), reusing the caller's scratch buffer for
-// serialisation. The returned scratch slice may share backing memory with
+// standard serialization), reusing the caller's scratch buffer for
+// serialization. The returned scratch slice may share backing memory with
 // the input — callers should always rebind it
 // (h, scratch = tx.HashTxIDInto(scratch)).
 //
 // If the transaction's hash has already been cached via SetTxHash, the
 // scratch buffer is passed through unchanged and no allocation occurs.
-// Note: TxIDChainHash itself does not populate the cache; only SetTxHash
-// does.
+// TxIDChainHash itself does not populate the cache; only SetTxHash does.
 //
 // Allocations beyond the caller-owned scratch are zero (assuming scratch
 // has sufficient capacity for tx.Size()).
