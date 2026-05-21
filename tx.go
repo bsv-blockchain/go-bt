@@ -215,6 +215,109 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	return bytesRead, nil
 }
 
+// ReadFromWithArena decodes a Tx from r using a for per-script allocations in
+// Inputs and Outputs. The decoded Tx's Input.UnlockingScript,
+// Input.PreviousTxScript (extended format), and Output.LockingScript slices
+// remain valid only until arena.Reset is called.
+//
+// Tx field semantics (Version, LockTime, Inputs/Outputs slice headers) are
+// identical to ReadFrom. Extended-format detection mirrors ReadFrom exactly.
+func (tx *Tx) ReadFromWithArena(r io.Reader, a *Arena) (int64, error) {
+	*tx = Tx{}
+	var bytesRead int64
+
+	var n64 int64
+	var err error
+
+	var version [4]byte
+	n, err := io.ReadFull(r, version[:])
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, err
+	}
+	tx.Version = binary.LittleEndian.Uint32(version[:])
+
+	var inputCount VarInt
+	n64, err = inputCount.ReadFrom(r)
+	bytesRead += n64
+	if err != nil {
+		return bytesRead, err
+	}
+
+	var outputCount VarInt
+	var locktime [4]byte
+
+	if inputCount == 0 {
+		n64, err = outputCount.ReadFrom(r)
+		bytesRead += n64
+		if err != nil {
+			return bytesRead, err
+		}
+
+		if outputCount == 0 {
+			n, err = io.ReadFull(r, locktime[:])
+			bytesRead += int64(n)
+			if err != nil {
+				return bytesRead, err
+			}
+
+			if binary.BigEndian.Uint32(locktime[:]) != 0xEF {
+				tx.LockTime = binary.LittleEndian.Uint32(locktime[:])
+				return bytesRead, nil
+			}
+
+			tx.extended = true
+
+			n64, err = inputCount.ReadFrom(r)
+			bytesRead += n64
+			if err != nil {
+				return bytesRead, err
+			}
+		}
+	}
+
+	for i := uint64(0); i < uint64(inputCount); i++ {
+		input := &Input{}
+		if tx.extended {
+			n64, err = input.ReadFromExtendedWithArena(r, a)
+		} else {
+			n64, err = input.ReadFromWithArena(r, a)
+		}
+		bytesRead += n64
+		if err != nil {
+			return bytesRead, err
+		}
+		tx.Inputs = append(tx.Inputs, input)
+	}
+
+	if inputCount > 0 || tx.extended {
+		n64, err = outputCount.ReadFrom(r)
+		bytesRead += n64
+		if err != nil {
+			return bytesRead, err
+		}
+	}
+
+	for i := uint64(0); i < uint64(outputCount); i++ {
+		output := new(Output)
+		n64, err = output.ReadFromWithArena(r, a)
+		bytesRead += n64
+		if err != nil {
+			return bytesRead, err
+		}
+		tx.Outputs = append(tx.Outputs, output)
+	}
+
+	n, err = io.ReadFull(r, locktime[:])
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, err
+	}
+	tx.LockTime = binary.LittleEndian.Uint32(locktime[:])
+
+	return bytesRead, nil
+}
+
 // ReadFrom txs from a block in a `bt.Txs`. This assumes a preceding varint detailing
 // the total number of txs that the reader will provide.
 func (tt *Txs) ReadFrom(r io.Reader) (int64, error) {
