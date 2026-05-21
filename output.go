@@ -85,7 +85,12 @@ func (o *Output) ReadFromWithArena(r io.Reader, a *Arena) (int64, error) {
 		return bytesRead, errors.Errorf("lockingScript length %d exceeds MaxArenaAlloc", l)
 	}
 
-	script := a.Alloc(int(l))
+	var script []byte
+	if l > 0 {
+		script = a.Alloc(int(l))
+	} else {
+		script = []byte{}
+	}
 	n, err = io.ReadFull(r, script)
 	bytesRead += int64(n)
 	if err != nil {

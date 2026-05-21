@@ -88,6 +88,10 @@ func outputFixtures(t testing.TB) []struct {
 	}{
 		{name: "small_opreturn", data: small},
 		{name: "5kb_script", data: big},
+		{name: "empty_script", data: []byte{
+			0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // satoshis = 7
+			0x00, // script len = 0
+		}},
 	}
 }
 
