@@ -108,24 +108,35 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 
 // ReadFrom reads from the `io.Reader` into the `bt.Tx`.
 func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
+	return tx.ReadFromWithArena(r, nil)
+}
+
+// ReadFromWithArena decodes a Tx from r. When a is non-nil, per-script byte
+// slices (input UnlockingScript / PreviousTxScript, output LockingScript)
+// are drawn from the arena; those slices remain valid only until the next
+// arena.Reset or ResetAndShrink call. When a is nil, scripts are heap-
+// allocated via make([]byte, n) and there is no arena lifetime restriction
+// — this nil-arena path is the implementation used by the standard
+// (non-arena) Tx.ReadFrom.
+//
+// Tx field semantics (Version, LockTime, Inputs/Outputs slice headers) are
+// identical to ReadFrom.
+func (tx *Tx) ReadFromWithArena(r io.Reader, a *Arena) (int64, error) {
 	*tx = Tx{}
 	var bytesRead int64
 
-	// Define n64 and err here to avoid linter complaining about shadowing variables.
 	var n64 int64
 	var err error
 
-	version := make([]byte, 4)
-	n, err := io.ReadFull(r, version)
+	var version [4]byte
+	n, err := io.ReadFull(r, version[:])
 	bytesRead += int64(n)
 	if err != nil {
 		return bytesRead, err
 	}
-
-	tx.Version = binary.LittleEndian.Uint32(version)
+	tx.Version = binary.LittleEndian.Uint32(version[:])
 
 	var inputCount VarInt
-
 	n64, err = inputCount.ReadFrom(r)
 	bytesRead += n64
 	if err != nil {
@@ -133,12 +144,8 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	}
 
 	var outputCount VarInt
-	locktime := make([]byte, 4)
+	var locktime [4]byte
 
-	// ----------------------------------------------------------------------------------
-	// If the inputCount is 0, we may be parsing an incomplete transaction, or we may be
-	// both of these cases without needing to rewind (peek) the incoming stream of bytes.
-	// ----------------------------------------------------------------------------------
 	if inputCount == 0 {
 		n64, err = outputCount.ReadFrom(r)
 		bytesRead += n64
@@ -147,15 +154,14 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 		}
 
 		if outputCount == 0 {
-			// Read in lock time
-			n, err = io.ReadFull(r, locktime)
+			n, err = io.ReadFull(r, locktime[:])
 			bytesRead += int64(n)
 			if err != nil {
 				return bytesRead, err
 			}
 
-			if binary.BigEndian.Uint32(locktime) != 0xEF {
-				tx.LockTime = binary.LittleEndian.Uint32(locktime)
+			if binary.BigEndian.Uint32(locktime[:]) != 0xEF {
+				tx.LockTime = binary.LittleEndian.Uint32(locktime[:])
 				return bytesRead, nil
 			}
 
@@ -168,16 +174,14 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 			}
 		}
 	}
-	// ----------------------------------------------------------------------------------
-	// If we have not returned from the previous block of code, we will have detected
-	// a sane transaction, and we will know if it is extended format or not.
-	// We can now proceed with reading the rest of the transaction.
-	// ----------------------------------------------------------------------------------
 
-	// create Inputs
 	for i := uint64(0); i < uint64(inputCount); i++ {
 		input := &Input{}
-		n64, err = input.readFrom(r, tx.extended)
+		if tx.extended {
+			n64, err = input.ReadFromExtendedWithArena(r, a)
+		} else {
+			n64, err = input.ReadFromWithArena(r, a)
+		}
 		bytesRead += n64
 		if err != nil {
 			return bytesRead, err
@@ -186,7 +190,6 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	}
 
 	if inputCount > 0 || tx.extended {
-		// Re-read the actual output count...
 		n64, err = outputCount.ReadFrom(r)
 		bytesRead += n64
 		if err != nil {
@@ -196,21 +199,20 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 
 	for i := uint64(0); i < uint64(outputCount); i++ {
 		output := new(Output)
-		n64, err = output.ReadFrom(r)
+		n64, err = output.ReadFromWithArena(r, a)
 		bytesRead += n64
 		if err != nil {
 			return bytesRead, err
 		}
-
 		tx.Outputs = append(tx.Outputs, output)
 	}
 
-	n, err = io.ReadFull(r, locktime)
+	n, err = io.ReadFull(r, locktime[:])
 	bytesRead += int64(n)
 	if err != nil {
 		return bytesRead, err
 	}
-	tx.LockTime = binary.LittleEndian.Uint32(locktime)
+	tx.LockTime = binary.LittleEndian.Uint32(locktime[:])
 
 	return bytesRead, nil
 }
@@ -358,6 +360,27 @@ func (tx *Tx) TxIDChainHash() *chainhash.Hash {
 	return &hash
 }
 
+// HashTxIDInto computes the transaction's txid (double-SHA256 of the
+// standard serialization), reusing the caller's scratch buffer for
+// serialization. The returned scratch slice may share backing memory with
+// the input — callers should always rebind it
+// (h, scratch = tx.HashTxIDInto(scratch)).
+//
+// If the transaction's hash has already been cached via SetTxHash, the
+// scratch buffer is passed through unchanged and no allocation occurs.
+// TxIDChainHash itself does not populate the cache; only SetTxHash does.
+//
+// Allocations beyond the caller-owned scratch are zero (assuming scratch
+// has sufficient capacity for tx.Size()).
+func (tx *Tx) HashTxIDInto(scratch []byte) (chainhash.Hash, []byte) {
+	if h := tx.txHash.Load(); h != nil {
+		return *h, scratch
+	}
+	scratch = scratch[:0]
+	scratch = tx.AppendBytes(scratch)
+	return chainhash.DoubleHashH(scratch), scratch
+}
+
 // String encodes the transaction into a hex string.
 func (tx *Tx) String() string {
 	return hex.EncodeToString(tx.Bytes())
@@ -406,6 +429,23 @@ func (tx *Tx) BytesWithClearedInputs(index int, lockingScript []byte) []byte {
 	return tx.toBytesHelper(index, lockingScript, false)
 }
 
+// cloneScript returns a heap-owned deep copy of s. Used by Clone, ShallowClone,
+// and CloneTx so the returned clone is independent of any shared backing
+// (in particular, arena-allocated script bytes from ReadFromWithArena).
+func cloneScript(s *bscript.Script) *bscript.Script {
+	if s == nil {
+		return nil
+	}
+	if len(*s) == 0 {
+		empty := bscript.Script([]byte{})
+		return &empty
+	}
+	buf := make([]byte, len(*s))
+	copy(buf, *s)
+	out := bscript.Script(buf)
+	return &out
+}
+
 // CloneTx returns a clone of the tx by bytes
 func (tx *Tx) CloneTx() *Tx {
 	// Ignore erring as byte slice passed in is created from valid tx
@@ -416,10 +456,7 @@ func (tx *Tx) CloneTx() *Tx {
 
 	for i, input := range tx.Inputs {
 		clone.Inputs[i].PreviousTxSatoshis = input.PreviousTxSatoshis
-		if input.PreviousTxScript != nil {
-			clone.Inputs[i].PreviousTxScript = &bscript.Script{}
-			*clone.Inputs[i].PreviousTxScript = *input.PreviousTxScript
-		}
+		clone.Inputs[i].PreviousTxScript = cloneScript(input.PreviousTxScript)
 	}
 
 	return clone
@@ -444,32 +481,28 @@ func (tx *Tx) Clone() *Tx {
 			PreviousTxOutIndex: input.PreviousTxOutIndex,
 			SequenceNumber:     input.SequenceNumber,
 		}
-		if input.UnlockingScript != nil {
-			clone.Inputs[i].UnlockingScript = bscript.NewFromBytes(*input.UnlockingScript)
-		}
-		if input.PreviousTxScript != nil {
-			clone.Inputs[i].PreviousTxScript = bscript.NewFromBytes(*input.PreviousTxScript)
-		}
+		clone.Inputs[i].UnlockingScript = cloneScript(input.UnlockingScript)
+		clone.Inputs[i].PreviousTxScript = cloneScript(input.PreviousTxScript)
 	}
 
 	for i, output := range tx.Outputs {
 		clone.Outputs[i] = &Output{
 			Satoshis: output.Satoshis,
 		}
-		if output.LockingScript != nil {
-			clone.Outputs[i].LockingScript = bscript.NewFromBytes(*output.LockingScript)
-		}
+		clone.Outputs[i].LockingScript = cloneScript(output.LockingScript)
 	}
 
 	return clone
 }
 
-// ShallowClone returns a clone of the tx, but only clones the elements of the tx
-// that are mutated in the signing process.
+// ShallowClone returns a clone of the tx. Version, LockTime, and per-input
+// fields used during signing are copied; script bytes are deep-copied so the
+// clone is safe against arena resets and in-place mutation of script bytes.
+//
+// Creating a new Tx from scratch is much faster than cloning from bytes
+// (~420ns/op vs. ~2200ns/op); this matters as we clone txs a couple of times
+// when verifying signatures.
 func (tx *Tx) ShallowClone() *Tx {
-	// Creating a new Tx from scratch is much faster than cloning from bytes
-	// ~ 420ns/op vs. 2200ns/op of the above function in benchmarking
-	// this matters as we clone txs a couple of times when verifying signatures
 	clone := &Tx{
 		Version:  tx.Version,
 		LockTime: tx.LockTime,
@@ -484,22 +517,15 @@ func (tx *Tx) ShallowClone() *Tx {
 			PreviousTxOutIndex: input.PreviousTxOutIndex,
 			SequenceNumber:     input.SequenceNumber,
 		}
-		if input.UnlockingScript != nil {
-			clone.Inputs[i].UnlockingScript = input.UnlockingScript
-		}
-		if input.PreviousTxScript != nil {
-			// previousTxScript needs to be cloned as it is mutated in the signing process
-			clone.Inputs[i].PreviousTxScript = bscript.NewFromBytes(*input.PreviousTxScript)
-		}
+		clone.Inputs[i].UnlockingScript = cloneScript(input.UnlockingScript)
+		clone.Inputs[i].PreviousTxScript = cloneScript(input.PreviousTxScript)
 	}
 
 	for i, output := range tx.Outputs {
 		clone.Outputs[i] = &Output{
 			Satoshis: output.Satoshis,
 		}
-		if output.LockingScript != nil {
-			clone.Outputs[i].LockingScript = output.LockingScript
-		}
+		clone.Outputs[i].LockingScript = cloneScript(output.LockingScript)
 	}
 
 	return clone

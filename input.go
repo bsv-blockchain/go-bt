@@ -51,81 +51,82 @@ func (i *Input) ReadFromExtended(r io.Reader) (int64, error) {
 
 // readFrom is a helper function that reads from the `io.Reader` into the `bt.Input`.
 func (i *Input) readFrom(r io.Reader, extended bool) (int64, error) {
+	return i.readFromWithArena(r, extended, nil)
+}
+
+// ReadFromWithArena reads from r into i (standard format) drawing the
+// unlocking-script []byte from arena. See bt.Arena for lifetime contract.
+// Existing ReadFrom is unchanged.
+func (i *Input) ReadFromWithArena(r io.Reader, a *Arena) (int64, error) {
+	return i.readFromWithArena(r, false, a)
+}
+
+// ReadFromExtendedWithArena is the extended-format counterpart to
+// ReadFromWithArena. The PreviousTxScript byte slice is also drawn from
+// arena.
+func (i *Input) ReadFromExtendedWithArena(r io.Reader, a *Arena) (int64, error) {
+	return i.readFromWithArena(r, true, a)
+}
+
+// readFromWithArena mirrors readFrom but routes script byte allocations
+// through the supplied Arena. Fixed-size fields (previousTxID, prevIndex,
+// sequence, prevSatoshis) use stack arrays — they are not the alloc hotspot.
+func (i *Input) readFromWithArena(r io.Reader, extended bool, a *Arena) (int64, error) {
 	*i = Input{}
 	var bytesRead int64
 
-	previousTxID := make([]byte, 32)
-	n, err := io.ReadFull(r, previousTxID)
+	var previousTxID [32]byte
+	n, err := io.ReadFull(r, previousTxID[:])
 	bytesRead += int64(n)
 	if err != nil {
 		return bytesRead, errors.Wrapf(err, "previousTxID(32): got %d bytes", n)
 	}
 
-	prevIndex := make([]byte, 4)
-	n, err = io.ReadFull(r, prevIndex)
+	var prevIndex [4]byte
+	n, err = io.ReadFull(r, prevIndex[:])
 	bytesRead += int64(n)
 	if err != nil {
-		return bytesRead, errors.Wrapf(err, "previousTxID(4): got %d bytes", n)
+		return bytesRead, errors.Wrapf(err, "prevIndex(4): got %d bytes", n)
 	}
 
-	var l VarInt
-	n64, err := l.ReadFrom(r)
+	script, n64, err := readArenaScript(r, a, "unlockingScript")
 	bytesRead += n64
 	if err != nil {
 		return bytesRead, err
 	}
 
-	script := make([]byte, l)
-	n, err = io.ReadFull(r, script)
-	bytesRead += int64(n)
-	if err != nil {
-		return bytesRead, errors.Wrapf(err, "script(%d): got %d bytes", l, n)
-	}
-
-	sequence := make([]byte, 4)
-	n, err = io.ReadFull(r, sequence)
+	var sequence [4]byte
+	n, err = io.ReadFull(r, sequence[:])
 	bytesRead += int64(n)
 	if err != nil {
 		return bytesRead, errors.Wrapf(err, "sequence(4): got %d bytes", n)
 	}
 
-	i.previousTxIDHash, err = chainhash.NewHash(previousTxID)
+	i.previousTxIDHash, err = chainhash.NewHash(previousTxID[:])
 	if err != nil {
 		return bytesRead, errors.Wrap(err, "could not read hash")
 	}
-	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(prevIndex)
+	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(prevIndex[:])
 	i.UnlockingScript = bscript.NewFromBytes(script)
-	i.SequenceNumber = binary.LittleEndian.Uint32(sequence)
+	i.SequenceNumber = binary.LittleEndian.Uint32(sequence[:])
 
 	if extended {
-		prevSatoshis := make([]byte, 8)
-		var prevTxLockingScript bscript.Script
+		var prevSatoshis [8]byte
 
-		n, err = io.ReadFull(r, prevSatoshis)
+		n, err = io.ReadFull(r, prevSatoshis[:])
 		bytesRead += int64(n)
 		if err != nil {
 			return bytesRead, errors.Wrapf(err, "prevSatoshis(8): got %d bytes", n)
 		}
 
-		// Read in the prevTxLockingScript
-		var scriptLen VarInt
-		n64b, err := scriptLen.ReadFrom(r)
+		newScript, n64b, err := readArenaScript(r, a, "prevTxScript")
 		bytesRead += n64b
 		if err != nil {
 			return bytesRead, err
 		}
 
-		newScript := make([]byte, scriptLen)
-		nRead, err := io.ReadFull(r, newScript)
-		bytesRead += int64(nRead)
-		if err != nil {
-			return bytesRead, errors.Wrapf(err, "script(%d): got %d bytes", scriptLen.Length(), nRead)
-		}
-
-		prevTxLockingScript = *bscript.NewFromBytes(newScript)
-
-		i.PreviousTxSatoshis = binary.LittleEndian.Uint64(prevSatoshis)
-		i.PreviousTxScript = bscript.NewFromBytes(prevTxLockingScript)
+		i.PreviousTxSatoshis = binary.LittleEndian.Uint64(prevSatoshis[:])
+		i.PreviousTxScript = bscript.NewFromBytes(newScript)
 	}
 
 	return bytesRead, nil
