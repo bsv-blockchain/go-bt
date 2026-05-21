@@ -107,6 +107,31 @@ func TestInput_ReadFromExtendedWithArena_Equivalence(t *testing.T) {
 	require.Equal(t, []byte(*refIn.PreviousTxScript), []byte(*gotIn.PreviousTxScript))
 }
 
+func TestInput_ReadFrom_RejectsOversizedScript(t *testing.T) {
+	// prev txid (32) + vout (4) + varint = 0xFE 0xFF 0xFF 0xFF 0xFF
+	data := append(make([]byte, 36), 0xfe, 0xff, 0xff, 0xff, 0xff)
+	in := &Input{}
+	_, err := in.ReadFrom(bytes.NewReader(data))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "MaxArenaAlloc")
+}
+
+func TestInput_ReadFromExtended_RejectsOversizedPrevTxScript(t *testing.T) {
+	// Standard input header (no unlocking script) + sequence + prev satoshis +
+	// PreviousTxScript varint that overflows.
+	data := []byte{}
+	data = append(data, make([]byte, 32)...)                            // prev txid
+	data = append(data, 0x00, 0x00, 0x00, 0x00)                        // vout
+	data = append(data, 0x00)                                          // unlocking script len = 0
+	data = append(data, 0xff, 0xff, 0xff, 0xff)                        // sequence
+	data = append(data, 0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00) // prevSatoshis = 1000
+	data = append(data, 0xfe, 0xff, 0xff, 0xff, 0xff)                  // prevScript varint, oversize
+	in := &Input{}
+	_, err := in.ReadFromExtended(bytes.NewReader(data))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "MaxArenaAlloc")
+}
+
 func TestNewInputFromReader(t *testing.T) {
 	t.Parallel()
 

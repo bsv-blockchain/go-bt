@@ -139,6 +139,18 @@ func TestOutput_ReadFromWithArena_PostResetInvalidatesScript(t *testing.T) {
 		"after Reset + reallocation, prior script bytes must be invalidated")
 }
 
+func TestOutput_ReadFrom_RejectsOversizedScript(t *testing.T) {
+	// satoshis(8) + varint = 0xFE 0x00 0x00 0x00 0x80 (2^31 = 2 GiB)
+	data := []byte{
+		0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0xfe, 0x00, 0x00, 0x00, 0x80,
+	}
+	out := &Output{}
+	_, err := out.ReadFrom(bytes.NewReader(data))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "MaxArenaAlloc")
+}
+
 func TestOutput_ReadFromWithArena_RejectsOversizedScript(t *testing.T) {
 	// satoshis(8) + varint=0xFE 0x00 0x00 0x00 0x80 (2^31 = 2 GiB) + (no data)
 	data := []byte{

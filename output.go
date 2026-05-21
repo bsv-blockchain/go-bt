@@ -48,6 +48,9 @@ func (o *Output) ReadFrom(r io.Reader) (int64, error) {
 		return bytesRead, err
 	}
 
+	if uint64(l) > uint64(MaxArenaAlloc) {
+		return bytesRead, errors.Errorf("lockingScript length %d exceeds MaxArenaAlloc", l)
+	}
 	script := make([]byte, l)
 	n, err = io.ReadFull(r, script)
 	bytesRead += int64(n)

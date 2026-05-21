@@ -74,6 +74,9 @@ func (i *Input) readFrom(r io.Reader, extended bool) (int64, error) {
 	if err != nil {
 		return bytesRead, err
 	}
+	if uint64(l) > uint64(MaxArenaAlloc) {
+		return bytesRead, errors.Errorf("unlockingScript length %d exceeds MaxArenaAlloc", l)
+	}
 
 	script := make([]byte, l)
 	n, err = io.ReadFull(r, script)
@@ -113,6 +116,9 @@ func (i *Input) readFrom(r io.Reader, extended bool) (int64, error) {
 		bytesRead += n64b
 		if err != nil {
 			return bytesRead, err
+		}
+		if uint64(scriptLen) > uint64(MaxArenaAlloc) {
+			return bytesRead, errors.Errorf("prevTxScript length %d exceeds MaxArenaAlloc", scriptLen)
 		}
 
 		newScript := make([]byte, scriptLen)
