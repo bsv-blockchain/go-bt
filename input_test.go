@@ -82,13 +82,13 @@ func TestInput_ReadFromExtendedWithArena_Equivalence(t *testing.T) {
 	// Hand-built extended-format input:
 	// prev txid (32) + vout (4) + unlocking_script_len=0 + sequence(4)
 	// + prev satoshis (8) + prev_script_len=2 + prev_script(2)
-	data := []byte{}
-	data = append(data, make([]byte, 32)...)                                             // prev txid
-	data = append(data, 0x00, 0x00, 0x00, 0x00)                                         // vout
-	data = append(data, 0x00)                                                            // unlocking script len = 0
-	data = append(data, 0xff, 0xff, 0xff, 0xff)                                         // sequence
-	data = append(data, 0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)                 // prevSatoshis = 1000
-	data = append(data, 0x02, 0x76, 0xa9)                                                // prevScript len=2, payload OP_DUP OP_HASH160
+	data := make([]byte, 0, 52)
+	data = append(data, make([]byte, 32)...)                            // prev txid
+	data = append(data, 0x00, 0x00, 0x00, 0x00)                         // vout
+	data = append(data, 0x00)                                           // unlocking script len = 0
+	data = append(data, 0xff, 0xff, 0xff, 0xff)                         // sequence
+	data = append(data, 0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00) // prevSatoshis = 1000
+	data = append(data, 0x02, 0x76, 0xa9)                               // prevScript len=2, payload OP_DUP OP_HASH160
 
 	refIn := &Input{}
 	_, err := refIn.ReadFromExtended(bytes.NewReader(data))
@@ -119,13 +119,13 @@ func TestInput_ReadFrom_RejectsOversizedScript(t *testing.T) {
 func TestInput_ReadFromExtended_RejectsOversizedPrevTxScript(t *testing.T) {
 	// Standard input header (no unlocking script) + sequence + prev satoshis +
 	// PreviousTxScript varint that overflows.
-	data := []byte{}
+	data := make([]byte, 0, 54)
 	data = append(data, make([]byte, 32)...)                            // prev txid
-	data = append(data, 0x00, 0x00, 0x00, 0x00)                        // vout
-	data = append(data, 0x00)                                          // unlocking script len = 0
-	data = append(data, 0xff, 0xff, 0xff, 0xff)                        // sequence
+	data = append(data, 0x00, 0x00, 0x00, 0x00)                         // vout
+	data = append(data, 0x00)                                           // unlocking script len = 0
+	data = append(data, 0xff, 0xff, 0xff, 0xff)                         // sequence
 	data = append(data, 0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00) // prevSatoshis = 1000
-	data = append(data, 0xfe, 0xff, 0xff, 0xff, 0xff)                  // prevScript varint, oversize
+	data = append(data, 0xfe, 0xff, 0xff, 0xff, 0xff)                   // prevScript varint, oversize
 	in := &Input{}
 	_, err := in.ReadFromExtended(bytes.NewReader(data))
 	require.Error(t, err)

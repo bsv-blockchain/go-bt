@@ -358,7 +358,7 @@ func (tx *Tx) TxIDChainHash() *chainhash.Hash {
 }
 
 // HashTxIDInto computes the transaction's chainhash, reusing the caller's
-// scratch buffer for serialisation. The returned scratch slice may share
+// scratch buffer for serialization. The returned scratch slice may share
 // backing memory with the input — callers should always rebind it
 // (`h, scratch = tx.HashTxIDInto(scratch)`).
 //

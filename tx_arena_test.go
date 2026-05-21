@@ -12,7 +12,7 @@ import (
 )
 
 // TestTx_ReadFromWithArena_Equivalence checks that ReadFromWithArena produces a
-// tx that serialises to the same bytes as ReadFrom for every canonical shape.
+// tx that serializes to the same bytes as ReadFrom for every canonical shape.
 func TestTx_ReadFromWithArena_Equivalence(t *testing.T) {
 	for _, tt := range txShapeTests(t) {
 		t.Run(tt.name, func(t *testing.T) {
@@ -28,7 +28,7 @@ func TestTx_ReadFromWithArena_Equivalence(t *testing.T) {
 			require.NoError(t, err)
 
 			require.Equal(t, refTx.Bytes(), gotTx.Bytes(),
-				"arena-decoded tx must serialise to identical bytes")
+				"arena-decoded tx must serialize to identical bytes")
 			require.Equal(t, refTx.TxID(), gotTx.TxID())
 		})
 	}
@@ -88,12 +88,12 @@ func TestTx_HashTxIDInto_ZeroAllocAfterWarmup(t *testing.T) {
 	scratch := make([]byte, 0, tx.Size())
 
 	allocs := testing.AllocsPerRun(100, func() {
-		tx.SetTxHash(nil) // bust cache so we actually serialise each iteration
+		tx.SetTxHash(nil) // bust cache so we actually serialize each iteration
 		var h chainhash.Hash
 		h, scratch = tx.HashTxIDInto(scratch)
 		_ = h
 	})
-	// HashTxIDInto + DoubleHashH should not allocate the serialisation buffer
+	// HashTxIDInto + DoubleHashH should not allocate the serialization buffer
 	// once scratch is sized. DoubleHashH on a byte slice is stack-only.
 	require.LessOrEqual(t, allocs, 0.0)
 }

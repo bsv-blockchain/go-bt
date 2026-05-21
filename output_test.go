@@ -70,8 +70,8 @@ func outputFixtures(t testing.TB) []struct {
 	// 1 satoshi, OP_RETURN, 4-byte data
 	small := []byte{
 		0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // satoshis = 1
-		0x06,                                            // script len = 6
-		0x6a, 0x04, 0xde, 0xad, 0xbe, 0xef,             // OP_RETURN 4-byte
+		0x06,                               // script len = 6
+		0x6a, 0x04, 0xde, 0xad, 0xbe, 0xef, // OP_RETURN 4-byte
 	}
 
 	// 5000-byte script
@@ -79,7 +79,8 @@ func outputFixtures(t testing.TB) []struct {
 	for i := range bigScript {
 		bigScript[i] = byte(i)
 	}
-	big := []byte{0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfd, 0x88, 0x13} // satoshis=5, varint=5000
+	big := make([]byte, 0, 11+len(bigScript))
+	big = append(big, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfd, 0x88, 0x13) // satoshis=5, varint=5000
 	big = append(big, bigScript...)
 
 	return []struct {
@@ -116,7 +117,7 @@ func TestOutput_ReadFromWithArena_Equivalence(t *testing.T) {
 func TestOutput_ReadFromWithArena_PostResetInvalidatesScript(t *testing.T) {
 	data := []byte{
 		0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // satoshis=1
-		0x04, 0xde, 0xad, 0xbe, 0xef,                    // script_len=4, payload
+		0x04, 0xde, 0xad, 0xbe, 0xef, // script_len=4, payload
 	}
 
 	arena := NewArena(0)

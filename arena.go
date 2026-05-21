@@ -12,7 +12,7 @@ import (
 // rejecting obviously-bogus varint lengths.
 const MaxArenaAlloc = 1 << 30
 
-// Arena is a bump-pointer allocator used by *.ReadFromWithArena to amortise
+// Arena is a bump-pointer allocator used by *.ReadFromWithArena to amortize
 // per-script []byte allocations across a batch of transaction decodes.
 //
 // All slices returned by Alloc remain valid until Reset (or ResetAndShrink)
