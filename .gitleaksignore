@@ -1,0 +1,27 @@
+# .gitleakignore — suppress known false positives in git history.
+#
+# Each entry is a gitleaks fingerprint: <commit>:<file>:<rule>:<line>.
+# These are all `generic-api-key` matches on dummy test/benchmark data in
+# files that no longer exist in HEAD (they live only in past commits, which
+# is why full-history scans still flag them). Examples: the FIPS-197 AES test
+# vector "2b7e151628aed2a6abf7158809cf4f3c" and randomly generated benchmark
+# keypairs — none are real secrets.
+#
+# Regenerate/verify with: gitleaks git --report-format json
+
+# bec/bench_test.go — benchmark keypair
+21afed222e10d0be9fdc0d9e82f4e26c45899c21:bec/bench_test.go:generic-api-key:93
+084a91c96e137ec64c4ed6ca840fbf62a1d55bf6:bec/bench_test.go:generic-api-key:93
+
+# crypto/encryption_test.go — AES test vector key
+8b52cb6e47ae936ca844f82a8090ddead656b2a8:crypto/encryption_test.go:generic-api-key:12
+97a8373de14cc5e982cbef2d86499871bd5c009f:crypto/encryption_test.go:generic-api-key:70
+565e54471a704c8f85e55091fab1dc97d6f051ae:crypto/encryption_test.go:generic-api-key:16
+565e54471a704c8f85e55091fab1dc97d6f051ae:crypto/encryption_test.go:generic-api-key:47
+
+# bsvsuite/bsvec/bench_test.go — benchmark keypair
+63529fb9b945e24afb376c0f63bb7bcbd901b06d:bsvsuite/bsvec/bench_test.go:generic-api-key:90
+
+# transaction/BitcoinTransaction_test.go — test key material
+dcd70454d45d8d9b5d05f467a7224d268475f1ab:transaction/BitcoinTransaction_test.go:generic-api-key:49
+7e6e82a05d2358b21db9beb07350dd7ba7d3a89b:transaction/BitcoinTransaction_test.go:generic-api-key:50
