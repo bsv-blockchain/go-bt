@@ -27,7 +27,8 @@ func TestNewP2PKHFromPubKeyStr(t *testing.T) {
 	)
 	require.NoError(t, err)
 	assert.NotNil(t, scriptP2PKH)
-	assert.Equal(t,
+	assert.Equal(
+		t,
 		"76a9144d5d1920331b71735a97a606d9734aed83cb3dfa88ac",
 		hex.EncodeToString(*scriptP2PKH),
 	)
@@ -44,7 +45,8 @@ func TestNewP2PKHFromPubKey(t *testing.T) {
 	scriptP2PKH, err := bscript.NewP2PKHFromPubKeyEC(pubkey)
 	require.NoError(t, err)
 	assert.NotNil(t, scriptP2PKH)
-	assert.Equal(t,
+	assert.Equal(
+		t,
 		"76a9144d5d1920331b71735a97a606d9734aed83cb3dfa88ac",
 		hex.EncodeToString(*scriptP2PKH),
 	)
@@ -88,7 +90,8 @@ func TestNewFromHexString(t *testing.T) {
 	s, err := bscript.NewFromHexString("76a914e2a623699e81b291c0327f408fea765d534baa2a88ac")
 	require.NoError(t, err)
 	assert.NotNil(t, s)
-	assert.Equal(t,
+	assert.Equal(
+		t,
 		"76a914e2a623699e81b291c0327f408fea765d534baa2a88ac",
 		hex.EncodeToString(*s),
 	)
@@ -130,7 +133,8 @@ func TestNewFromASM(t *testing.T) {
 	s, err := bscript.NewFromASM("OP_DUP OP_HASH160 e2a623699e81b291c0327f408fea765d534baa2a OP_EQUALVERIFY OP_CHECKSIG")
 	require.NoError(t, err)
 	assert.NotNil(t, s)
-	assert.Equal(t,
+	assert.Equal(
+		t,
 		"76a914e2a623699e81b291c0327f408fea765d534baa2a88ac",
 		hex.EncodeToString(*s),
 	)
