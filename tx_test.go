@@ -255,7 +255,8 @@ func TestTxCreateTx(t *testing.T) {
 	tx := bt.NewTx()
 	assert.NotNil(t, tx)
 
-	mustFrom(t, tx,
+	mustFrom(
+		t, tx,
 		"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 		0,
 		"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
@@ -276,7 +277,8 @@ func TestTxHasDataOutputs(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 
-		mustFrom(t, tx,
+		mustFrom(
+			t, tx,
 			"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 			0,
 			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
@@ -302,7 +304,8 @@ func TestTxHasDataOutputs(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 
-		mustFrom(t, tx,
+		mustFrom(
+			t, tx,
 			"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 			0,
 			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
@@ -1113,7 +1116,8 @@ func TestTxEstimateFeesPaidTotal(t *testing.T) {
 					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 					0,
 					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-					1000))
+					1000,
+				))
 				mustPayToAddress(t, tx, "mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500)
 				return tx
 			}(),

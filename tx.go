@@ -571,7 +571,8 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte, extended bool) []by
 // (provided h has sufficient capacity). This is the core serialization method
 // shared by both Bytes() and AppendBytes().
 func (tx *Tx) appendBytesHelper(h []byte, index int, lockingScript []byte, extended bool) []byte {
-	h = append(h,
+	h = append(
+		h,
 		byte(tx.Version),
 		byte(tx.Version>>8),
 		byte(tx.Version>>16),
@@ -602,7 +603,8 @@ func (tx *Tx) appendBytesHelper(h []byte, index int, lockingScript []byte, exten
 		h = out.appendTo(h)
 	}
 
-	return append(h,
+	return append(
+		h,
 		byte(tx.LockTime),
 		byte(tx.LockTime>>8),
 		byte(tx.LockTime>>16),

@@ -178,7 +178,8 @@ func (tx *Tx) PreviousOutHash() []byte {
 
 	for _, in := range tx.Inputs {
 		buf = append(buf, in.previousTxIDHash[:]...)
-		buf = append(buf,
+		buf = append(
+			buf,
 			byte(in.PreviousTxOutIndex), byte(in.PreviousTxOutIndex>>8),
 			byte(in.PreviousTxOutIndex>>16), byte(in.PreviousTxOutIndex>>24),
 		)
@@ -192,7 +193,8 @@ func (tx *Tx) SequenceHash() []byte {
 	buf := make([]byte, 0, len(tx.Inputs)*4)
 
 	for _, in := range tx.Inputs {
-		buf = append(buf,
+		buf = append(
+			buf,
 			byte(in.SequenceNumber), byte(in.SequenceNumber>>8),
 			byte(in.SequenceNumber>>16), byte(in.SequenceNumber>>24),
 		)

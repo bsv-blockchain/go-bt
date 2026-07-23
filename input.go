@@ -352,7 +352,8 @@ func (i *Input) appendTo(h []byte, clearLockingScript bool) []byte {
 		h = append(h, i.previousTxIDHash[:]...)
 	}
 
-	h = append(h,
+	h = append(
+		h,
 		byte(i.PreviousTxOutIndex),
 		byte(i.PreviousTxOutIndex>>8),
 		byte(i.PreviousTxOutIndex>>16),
@@ -368,7 +369,8 @@ func (i *Input) appendTo(h []byte, clearLockingScript bool) []byte {
 		h = append(h, *i.UnlockingScript...)
 	}
 
-	return append(h,
+	return append(
+		h,
 		byte(i.SequenceNumber),
 		byte(i.SequenceNumber>>8),
 		byte(i.SequenceNumber>>16),
@@ -380,7 +382,8 @@ func (i *Input) appendTo(h []byte, clearLockingScript bool) []byte {
 func (i *Input) appendExtendedTo(h []byte, clearLockingScript bool) []byte {
 	h = i.appendTo(h, clearLockingScript)
 
-	h = append(h,
+	h = append(
+		h,
 		byte(i.PreviousTxSatoshis),
 		byte(i.PreviousTxSatoshis>>8),
 		byte(i.PreviousTxSatoshis>>16),
