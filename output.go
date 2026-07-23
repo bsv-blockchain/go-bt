@@ -117,7 +117,8 @@ func (o *Output) Size() int {
 
 // appendTo appends the serialized output to h without allocating.
 func (o *Output) appendTo(h []byte) []byte {
-	h = append(h,
+	h = append(
+		h,
 		byte(o.Satoshis),
 		byte(o.Satoshis>>8),
 		byte(o.Satoshis>>16),

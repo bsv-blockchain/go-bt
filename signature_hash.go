@@ -159,7 +159,8 @@ func (tx *Tx) calcInputPreimage(in *Input, sigHashFlag sighash.Flag,
 	buf := make([]byte, 0, bufSize)
 
 	// Version
-	buf = append(buf,
+	buf = append(
+		buf,
 		byte(tx.Version), byte(tx.Version>>8),
 		byte(tx.Version>>16), byte(tx.Version>>24),
 	)
@@ -178,7 +179,8 @@ func (tx *Tx) calcInputPreimage(in *Input, sigHashFlag sighash.Flag,
 
 	// outpoint (32-byte hash + 4-byte little endian)
 	buf = append(buf, in.previousTxIDHash[:]...)
-	buf = append(buf,
+	buf = append(
+		buf,
 		byte(in.PreviousTxOutIndex), byte(in.PreviousTxOutIndex>>8),
 		byte(in.PreviousTxOutIndex>>16), byte(in.PreviousTxOutIndex>>24),
 	)
@@ -188,7 +190,8 @@ func (tx *Tx) calcInputPreimage(in *Input, sigHashFlag sighash.Flag,
 	buf = append(buf, *in.PreviousTxScript...)
 
 	// value of the output spent by this input (8-byte little endian)
-	buf = append(buf,
+	buf = append(
+		buf,
 		byte(in.PreviousTxSatoshis), byte(in.PreviousTxSatoshis>>8),
 		byte(in.PreviousTxSatoshis>>16), byte(in.PreviousTxSatoshis>>24),
 		byte(in.PreviousTxSatoshis>>32), byte(in.PreviousTxSatoshis>>40),
@@ -196,7 +199,8 @@ func (tx *Tx) calcInputPreimage(in *Input, sigHashFlag sighash.Flag,
 	)
 
 	// nSequence of the input
-	buf = append(buf,
+	buf = append(
+		buf,
 		byte(in.SequenceNumber), byte(in.SequenceNumber>>8),
 		byte(in.SequenceNumber>>16), byte(in.SequenceNumber>>24),
 	)
@@ -209,14 +213,16 @@ func (tx *Tx) calcInputPreimage(in *Input, sigHashFlag sighash.Flag,
 	}
 
 	// LockTime
-	buf = append(buf,
+	buf = append(
+		buf,
 		byte(tx.LockTime), byte(tx.LockTime>>8),
 		byte(tx.LockTime>>16), byte(tx.LockTime>>24),
 	)
 
 	// sighashType
 	shf := uint32(sigHashFlag)
-	buf = append(buf,
+	buf = append(
+		buf,
 		byte(shf), byte(shf>>8),
 		byte(shf>>16), byte(shf>>24),
 	)
@@ -304,7 +310,8 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 	buf := make([]byte, 0, txCopy.Size()+8)
 
 	// Version
-	buf = append(buf,
+	buf = append(
+		buf,
 		byte(tx.Version), byte(tx.Version>>8),
 		byte(tx.Version>>16), byte(tx.Version>>24),
 	)
@@ -315,7 +322,8 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 			buf = append(buf, in.previousTxIDHash[:]...)
 		}
 
-		buf = append(buf,
+		buf = append(
+			buf,
 			byte(in.PreviousTxOutIndex), byte(in.PreviousTxOutIndex>>8),
 			byte(in.PreviousTxOutIndex>>16), byte(in.PreviousTxOutIndex>>24),
 		)
@@ -323,7 +331,8 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 		buf = VarInt(uint64(len(*in.PreviousTxScript))).AppendTo(buf)
 		buf = append(buf, *in.PreviousTxScript...)
 
-		buf = append(buf,
+		buf = append(
+			buf,
 			byte(in.SequenceNumber), byte(in.SequenceNumber>>8),
 			byte(in.SequenceNumber>>16), byte(in.SequenceNumber>>24),
 		)
@@ -331,7 +340,8 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 
 	buf = VarInt(uint64(len(txCopy.Outputs))).AppendTo(buf)
 	for _, out := range txCopy.Outputs {
-		buf = append(buf,
+		buf = append(
+			buf,
 			byte(out.Satoshis), byte(out.Satoshis>>8),
 			byte(out.Satoshis>>16), byte(out.Satoshis>>24),
 			byte(out.Satoshis>>32), byte(out.Satoshis>>40),
@@ -343,14 +353,16 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 	}
 
 	// LockTime
-	buf = append(buf,
+	buf = append(
+		buf,
 		byte(tx.LockTime), byte(tx.LockTime>>8),
 		byte(tx.LockTime>>16), byte(tx.LockTime>>24),
 	)
 
 	// sighash flag
 	s := uint32(shf)
-	buf = append(buf,
+	buf = append(
+		buf,
 		byte(s), byte(s>>8),
 		byte(s>>16), byte(s>>24),
 	)

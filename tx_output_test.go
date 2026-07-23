@@ -26,7 +26,8 @@ func TestNewP2PKHOutputFromPubKeyHashStr(t *testing.T) {
 			uint64(5000),
 		)
 		require.NoError(t, err)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			"76a91488ac",
 			tx.Outputs[0].LockingScriptHexString(),
 		)
@@ -49,7 +50,8 @@ func TestNewP2PKHOutputFromPubKeyHashStr(t *testing.T) {
 			uint64(5000),
 		)
 		require.NoError(t, err)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			"76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac",
 			tx.Outputs[0].LockingScriptHexString(),
 		)
@@ -70,7 +72,8 @@ func TestNewHashPuzzleOutput(t *testing.T) {
 		err := tx.AddHashPuzzleOutput("", "", uint64(5000))
 
 		require.NoError(t, err)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			"a914b472a266d0bd89c13706a4132ccfb16f7c3b9fcb8876a90088ac",
 			tx.Outputs[0].LockingScriptHexString(),
 		)
@@ -85,7 +88,8 @@ func TestNewHashPuzzleOutput(t *testing.T) {
 		err = tx.AddHashPuzzleOutput("secret1", addr.PublicKeyHash, uint64(5000))
 
 		require.NoError(t, err)
-		assert.Equal(t,
+		assert.Equal(
+			t,
 			"a914d3f9e3d971764be5838307b175ee4e08ba427b908876a914c28f832c3d539933e0c719297340b34eee0f4c3488ac",
 			tx.Outputs[0].LockingScriptHexString(),
 		)
@@ -147,7 +151,8 @@ func TestTx_PayToAddress(t *testing.T) {
 			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 			0,
 			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-			4000000)
+			4000000,
+		)
 		require.NoError(t, err)
 
 		err = tx.PayToAddress("", 100)
@@ -161,7 +166,8 @@ func TestTx_PayToAddress(t *testing.T) {
 			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 			0,
 			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-			4000000)
+			4000000,
+		)
 		require.NoError(t, err)
 
 		err = tx.PayToAddress("1234567", 100)
@@ -175,7 +181,8 @@ func TestTx_PayToAddress(t *testing.T) {
 			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 			0,
 			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-			4000000)
+			4000000,
+		)
 		require.NoError(t, err)
 
 		err = tx.PayToAddress("1GHMW7ABrFma2NSwiVe9b9bZxkMB7tuPZi", 100)
@@ -213,7 +220,8 @@ func TestTx_PayTo(t *testing.T) {
 				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 				0,
 				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				4000000)
+				4000000,
+			)
 			require.NoError(t, err)
 			err = tx.PayTo(test.script, 100)
 			if test.err == nil {
