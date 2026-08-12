@@ -80,3 +80,11 @@ var (
 	ErrInsufficientFees      = errors.New("fee paid not enough with new locking script")
 	ErrUnlockerNotFound      = errors.New("UTXO unlocker not found")
 )
+
+// Sentinel errors reported when decoding variable length integers.
+var (
+	// ErrNonMinimalVarInt is returned when a CompactSize (VarInt) prefix is not
+	// written in its shortest form, e.g. the value 1 encoded as `fd 01 00`
+	// rather than `01`. Bitcoin and SV Node reject such an encoding at parse.
+	ErrNonMinimalVarInt = errors.New("non-minimal varint encoding")
+)
