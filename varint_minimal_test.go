@@ -3,7 +3,6 @@ package bt_test
 import (
 	"bytes"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -78,7 +77,7 @@ func TestVarIntReadFromAcceptsMinimal(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, value, uint64(v))
 			require.Equal(t, int64(len(encoded)), n)
-			require.Equal(t, bt.VarInt(value).Length(), len(encoded))
+			require.Len(t, encoded, bt.VarInt(value).Length())
 		})
 	}
 }
@@ -194,5 +193,5 @@ func TestErrNonMinimalVarIntIsMatchable(t *testing.T) {
 	// A truncated prefix is a different failure and must not match.
 	_, err = v.ReadFrom(bytes.NewReader([]byte{0xfd, 0x01}))
 	require.Error(t, err)
-	require.False(t, errors.Is(err, bt.ErrNonMinimalVarInt))
+	require.NotErrorIs(t, err, bt.ErrNonMinimalVarInt)
 }
