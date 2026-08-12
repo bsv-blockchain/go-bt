@@ -2,6 +2,7 @@ package bt
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 
 	"github.com/pkg/errors"
@@ -105,7 +106,31 @@ func (v VarInt) WriteTo(w io.Writer) (int64, error) {
 	return int64(written), err
 }
 
+// checkMinimal returns ErrNonMinimalVarInt when v was read from a discriminant
+// wider than the value needs, e.g. the value 1 written as `fd 01 00` rather than
+// `01`.
+//
+// Length reports the width Bytes/AppendTo/WriteTo would emit for v, so it is by
+// definition the shortest encoding — comparing against the width actually
+// consumed is exactly the canonicality rule, and cannot drift from the writers.
+func (v VarInt) checkMinimal(read int) error {
+	if minimal := v.Length(); minimal != read {
+		return fmt.Errorf("%w: %d read as %d bytes, minimal encoding is %d", ErrNonMinimalVarInt, uint64(v), read, minimal)
+	}
+
+	return nil
+}
+
 // ReadFrom reads the next varint from the io.Reader and assigned it to itself.
+//
+// A non-minimally encoded varint is rejected with ErrNonMinimalVarInt. Bitcoin
+// and SV Node treat an over-long CompactSize prefix as a hard parse error, and
+// accepting one here is worse than merely lenient: the over-long form decodes to
+// the same value and is then RE-SERIALIZED canonically, so the resulting
+// transaction has the canonical txid and every hash-based check downstream
+// passes. Consumers cannot detect after the fact what they accepted, which makes
+// the parse the only place the divergence is visible. Sibling readers in this
+// ecosystem already enforce this — see go-wire's ReadVarInt.
 func (v *VarInt) ReadFrom(r io.Reader) (int64, error) {
 	b := make([]byte, 1)
 	if _, err := io.ReadFull(r, b); err != nil {
@@ -119,7 +144,8 @@ func (v *VarInt) ReadFrom(r io.Reader) (int64, error) {
 			return 9, errors.Wrapf(err, "varint(8): got %d bytes", n)
 		}
 		*v = VarInt(binary.LittleEndian.Uint64(bb))
-		return 9, nil
+
+		return 9, v.checkMinimal(9)
 
 	case 0xfe:
 		bb := make([]byte, 4)
@@ -127,7 +153,8 @@ func (v *VarInt) ReadFrom(r io.Reader) (int64, error) {
 			return 5, errors.Wrapf(err, "varint(4): got %d bytes", n)
 		}
 		*v = VarInt(binary.LittleEndian.Uint32(bb))
-		return 5, nil
+
+		return 5, v.checkMinimal(5)
 
 	case 0xfd:
 		bb := make([]byte, 2)
@@ -135,7 +162,8 @@ func (v *VarInt) ReadFrom(r io.Reader) (int64, error) {
 			return 3, errors.Wrapf(err, "varint(2): got %d bytes", n)
 		}
 		*v = VarInt(binary.LittleEndian.Uint16(bb))
-		return 3, nil
+
+		return 3, v.checkMinimal(3)
 
 	default:
 		*v = VarInt(binary.LittleEndian.Uint16([]byte{b[0], 0x00}))
