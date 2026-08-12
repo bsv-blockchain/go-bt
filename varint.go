@@ -16,6 +16,15 @@ type VarInt uint64
 // NewVarIntFromBytes takes a byte array in VarInt format and returns the
 // decoded unsigned integer value of the length, and it's size in bytes.
 // See http://learnmeabitcoin.com/glossary/varint
+//
+// This function does NOT enforce minimal encoding: `fd 00 00` decodes to 0
+// here, whereas (*VarInt).ReadFrom rejects it with ErrNonMinimalVarInt. The
+// leniency is retained only because the (VarInt, int) signature has no error
+// return, so rejecting would be a breaking API change; it is not a statement
+// that the encoding is valid. Nothing on a transaction parse path uses this
+// function — every count and length prefix is read through ReadFrom.
+//
+// Use (*VarInt).ReadFrom for anything decoding untrusted bytes.
 func NewVarIntFromBytes(bb []byte) (VarInt, int) {
 	switch bb[0] {
 	case 0xff:

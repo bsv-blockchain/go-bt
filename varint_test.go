@@ -19,6 +19,11 @@ func convertIntToBytes(val uint64) []byte {
 	return buf.Bytes()
 }
 
+// TestDecodeVarInt pins NewVarIntFromBytes, which is deliberately lenient: the
+// 0xfd/0xfe/0xff cases below are non-minimal encodings of 0 and are accepted.
+// (*VarInt).ReadFrom rejects the same bytes with ErrNonMinimalVarInt — see
+// TestVarIntReadFromRejectsNonMinimal. The divergence is documented on
+// NewVarIntFromBytes and exists only because its signature has no error return.
 func TestDecodeVarInt(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
