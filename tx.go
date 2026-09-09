@@ -627,137 +627,79 @@ type TxSize struct {
 // WriteTo writes the serialized transaction directly to w in standard format
 // without allocating an intermediate byte slice.
 func (tx *Tx) WriteTo(w io.Writer) (int64, error) {
-	var total int64
-	var buf [4]byte
+	p := newPartWriter(w)
+	defer p.release()
 
-	// Version (4 bytes LE)
-	buf[0] = byte(tx.Version)
-	buf[1] = byte(tx.Version >> 8)
-	buf[2] = byte(tx.Version >> 16)
-	buf[3] = byte(tx.Version >> 24)
-	n, err := w.Write(buf[:])
-	total += int64(n)
-	if err != nil {
-		return total, err
-	}
+	tx.writeTo(p)
 
-	// Input count (varint)
-	n64, err := VarInt(uint64(len(tx.Inputs))).WriteTo(w)
-	total += n64
-	if err != nil {
-		return total, err
-	}
+	return p.finish()
+}
 
-	// Inputs
+// writeTo appends the transaction in standard format.
+func (tx *Tx) writeTo(p *partWriter) {
+	p.u32(tx.Version)
+	p.varInt(uint64(len(tx.Inputs)))
+
 	for _, in := range tx.Inputs {
-		n64, err = in.WriteTo(w)
-		total += n64
-		if err != nil {
-			return total, err
-		}
+		in.writeTo(p)
 	}
 
-	// Output count (varint)
-	n64, err = VarInt(uint64(len(tx.Outputs))).WriteTo(w)
-	total += n64
-	if err != nil {
-		return total, err
-	}
+	tx.writeOutputsAndLockTime(p)
+}
 
-	// Outputs
+// writeOutputsAndLockTime appends the part the standard and extended formats
+// share, which is everything after the inputs.
+func (tx *Tx) writeOutputsAndLockTime(p *partWriter) {
+	p.varInt(uint64(len(tx.Outputs)))
+
 	for _, out := range tx.Outputs {
-		n64, err = out.WriteTo(w)
-		total += n64
-		if err != nil {
-			return total, err
-		}
+		out.writeTo(p)
 	}
 
-	// LockTime (4 bytes LE)
-	buf[0] = byte(tx.LockTime)
-	buf[1] = byte(tx.LockTime >> 8)
-	buf[2] = byte(tx.LockTime >> 16)
-	buf[3] = byte(tx.LockTime >> 24)
-	n, err = w.Write(buf[:])
-	total += int64(n)
-	return total, err
+	p.u32(tx.LockTime)
 }
 
 // WriteExtendedTo writes the serialized transaction directly to w in extended
 // format (with PreviousTxSatoshis and PreviousTxScript) without allocating
 // an intermediate byte slice.
 func (tx *Tx) WriteExtendedTo(w io.Writer) (int64, error) {
-	var total int64
-	var buf [4]byte
+	p := newPartWriter(w)
+	defer p.release()
 
-	// Version (4 bytes LE)
-	buf[0] = byte(tx.Version)
-	buf[1] = byte(tx.Version >> 8)
-	buf[2] = byte(tx.Version >> 16)
-	buf[3] = byte(tx.Version >> 24)
-	n, err := w.Write(buf[:])
-	total += int64(n)
-	if err != nil {
-		return total, err
-	}
+	tx.writeExtendedTo(p)
 
-	// Extended marker (6 bytes)
-	n, err = w.Write([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0xEF})
-	total += int64(n)
-	if err != nil {
-		return total, err
-	}
+	return p.finish()
+}
 
-	// Input count (varint)
-	n64, err := VarInt(uint64(len(tx.Inputs))).WriteTo(w)
-	total += n64
-	if err != nil {
-		return total, err
-	}
+// writeExtendedTo appends the transaction in extended format: the standard
+// header, then the six-byte extended marker, then inputs that each carry the
+// output they spend.
+func (tx *Tx) writeExtendedTo(p *partWriter) {
+	p.u32(tx.Version)
+	p.raw(extendedMarker[:])
+	p.varInt(uint64(len(tx.Inputs)))
 
-	// Inputs (extended format)
 	for _, in := range tx.Inputs {
-		n64, err = in.WriteExtendedTo(w)
-		total += n64
-		if err != nil {
-			return total, err
-		}
+		in.writeExtendedTo(p)
 	}
 
-	// Output count (varint)
-	n64, err = VarInt(uint64(len(tx.Outputs))).WriteTo(w)
-	total += n64
-	if err != nil {
-		return total, err
-	}
-
-	// Outputs
-	for _, out := range tx.Outputs {
-		n64, err = out.WriteTo(w)
-		total += n64
-		if err != nil {
-			return total, err
-		}
-	}
-
-	// LockTime (4 bytes LE)
-	buf[0] = byte(tx.LockTime)
-	buf[1] = byte(tx.LockTime >> 8)
-	buf[2] = byte(tx.LockTime >> 16)
-	buf[3] = byte(tx.LockTime >> 24)
-	n, err = w.Write(buf[:])
-	total += int64(n)
-	return total, err
+	tx.writeOutputsAndLockTime(p)
 }
 
 // SerializeTo writes the transaction to w using extended format if the
 // transaction is extended, otherwise standard format. No intermediate
 // byte slice is allocated.
 func (tx *Tx) SerializeTo(w io.Writer) (int64, error) {
+	p := newPartWriter(w)
+	defer p.release()
+
 	if tx.IsExtended() {
-		return tx.WriteExtendedTo(w)
+		tx.writeExtendedTo(p)
+	} else {
+		tx.writeTo(p)
 	}
-	return tx.WriteTo(w)
+
+	return p.finish()
 }
 
 // Size will return the size of tx in bytes without

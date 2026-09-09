@@ -188,107 +188,58 @@ sequence:     %x
 // WriteTo writes the serialized Input directly to w without allocating
 // an intermediate byte slice. It writes the standard (non-extended) format.
 func (i *Input) WriteTo(w io.Writer) (int64, error) {
-	var total int64
-	var buf [4]byte
+	p := newPartWriter(w)
+	defer p.release()
 
-	// previousTxIDHash (32 bytes)
+	i.writeTo(p)
+
+	return p.finish()
+}
+
+// writeTo appends this input in standard format to an in-progress transaction
+// serialisation.
+func (i *Input) writeTo(p *partWriter) {
 	if i.previousTxIDHash != nil {
-		n, err := w.Write(i.previousTxIDHash[:])
-		total += int64(n)
-		if err != nil {
-			return total, err
-		}
+		p.raw(i.previousTxIDHash[:])
 	}
 
-	// PreviousTxOutIndex (4 bytes LE)
-	buf[0] = byte(i.PreviousTxOutIndex)
-	buf[1] = byte(i.PreviousTxOutIndex >> 8)
-	buf[2] = byte(i.PreviousTxOutIndex >> 16)
-	buf[3] = byte(i.PreviousTxOutIndex >> 24)
-	n, err := w.Write(buf[:])
-	total += int64(n)
-	if err != nil {
-		return total, err
-	}
+	p.u32(i.PreviousTxOutIndex)
 
-	// UnlockingScript length (varint) + script bytes
-	var n64 int64
 	if i.UnlockingScript == nil {
-		n64, err = VarInt(0).WriteTo(w)
-		total += n64
-		if err != nil {
-			return total, err
-		}
+		p.varInt(0)
 	} else {
-		n64, err = VarInt(uint64(len(*i.UnlockingScript))).WriteTo(w)
-		total += n64
-		if err != nil {
-			return total, err
-		}
-		n, err = w.Write(*i.UnlockingScript)
-		total += int64(n)
-		if err != nil {
-			return total, err
-		}
+		p.varInt(uint64(len(*i.UnlockingScript)))
+		p.raw(*i.UnlockingScript)
 	}
 
-	// SequenceNumber (4 bytes LE)
-	buf[0] = byte(i.SequenceNumber)
-	buf[1] = byte(i.SequenceNumber >> 8)
-	buf[2] = byte(i.SequenceNumber >> 16)
-	buf[3] = byte(i.SequenceNumber >> 24)
-	n, err = w.Write(buf[:])
-	total += int64(n)
-	return total, err
+	p.u32(i.SequenceNumber)
 }
 
 // WriteExtendedTo writes the serialized Input in extended format directly to w.
 // Extended format appends PreviousTxSatoshis and PreviousTxScript after the
 // standard input fields.
 func (i *Input) WriteExtendedTo(w io.Writer) (int64, error) {
-	total, err := i.WriteTo(w)
-	if err != nil {
-		return total, err
-	}
+	p := newPartWriter(w)
+	defer p.release()
 
-	// PreviousTxSatoshis (8 bytes LE)
-	var buf [8]byte
-	buf[0] = byte(i.PreviousTxSatoshis)
-	buf[1] = byte(i.PreviousTxSatoshis >> 8)
-	buf[2] = byte(i.PreviousTxSatoshis >> 16)
-	buf[3] = byte(i.PreviousTxSatoshis >> 24)
-	buf[4] = byte(i.PreviousTxSatoshis >> 32)
-	buf[5] = byte(i.PreviousTxSatoshis >> 40)
-	buf[6] = byte(i.PreviousTxSatoshis >> 48)
-	buf[7] = byte(i.PreviousTxSatoshis >> 56)
-	n, err := w.Write(buf[:])
-	total += int64(n)
-	if err != nil {
-		return total, err
-	}
+	i.writeExtendedTo(p)
 
-	// PreviousTxScript length (varint) + script bytes
-	var n64 int64
+	return p.finish()
+}
+
+// writeExtendedTo appends this input in extended format, which is the standard
+// format followed by the satoshis and locking script of the output it spends.
+func (i *Input) writeExtendedTo(p *partWriter) {
+	i.writeTo(p)
+
+	p.u64(i.PreviousTxSatoshis)
+
 	if i.PreviousTxScript != nil {
-		n64, err = VarInt(uint64(len(*i.PreviousTxScript))).WriteTo(w)
-		total += n64
-		if err != nil {
-			return total, err
-		}
-		n, err = w.Write(*i.PreviousTxScript)
-		total += int64(n)
-		if err != nil {
-			return total, err
-		}
+		p.varInt(uint64(len(*i.PreviousTxScript)))
+		p.raw(*i.PreviousTxScript)
 	} else {
-		n64, err = VarInt(0).WriteTo(w)
-		total += n64
-		if err != nil {
-			return total, err
-		}
+		p.varInt(0)
 	}
-
-	return total, nil
 }
 
 // Size returns the serialized size of the Input in bytes without allocating.
