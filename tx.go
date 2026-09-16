@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"sync/atomic"
 
 	crypto "github.com/bsv-blockchain/go-sdk/primitives/hash"
+	"github.com/pkg/errors"
 
 	"github.com/bsv-blockchain/go-bt/v2/bscript"
 	"github.com/bsv-blockchain/go-bt/v2/chainhash"
@@ -423,6 +425,37 @@ func (tx *Tx) SerializeBytes() []byte {
 	return tx.Bytes()
 }
 
+// ExtendedBytesMax behaves like ExtendedBytes but refuses to allocate a
+// representation larger than limit bytes. When the extended size exceeds limit it
+// returns an error wrapping ErrTxTooLarge (matchable with errors.Is) and does not
+// allocate the representation, letting a caller reject or reroute an oversized
+// transaction before it materializes in memory. A limit equal to the extended
+// size is allowed.
+func (tx *Tx) ExtendedBytesMax(limit uint64) ([]byte, error) {
+	if sz := tx.ExtendedSize(); sz > limit {
+		return nil, errors.Wrapf(ErrTxTooLarge, "extended tx size %d exceeds limit %d", sz, limit)
+	}
+
+	return tx.ExtendedBytes(), nil
+}
+
+// SerializeBytesMax behaves like SerializeBytes - extended format when the
+// transaction is extended, otherwise standard - but refuses to allocate a
+// representation larger than limit bytes, returning an error wrapping
+// ErrTxTooLarge (matchable with errors.Is) instead. A limit equal to the
+// serialized size is allowed.
+func (tx *Tx) SerializeBytesMax(limit uint64) ([]byte, error) {
+	if tx.IsExtended() {
+		return tx.ExtendedBytesMax(limit)
+	}
+
+	if sz := uint64(tx.Size()); sz > limit {
+		return nil, errors.Wrapf(ErrTxTooLarge, "tx size %d exceeds limit %d", sz, limit)
+	}
+
+	return tx.Bytes(), nil
+}
+
 // BytesWithClearedInputs encodes the transaction into a byte array but clears its Inputs first.
 // This is used when signing transactions.
 func (tx *Tx) BytesWithClearedInputs(index int, lockingScript []byte) []byte {
@@ -563,7 +596,21 @@ func (tt *Txs) NodeJSON() interface{} {
 // It pre-computes the exact size to allocate once, then delegates
 // to appendBytesHelper for zero-alloc serialization.
 func (tx *Tx) toBytesHelper(index int, lockingScript []byte, extended bool) []byte {
-	h := make([]byte, 0, tx.Size())
+	capHint := tx.Size()
+
+	// The extended representation is larger than Size() reports (marker plus the
+	// spent output per input), so pre-size it with ExtendedSize() to avoid the
+	// slice re-growing mid-serialisation. Only do this for the plain extended
+	// path (lockingScript == nil), which is the exact shape ExtendedSize models;
+	// the guard keeps the int conversion safe for pathologically large sizes.
+	if extended && lockingScript == nil {
+		if es := tx.ExtendedSize(); es <= uint64(math.MaxInt) {
+			capHint = int(es)
+		}
+	}
+
+	h := make([]byte, 0, capHint)
+
 	return tx.appendBytesHelper(h, index, lockingScript, extended)
 }
 
@@ -721,6 +768,39 @@ func (tx *Tx) Size() int {
 
 	for _, out := range tx.Outputs {
 		size += out.Size()
+	}
+
+	return size
+}
+
+// ExtendedSize returns the size in bytes of the transaction serialized in
+// extended format - the representation produced by ExtendedBytes and
+// WriteExtendedTo, which carries the marker plus every spent output's satoshis
+// and locking script. It is computed from the structure fields without
+// allocating, and always reflects the extended shape regardless of whether
+// IsExtended reports true.
+//
+// It returns uint64 (unlike Size, which returns int) because a consensus-valid
+// transaction's extended representation can exceed what an int holds on a 32-bit
+// platform and can exceed 2^31 anywhere; a caller can compare it against a
+// resource budget and reject or reroute an oversized transaction before
+// allocating. See ExtendedBytesMax for a helper that does exactly that.
+func (tx *Tx) ExtendedSize() uint64 {
+	// version(4) + extended marker(6) + locktime(4)
+	size := uint64(14)
+
+	// varint for input count
+	size += uint64(VarInt(uint64(len(tx.Inputs))).Length())
+
+	for _, in := range tx.Inputs {
+		size += in.ExtendedSize()
+	}
+
+	// varint for output count
+	size += uint64(VarInt(uint64(len(tx.Outputs))).Length())
+
+	for _, out := range tx.Outputs {
+		size += uint64(out.Size())
 	}
 
 	return size

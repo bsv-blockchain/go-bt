@@ -12,6 +12,11 @@ var (
 	ErrUnsupportedScript = errors.New("non-P2PKH input used in the tx - unsupported")
 	ErrInvalidScriptType = errors.New("invalid script type")
 	ErrNoUnlocker        = errors.New("unlocker not supplied")
+
+	// ErrTxTooLarge is returned by the bounded serializers (ExtendedBytesMax,
+	// SerializeBytesMax) when the serialized size would exceed the caller-supplied
+	// limit. Match it with errors.Is.
+	ErrTxTooLarge = errors.New("serialized transaction exceeds size limit")
 )
 
 // Sentinel errors reported by inputs.
