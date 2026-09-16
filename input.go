@@ -255,6 +255,25 @@ func (i *Input) Size() int {
 	return size
 }
 
+// ExtendedSize returns the serialized size of the Input in extended format
+// without allocating: the standard fields plus PreviousTxSatoshis and
+// PreviousTxScript (with a zero-length prev script encoded as a single byte). It
+// returns uint64 to compose safely into Tx.ExtendedSize, whose total can exceed
+// what an int holds on a 32-bit platform.
+func (i *Input) ExtendedSize() uint64 {
+	// standard fields + PreviousTxSatoshis(8)
+	size := uint64(i.Size()) + 8
+
+	if i.PreviousTxScript == nil {
+		size++ // VarInt(0) = 1 byte
+	} else {
+		l := len(*i.PreviousTxScript)
+		size += uint64(VarInt(uint64(l)).Length()) + uint64(l)
+	}
+
+	return size
+}
+
 // Bytes encodes the Input into a hex byte array.
 func (i *Input) Bytes(clearLockingScript bool, intoBytes ...[]byte) []byte {
 	var h []byte
