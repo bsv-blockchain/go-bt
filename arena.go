@@ -2,6 +2,7 @@ package bt
 
 import (
 	"io"
+	"slices"
 
 	"github.com/pkg/errors"
 )
@@ -128,20 +129,75 @@ func readArenaScript(r io.Reader, a *Arena, label string) ([]byte, int64, error)
 		return nil, bytesRead, errors.Errorf("%s length %d exceeds MaxArenaAlloc", label, l)
 	}
 
-	var script []byte
-	switch {
-	case a == nil:
-		script = make([]byte, l)
-	case l > 0:
-		script = a.Alloc(int(l))
-	default:
-		script = []byte{}
+	if a != nil {
+		var script []byte
+		if l > 0 {
+			script = a.Alloc(int(l))
+		} else {
+			script = []byte{}
+		}
+
+		n, readErr := io.ReadFull(r, script)
+		bytesRead += int64(n)
+
+		if readErr != nil {
+			return nil, bytesRead, errors.Wrapf(readErr, "%s(%d): got %d bytes", label, l, n)
+		}
+
+		return script, bytesRead, nil
 	}
-	n, err := io.ReadFull(r, script)
+
+	script, n, err := readScriptIncremental(r, int(l))
 	bytesRead += int64(n)
+
 	if err != nil {
 		return nil, bytesRead, errors.Wrapf(err, "%s(%d): got %d bytes", label, l, n)
 	}
 
 	return script, bytesRead, nil
+}
+
+// scriptReadChunk is how much readScriptIncremental adds to the buffer per
+// round trip. Large enough that a legitimate multi-megabyte data carrier costs
+// few reads, small enough that a declared length nobody intends to send buys
+// only this much memory.
+const scriptReadChunk = 64 * 1024
+
+// readScriptIncremental reads length bytes from r, growing the buffer against
+// the bytes that actually arrive rather than allocating the declared length up
+// front. A sender that declares a length near MaxArenaAlloc and then sends
+// nothing therefore holds scriptReadChunk bytes, not a gigabyte
+// (bsv-blockchain/go-bt#187).
+//
+// Returns the bytes read so far even on failure, so the caller can keep its
+// stream accounting exact.
+func readScriptIncremental(r io.Reader, length int) ([]byte, int, error) {
+	// make, not nil: callers compare wrapped *bscript.Script values across the
+	// arena and non-arena paths, and a nil script is not equal to an empty one.
+	script := make([]byte, 0, min(length, scriptReadChunk))
+
+	for len(script) < length {
+		want := min(length-len(script), scriptReadChunk)
+
+		// Grow geometrically against the bytes received rather than the length the
+		// sender claimed, then extend into the space just reserved.
+		start := len(script)
+		script = slices.Grow(script, want)[:start+want]
+
+		n, err := io.ReadFull(r, script[start:])
+		script = script[:start+n]
+
+		if err != nil {
+			// A stream that ends exactly on a chunk boundary reports io.EOF for the
+			// next chunk, but from the caller's point of view the script is truncated,
+			// not absent. Report what a single ReadFull of the whole script would have.
+			if errors.Is(err, io.EOF) && len(script) > 0 {
+				err = io.ErrUnexpectedEOF
+			}
+
+			return nil, len(script), err
+		}
+	}
+
+	return script, len(script), nil
 }
