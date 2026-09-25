@@ -348,8 +348,9 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 			byte(out.Satoshis>>48), byte(out.Satoshis>>56),
 		)
 
-		buf = VarInt(uint64(len(*out.LockingScript))).AppendTo(buf)
-		buf = append(buf, *out.LockingScript...)
+		script := out.lockingScriptBytes()
+		buf = VarInt(uint64(len(script))).AppendTo(buf)
+		buf = append(buf, script...)
 	}
 
 	// LockTime
