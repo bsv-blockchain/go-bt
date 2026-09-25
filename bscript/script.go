@@ -317,6 +317,9 @@ func (s *Script) IsP2SH() bool {
 // IsData returns true if this is a data output script. This
 // means the script starts with OP_RETURN or OP_FALSE OP_RETURN.
 func (s *Script) IsData() bool {
+	if s == nil {
+		return false
+	}
 	b := []byte(*s)
 
 	return (len(b) > 0 && b[0] == OpRETURN) ||
