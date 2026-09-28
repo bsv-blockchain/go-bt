@@ -63,17 +63,27 @@ func (o *Output) ReadFromWithArena(r io.Reader, a *Arena) (int64, error) {
 	return bytesRead, nil
 }
 
+// lockingScriptBytes returns the locking script's bytes. A nil LockingScript
+// is treated as an empty script: it has the same wire bytes as &bscript.Script{}.
+func (o *Output) lockingScriptBytes() []byte {
+	if o.LockingScript == nil {
+		return nil
+	}
+	return *o.LockingScript
+}
+
 // LockingScriptHexString returns the locking script
 // of an output encoded as a hex string.
 func (o *Output) LockingScriptHexString() string {
-	return hex.EncodeToString(*o.LockingScript)
+	return hex.EncodeToString(o.lockingScriptBytes())
 }
 
 func (o *Output) String() string {
+	script := o.lockingScriptBytes()
 	return fmt.Sprintf(`value:     %d
 scriptLen: %d
 script:    %s
-`, o.Satoshis, len(*o.LockingScript), o.LockingScript)
+`, o.Satoshis, len(script), hex.EncodeToString(script))
 }
 
 // WriteTo writes the serialized Output directly to w without allocating
@@ -90,14 +100,15 @@ func (o *Output) WriteTo(w io.Writer) (int64, error) {
 // writeTo appends this output to an in-progress transaction serialisation.
 func (o *Output) writeTo(p *partWriter) {
 	p.u64(o.Satoshis)
-	p.varInt(uint64(len(*o.LockingScript)))
-	p.raw(*o.LockingScript)
+	script := o.lockingScriptBytes()
+	p.varInt(uint64(len(script)))
+	p.raw(script)
 }
 
 // Size returns the serialized size of the Output in bytes without allocating.
 func (o *Output) Size() int {
 	// Satoshis(8)
-	l := len(*o.LockingScript)
+	l := len(o.lockingScriptBytes())
 	return 8 + VarInt(uint64(l)).Length() + l
 }
 
@@ -114,12 +125,14 @@ func (o *Output) appendTo(h []byte) []byte {
 		byte(o.Satoshis>>48),
 		byte(o.Satoshis>>56),
 	)
-	h = VarInt(uint64(len(*o.LockingScript))).AppendTo(h)
-	return append(h, *o.LockingScript...)
+	script := o.lockingScriptBytes()
+	h = VarInt(uint64(len(script))).AppendTo(h)
+	return append(h, script...)
 }
 
 // Bytes encodes the Output into a byte array.
 func (o *Output) Bytes(inBytes ...[]byte) []byte {
+	script := o.lockingScriptBytes()
 	var h []byte
 	if len(inBytes) > 0 {
 		h = inBytes[0]
@@ -139,12 +152,12 @@ func (o *Output) Bytes(inBytes ...[]byte) []byte {
 		b := make([]byte, 8)
 		binary.LittleEndian.PutUint64(b, o.Satoshis)
 
-		h = make([]byte, 0, len(b)+9+len(*o.LockingScript))
+		h = make([]byte, 0, len(b)+9+len(script))
 		h = append(h, b...)
 	}
 
-	h = append(h, VarInt(uint64(len(*o.LockingScript))).Bytes()...)
-	h = append(h, *o.LockingScript...)
+	h = append(h, VarInt(uint64(len(script))).Bytes()...)
+	h = append(h, script...)
 
 	return h
 }

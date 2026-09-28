@@ -184,11 +184,15 @@ func (w *nodeTxWrapper) UnmarshalJSON(b []byte) error {
 
 // fromOutput converts an Output to a nodeOutputJSON.
 func (o *nodeOutputJSON) fromOutput(out *Output) error {
-	asm, err := out.LockingScript.ToASM()
+	lockingScript := out.LockingScript
+	if lockingScript == nil {
+		lockingScript = &bscript.Script{} // a nil script is treated as empty
+	}
+	asm, err := lockingScript.ToASM()
 	if err != nil {
 		return err
 	}
-	addresses, err := out.LockingScript.Addresses()
+	addresses, err := lockingScript.Addresses()
 	if err != nil {
 		return err
 	}
@@ -205,7 +209,7 @@ func (o *nodeOutputJSON) fromOutput(out *Output) error {
 			Asm:     asm,
 			Hex:     out.LockingScriptHexString(),
 			ReqSigs: len(addresses),
-			Type:    out.LockingScript.ScriptType(),
+			Type:    lockingScript.ScriptType(),
 		},
 	}
 
