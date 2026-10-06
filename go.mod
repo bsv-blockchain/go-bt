@@ -3,7 +3,7 @@ module github.com/bsv-blockchain/go-bt/v2
 go 1.26.0
 
 require (
-	github.com/bsv-blockchain/go-sdk v1.6.0
+	github.com/bsv-blockchain/go-sdk v1.7.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.12.1
 	golang.org/x/crypto v0.57.0
