@@ -2,7 +2,6 @@ package bt
 
 import (
 	"io"
-	"slices"
 
 	"github.com/pkg/errors"
 )
@@ -105,10 +104,12 @@ func (a *Arena) Cap() int { return cap(a.slab) }
 func (a *Arena) Used() int { return a.pos }
 
 // readArenaScript reads a varint length prefix from r followed by that many
-// script bytes. When a is nil, the bytes go to make([]byte, n) — matching
-// the non-arena ReadFrom path. When a is non-nil, bytes come from
-// arena.Alloc for n > 0; n == 0 uses a non-nil []byte{} sentinel so wrapped
-// *bscript.Script values compare equal across both paths.
+// script bytes. When a is nil, the bytes go to a heap buffer — matching the
+// non-arena ReadFrom path. When a is non-nil, bytes come from arena.Alloc.
+// Either way the declared length is trusted only once a quarter of the script
+// has arrived, unless the script fits in a scriptReadChunk heap buffer or in the
+// arena's free space. A zero length yields a non-nil []byte{} sentinel so
+// wrapped *bscript.Script values compare equal across both paths.
 //
 // Rejects lengths greater than MaxArenaAlloc with a wrapped error containing
 // "MaxArenaAlloc". The label is included in both the cap-exceeded and the
@@ -129,25 +130,16 @@ func readArenaScript(r io.Reader, a *Arena, label string) ([]byte, int64, error)
 		return nil, bytesRead, errors.Errorf("%s length %d exceeds MaxArenaAlloc", label, l)
 	}
 
+	var (
+		script []byte
+		n      int
+	)
+
 	if a != nil {
-		var script []byte
-		if l > 0 {
-			script = a.Alloc(int(l))
-		} else {
-			script = []byte{}
-		}
-
-		n, readErr := io.ReadFull(r, script)
-		bytesRead += int64(n)
-
-		if readErr != nil {
-			return nil, bytesRead, errors.Wrapf(readErr, "%s(%d): got %d bytes", label, l, n)
-		}
-
-		return script, bytesRead, nil
+		script, n, err = readArenaScriptIncremental(r, a, int(l))
+	} else {
+		script, n, err = readScriptIncremental(r, int(l))
 	}
-
-	script, n, err := readScriptIncremental(r, int(l))
 	bytesRead += int64(n)
 
 	if err != nil {
@@ -157,47 +149,109 @@ func readArenaScript(r io.Reader, a *Arena, label string) ([]byte, int64, error)
 	return script, bytesRead, nil
 }
 
-// scriptReadChunk is how much readScriptIncremental adds to the buffer per
-// round trip. Large enough that a legitimate multi-megabyte data carrier costs
-// few reads, small enough that a declared length nobody intends to send buys
-// only this much memory.
+// scriptReadChunk is the first chunk of a script's quarter-first read, and the
+// size up to which the heap path allocates a script outright. Any declared
+// length therefore buys at most this much memory before bytes arrive.
 const scriptReadChunk = 64 * 1024
 
-// readScriptIncremental reads length bytes from r, growing the buffer against
-// the bytes that actually arrive rather than allocating the declared length up
-// front. A sender that declares a length near MaxArenaAlloc and then sends
-// nothing therefore holds scriptReadChunk bytes, not a gigabyte
-// (bsv-blockchain/go-bt#187).
+// readScriptIncremental reads length bytes from r onto the heap without
+// trusting the declared length up front: a script larger than scriptReadChunk
+// is read through readScriptQuarterFirst. A sender that declares a length near
+// MaxArenaAlloc and then sends nothing therefore holds scriptReadChunk bytes,
+// not a gigabyte (bsv-blockchain/go-bt#187).
 //
 // Returns the bytes read so far even on failure, so the caller can keep its
 // stream accounting exact.
 func readScriptIncremental(r io.Reader, length int) ([]byte, int, error) {
-	// make, not nil: callers compare wrapped *bscript.Script values across the
-	// arena and non-arena paths, and a nil script is not equal to an empty one.
-	script := make([]byte, 0, min(length, scriptReadChunk))
-
-	for len(script) < length {
-		want := min(length-len(script), scriptReadChunk)
-
-		// Grow geometrically against the bytes received rather than the length the
-		// sender claimed, then extend into the space just reserved.
-		start := len(script)
-		script = slices.Grow(script, want)[:start+want]
-
-		n, err := io.ReadFull(r, script[start:])
-		script = script[:start+n]
-
-		if err != nil {
-			// A stream that ends exactly on a chunk boundary reports io.EOF for the
-			// next chunk, but from the caller's point of view the script is truncated,
-			// not absent. Report what a single ReadFull of the whole script would have.
-			if errors.Is(err, io.EOF) && len(script) > 0 {
-				err = io.ErrUnexpectedEOF
-			}
-
-			return nil, len(script), err
-		}
+	prefixLen := 0
+	if length > scriptReadChunk {
+		prefixLen = length / 4
 	}
 
-	return script, len(script), nil
+	// make, not nil: callers compare wrapped *bscript.Script values across the
+	// arena and non-arena paths, and a nil script is not equal to an empty one.
+	return readScriptQuarterFirst(r, length, prefixLen, func(n int) []byte { return make([]byte, n) })
+}
+
+// readArenaScriptIncremental is readScriptIncremental for the arena. A script
+// that fits in the slab costs no new memory whatever its declared length, so it
+// is read in place. One that does not fit would grow the slab, so the slab grows
+// only once a quarter of the script has arrived, and then once, to fit it.
+//
+// A failed read gives back the arena space it took. Returns the bytes read so
+// far even on failure, so the caller can keep its stream accounting exact.
+func readArenaScriptIncremental(r io.Reader, a *Arena, length int) ([]byte, int, error) {
+	if length == 0 {
+		// Non-nil, so it compares equal to the non-arena path's empty script.
+		return []byte{}, 0, nil
+	}
+
+	prefixLen := 0
+	if length > cap(a.slab)-a.pos {
+		prefixLen = length / 4
+	}
+
+	start := a.pos
+
+	script, n, err := readScriptQuarterFirst(r, length, prefixLen, a.Alloc)
+	if err != nil {
+		a.pos = start
+	}
+
+	return script, n, err
+}
+
+// readScriptQuarterFirst reads the first prefixLen bytes of a length-byte script
+// into heap chunks that start at scriptReadChunk and double as bytes arrive, then
+// takes the whole script from alloc, copies the prefix in and reads the rest
+// straight into it. Memory follows the bytes received until the prefix is in;
+// after that the declared length is trusted. Each byte is copied at most once,
+// so a script that arrives costs about length + prefixLen.
+//
+// Returns the bytes read so far even on failure.
+func readScriptQuarterFirst(r io.Reader, length, prefixLen int, alloc func(int) []byte) ([]byte, int, error) {
+	var chunks [][]byte
+
+	read := 0
+
+	for size := scriptReadChunk; read < prefixLen; size *= 2 {
+		chunk := make([]byte, min(size, prefixLen-read))
+
+		n, err := io.ReadFull(r, chunk)
+		read += n
+
+		if err != nil {
+			return nil, read, truncatedScriptError(err, read)
+		}
+
+		chunks = append(chunks, chunk)
+	}
+
+	script := alloc(length)
+
+	off := 0
+	for _, chunk := range chunks {
+		off += copy(script[off:], chunk)
+	}
+
+	n, err := io.ReadFull(r, script[read:])
+	read += n
+
+	if err != nil {
+		return nil, read, truncatedScriptError(err, read)
+	}
+
+	return script, read, nil
+}
+
+// truncatedScriptError reports what a single io.ReadFull of the whole script
+// would have: io.EOF only when nothing arrived. A read split into pieces sees
+// io.EOF on a piece that starts exactly where the stream ends, but from the
+// caller's point of view the script is truncated, not absent.
+func truncatedScriptError(err error, read int) error {
+	if errors.Is(err, io.EOF) && read > 0 {
+		return io.ErrUnexpectedEOF
+	}
+
+	return err
 }
