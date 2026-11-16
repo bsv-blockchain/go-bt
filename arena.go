@@ -30,6 +30,10 @@ const MaxArenaAlloc = 1 << 30
 //
 // The zero value Arena{} is ready to use; the first Alloc allocates the
 // backing slab.
+//
+// When a *.ReadFromWithArena script read fails, the cursor goes back to where
+// it was before that script, so Used drops by the space it took. Scripts read
+// before it keep their space, and a slab that grew for it stays grown.
 type Arena struct {
 	slab []byte
 	pos  int
@@ -163,14 +167,20 @@ const scriptReadChunk = 64 * 1024
 // Returns the bytes read so far even on failure, so the caller can keep its
 // stream accounting exact.
 func readScriptIncremental(r io.Reader, length int) ([]byte, int, error) {
-	prefixLen := 0
-	if length > scriptReadChunk {
-		prefixLen = length / 4
+	if length <= scriptReadChunk {
+		// make, not nil: callers compare wrapped *bscript.Script values across the
+		// arena and non-arena paths, and a nil script is not equal to an empty one.
+		script := make([]byte, length)
+
+		n, err := io.ReadFull(r, script)
+		if err != nil {
+			return nil, n, err
+		}
+
+		return script, n, nil
 	}
 
-	// make, not nil: callers compare wrapped *bscript.Script values across the
-	// arena and non-arena paths, and a nil script is not equal to an empty one.
-	return readScriptQuarterFirst(r, length, prefixLen, func(n int) []byte { return make([]byte, n) })
+	return readScriptQuarterFirst(r, length, func(n int) []byte { return make([]byte, n) })
 }
 
 // readArenaScriptIncremental is readScriptIncremental for the arena. A script
@@ -186,32 +196,40 @@ func readArenaScriptIncremental(r io.Reader, a *Arena, length int) ([]byte, int,
 		return []byte{}, 0, nil
 	}
 
-	prefixLen := 0
-	if length > cap(a.slab)-a.pos {
-		prefixLen = length / 4
+	var (
+		start  = a.pos
+		script []byte
+		n      int
+		err    error
+	)
+
+	if length <= cap(a.slab)-a.pos {
+		script = a.Alloc(length)
+		n, err = io.ReadFull(r, script)
+	} else {
+		script, n, err = readScriptQuarterFirst(r, length, a.Alloc)
 	}
 
-	start := a.pos
-
-	script, n, err := readScriptQuarterFirst(r, length, prefixLen, a.Alloc)
 	if err != nil {
 		a.pos = start
+		return nil, n, err
 	}
 
-	return script, n, err
+	return script, n, nil
 }
 
-// readScriptQuarterFirst reads the first prefixLen bytes of a length-byte script
-// into heap chunks that start at scriptReadChunk and double as bytes arrive, then
-// takes the whole script from alloc, copies the prefix in and reads the rest
-// straight into it. Memory follows the bytes received until the prefix is in;
+// readScriptQuarterFirst reads the first quarter of a length-byte script into
+// heap chunks that start at scriptReadChunk and double as bytes arrive, then
+// takes the whole script from alloc, copies the quarter in and reads the rest
+// straight into it. Memory follows the bytes received until the quarter is in;
 // after that the declared length is trusted. Each byte is copied at most once,
-// so a script that arrives costs about length + prefixLen.
+// so a script that arrives costs about 1.25 times its length.
 //
 // Returns the bytes read so far even on failure.
-func readScriptQuarterFirst(r io.Reader, length, prefixLen int, alloc func(int) []byte) ([]byte, int, error) {
+func readScriptQuarterFirst(r io.Reader, length int, alloc func(int) []byte) ([]byte, int, error) {
 	var chunks [][]byte
 
+	prefixLen := length / 4
 	read := 0
 
 	for size := scriptReadChunk; read < prefixLen; size *= 2 {

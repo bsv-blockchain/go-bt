@@ -7,7 +7,9 @@ import (
 	"runtime"
 	"strconv"
 	"testing"
+	"testing/iotest"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,18 +21,32 @@ func declaredScriptHeader(t *testing.T, length uint64) []byte {
 	return VarInt(length).Bytes()
 }
 
+// scriptReader is one of the incremental script readers under test.
+type scriptReader struct {
+	name string
+	read func(r io.Reader, length int) ([]byte, int, error)
+}
+
 // scriptReaders lists both incremental readers, so the tests below hold the
 // arena path to the same allocation, content and error contract as the heap
 // path. The arena starts empty, so every byte it holds was allocated by the read.
-var scriptReaders = []struct {
-	name string
-	read func(r io.Reader, length int) ([]byte, int, error)
-}{
+var scriptReaders = []scriptReader{
 	{name: "heap", read: readScriptIncremental},
 	{name: "arena", read: func(r io.Reader, length int) ([]byte, int, error) {
 		return readArenaScriptIncremental(r, NewArena(0), length)
 	}},
 }
+
+// scriptReadersWithRoom adds an arena with room for every script these tests
+// read, so the in-place arena read is held to the same content and error
+// contract. It is left out of the allocation tests, whose arenas must start
+// empty.
+var scriptReadersWithRoom = append(scriptReaders[:len(scriptReaders):len(scriptReaders)], scriptReader{
+	name: "arena with room",
+	read: func(r io.Reader, length int) ([]byte, int, error) {
+		return readArenaScriptIncremental(r, NewArena(2<<20), length)
+	},
+})
 
 // TestReadScriptIncremental_AllocationTracksBytesReceived pins the fix for
 // bsv-blockchain/go-bt#187: the allocation followed the length the sender
@@ -110,7 +126,7 @@ func TestOutput_ReadFrom_AllocationTracksBytesReceived(t *testing.T) {
 // TestReadScriptIncremental_ReadsExactScripts covers the sizes either side of
 // the chunk boundary, where a chunked read is most likely to go wrong.
 func TestReadScriptIncremental_ReadsExactScripts(t *testing.T) {
-	for _, reader := range scriptReaders {
+	for _, reader := range scriptReadersWithRoom {
 		for _, length := range []int{0, 1, scriptReadChunk - 1, scriptReadChunk, scriptReadChunk + 1, 3*scriptReadChunk + 7, 1<<20 + 3} {
 			t.Run(reader.name+"/"+strconv.Itoa(length), func(t *testing.T) {
 				want := make([]byte, length)
@@ -153,11 +169,63 @@ func TestReadScriptIncremental_TruncatedReportsUnexpectedEOF(t *testing.T) {
 		{name: "ends exactly at the quarter", declared: 1 << 20, sent: (1 << 20) / 4, wantErr: io.ErrUnexpectedEOF},
 		{name: "ends after the quarter", declared: scriptReadChunk + 10, sent: scriptReadChunk, wantErr: io.ErrUnexpectedEOF},
 	} {
-		for _, reader := range scriptReaders {
+		for _, reader := range scriptReadersWithRoom {
 			t.Run(reader.name+"/"+tc.name, func(t *testing.T) {
 				script, n, err := reader.read(bytes.NewReader(make([]byte, tc.sent)), tc.declared)
 
 				require.ErrorIs(t, err, tc.wantErr)
+				require.Nil(t, script)
+				require.Equal(t, tc.sent, n, "the byte count must stay exact so the caller's stream accounting holds")
+			})
+		}
+	}
+}
+
+// TestReadScriptIncremental_OneByteAtATime feeds the script one byte per Read,
+// so every piece of the read sees short reads, across the chunk and quarter
+// boundaries.
+func TestReadScriptIncremental_OneByteAtATime(t *testing.T) {
+	for _, reader := range scriptReadersWithRoom {
+		for _, length := range []int{1, scriptReadChunk + 1, 1<<20 + 3} {
+			t.Run(reader.name+"/"+strconv.Itoa(length), func(t *testing.T) {
+				want := make([]byte, length)
+				for i := range want {
+					want[i] = byte(i % 251)
+				}
+
+				script, n, err := reader.read(iotest.OneByteReader(bytes.NewReader(want)), length)
+				require.NoError(t, err)
+				require.Equal(t, length, n)
+				require.Equal(t, want, script)
+			})
+		}
+	}
+}
+
+// TestReadScriptIncremental_ReadErrorPassesThrough fails the stream with an
+// error other than EOF at each point where the read changes piece. The error
+// must reach the caller unchanged, with an exact byte count.
+func TestReadScriptIncremental_ReadErrorPassesThrough(t *testing.T) {
+	const declared = 1 << 20
+
+	errStream := errors.New("stream failed")
+
+	for _, tc := range []struct {
+		name string
+		sent int
+	}{
+		{name: "before any byte", sent: 0},
+		{name: "inside the quarter", sent: scriptReadChunk + 5},
+		{name: "exactly at the quarter", sent: declared / 4},
+		{name: "just past the quarter", sent: declared/4 + 1},
+		{name: "one byte short", sent: declared - 1},
+	} {
+		for _, reader := range scriptReadersWithRoom {
+			t.Run(reader.name+"/"+tc.name, func(t *testing.T) {
+				r := io.MultiReader(bytes.NewReader(make([]byte, tc.sent)), iotest.ErrReader(errStream))
+
+				script, n, err := reader.read(r, declared)
+				require.ErrorIs(t, err, errStream)
 				require.Nil(t, script)
 				require.Equal(t, tc.sent, n, "the byte count must stay exact so the caller's stream accounting holds")
 			})
